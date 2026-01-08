@@ -1,11 +1,11 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/static-components */
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import {
     FiCheckCircle, FiChevronLeft, FiChevronRight, FiMapPin,
-    FiBriefcase, FiUser, FiSmartphone, FiShield, FiAlertCircle
+    FiBriefcase, FiUser, FiSmartphone, FiShield, FiAlertCircle,
+    FiLock
 } from "react-icons/fi";
 import Layout from "../Layout/Layout";
 import Header from "../Layout/Header";
@@ -73,7 +73,7 @@ const Register = () => {
             submittedAt: new Date().toISOString(),
         };
 
-        // console.log("SENDING TO API:", normalizedData);
+        console.log("SENDING TO API:", normalizedData);
         setTimeout(() => {
             setIsLoading(false);
             alert("Registration Successful!");
@@ -188,11 +188,10 @@ const Register = () => {
                                     {/* Step 1: Basic & Address (Shared for Customer or Partner Step 1) */}
                                     {(normalizedRole === "customer" || (normalizedRole === "partner" && normalizedStep === 1)) && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4">
-                                            <div className="md:col-span-2">
-                                                <InputGroup label="Full Name" name="fullName" icon={FiUser} placeholder="Enter your full name" validation={{ required: "Name is required" }} />
-                                            </div>
+                                            <InputGroup label="Full Name" name="fullName" icon={FiUser} placeholder="Enter your full name" validation={{ required: "Name is required" }} />
                                             <InputGroup label="Email Address" name="email" type="email" icon={FiShield} placeholder="name@domain.com" validation={{ required: "Valid email required", pattern: /^\S+@\S+$/i }} />
                                             <InputGroup label="Phone Number" name="phone" icon={FiSmartphone} placeholder="Enter your contact No" validation={{ required: "Phone required" }} />
+                                            <InputGroup label="Password" name="password" icon={FiLock} placeholder="Enter your password" validation={{ required: "Password required" }} />
 
                                             {/* Address Sub-Section */}
                                             <div className="md:col-span-2 mt-4">
@@ -205,8 +204,8 @@ const Register = () => {
                                                         <InputGroup label="Address Line" name="addressLine" placeholder="House/Flat No, Street Name" validation={{ required: "Address is required" }} />
                                                     </div>
                                                     <InputGroup label="Landmark" name="landmark" placeholder="Near Apollo Hospital, etc." />
-                                                    <InputGroup label="City" name="city" validation={{ required: "City required" }} />
-                                                    <InputGroup label="Pincode / ZIP" name="pincode" validation={{ required: "Required" }} />
+                                                    <InputGroup label="City" name="city" placeholder="City" validation={{ required: "City required" }} />
+                                                    <InputGroup label="Pincode / ZIP" placeholder="Pincode" name="pincode" validation={{ required: "Required" }} />
                                                     <div className="flex flex-col gap-1.5">
                                                         <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 ml-1">Country</label>
                                                         <select {...register("country")} className="w-full rounded-xl border border-white/5 bg-stone-800 px-4 py-3 text-sm text-white focus:border-[#9fe870]/40 outline-none">

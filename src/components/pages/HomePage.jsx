@@ -371,7 +371,7 @@ const CheckoutTop = () => {
 
 const ServiceGallery = () => {
     return (
-        <div className="max-w-7xl mx-auto p-4 font-sans">
+        <div className="bg-linear-to-b from-white to-stone-50 max-w-7xl mx-auto p-4 font-sans">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-auto md:h-112.5">
 
                 {/* Left Card: Large Feature */}
@@ -459,62 +459,62 @@ const ServicesList = () => {
         {
             name: "Plumbing & Sanitary Services",
             category: "Repair",
-            img: "https://cdn-icons-png.flaticon.com/512/3095/3095034.png",
+            img: "https://cdn-icons-png.flaticon.com/512/12029/12029477.png",
         },
         {
             name: "Electrical Repair",
             category: "Repair",
-            img: "https://cdn-icons-png.flaticon.com/512/3103/3103451.png",
+            img: "https://cdn-icons-png.flaticon.com/512/4514/4514764.png",
         },
         {
             name: "Gas Burner Repair",
             category: "Repair",
-            img: "https://cdn-icons-png.flaticon.com/512/785/785116.png",
+            img: "https://cdn-icons-png.flaticon.com/512/11355/11355459.png",
         },
         {
             name: "Drywall Repair",
             category: "Repair",
-            img: "https://static.vecteezy.com/system/resources/previews/010/347/280/large_2x/drywall-repair-color-icon-illustration-vector.jpg",
+            img: "https://cdn-icons-png.flaticon.com/512/11034/11034182.png",
         },
         {
             name: "AC Cleaning",
             category: "Cleaning",
-            img: "https://cdn-icons-png.flaticon.com/512/911/911416.png",
+            img: "https://cdn-icons-png.flaticon.com/512/5361/5361406.png",
         },
         {
             name: "Bathroom Sanitization",
             category: "Cleaning",
-            img: "https://cdn-icons-png.flaticon.com/512/2954/2954893.png",
+            img: "https://cdn-icons-png.flaticon.com/512/11444/11444712.png",
         },
         {
             name: "Kitchen Deep Cleaning",
             category: "Cleaning",
-            img: "https://cdn-icons-png.flaticon.com/512/3143/3143641.png",
+            img: "https://cdn-icons-png.flaticon.com/512/1999/1999182.png",
         },
         {
             name: "Carpet & Sofa Cleaning",
             category: "Cleaning",
-            img: "https://cdn-icons-png.flaticon.com/512/2555/2555020.png",
+            img: "https://cdn-icons-png.flaticon.com/512/11058/11058843.png",
         },
         {
             name: "LED Lighting Installation",
             category: "Installation",
-            img: "https://cdn-icons-png.flaticon.com/512/1046/1046857.png",
+            img: "https://cdn-icons-png.flaticon.com/512/18571/18571591.png",
         },
         {
             name: "Smart Thermostat Installation",
             category: "Installation",
-            img: "https://cdn-icons-png.flaticon.com/512/4388/4388747.png",
+            img: "https://cdn-icons-png.flaticon.com/512/2258/2258946.png",
         },
         {
             name: "Wall Shelving Installation",
             category: "Installation",
-            img: "https://cdn-icons-png.flaticon.com/512/2749/2749678.png",
+            img: "https://cdn-icons-png.flaticon.com/512/4219/4219714.png",
         },
         {
             name: "Water Purifier Installation",
             category: "Installation",
-            img: "https://cdn-icons-png.flaticon.com/512/2933/2933811.png",
+            img: "https://cdn-icons-png.flaticon.com/512/5401/5401708.png",
         },
     ];
 
@@ -524,194 +524,198 @@ const ServicesList = () => {
             : services.filter(s => s.category === activeCategory);
 
     return (
-        <section className="bg-linear-to-b from-white to-stone-50 py-20 font-sans">
-            <div className="max-w-7xl mx-auto px-6">
+    <section className="bg-white py-20 font-sans">
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Header */}
+        <div className="mb-14 flex flex-wrap flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+          <div className="space-y-3">
+            <span className="text-xs font-semibold tracking-widest text-[#7ccf52]">
+              SERVICES
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-stone-900">
+              Popular services. <span className="text-stone-400">One place.</span>
+            </h2>
+          </div>
 
-                {/* Header */}
-                <div className="mb-14 flex flex-wrap flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-                    <div className="space-y-3">
-                        <span className="text-xs font-semibold tracking-widest text-[#7ccf52]">
-                            SERVICES
-                        </span>
-                        <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-stone-900">
-                            Popular services.{" "}
-                            <span className="text-stone-400">One place.</span>
-                        </h2>
-                    </div>
+          <p className="max-w-sm text-base leading-relaxed text-stone-600">
+            Filter by category to quickly find the service you need.
+          </p>
+        </div>
 
-                    <p className="max-w-sm text-base leading-relaxed text-stone-600">
-                        Filter by category to quickly find the service you need.
-                    </p>
+        {/* Category Tabs */}
+        <div className="flex flex-wrap gap-3 mb-12">
+          {categories.map((cat) => {
+            const active = activeCategory === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`relative px-6 py-2 rounded-full text-sm font-semibold transition-colors ${
+                  active
+                    ? "text-stone-900"
+                    : "text-stone-500 hover:text-stone-900"
+                }`}
+              >
+                {active && (
+                  <motion.span
+                    layoutId="active-pill"
+                    className="absolute inset-0 rounded-full bg-[#9fe870] shadow-md"
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  />
+                )}
+                <span className="relative z-10">{cat}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Services Grid */}
+        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <AnimatePresence mode="popLayout">
+            {filtered.map((service) => (
+              <motion.div
+                key={service.name}
+                layout
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 24 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                whileHover={{ y: -4 }}
+                className="group relative bg-white rounded-2xl border border-stone-100 p-6 flex items-center justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+              >
+                {/* Accent Line */}
+                <div className="absolute left-0 top-0 h-full w-1 bg-[#9fe870] scale-y-0 group-hover:scale-y-100 origin-top transition-transform duration-300" />
+
+                <div className="flex items-center gap-5">
+                  <div className="relative w-14 h-14 rounded-xl bg-stone-100 flex items-center justify-center transition-transform group-hover:scale-105">
+                    <img
+                      src={service.img}
+                      alt={service.name}
+                      className="w-9 h-9"
+                    />
+                    <div className="absolute inset-0 rounded-xl bg-[#9fe870] blur-lg opacity-0 group-hover:opacity-20 transition-opacity" />
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-stone-900">
+                      {service.name}
+                    </h3>
+                    <span className="text-sm text-stone-500">
+                      {service.category}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Category Tabs */}
-                <div className="flex flex-wrap gap-3 mb-12">
-                    {categories.map(cat => {
-                        const active = activeCategory === cat;
-
-                        return (
-                            <button key={cat} onClick={() => setActiveCategory(cat)}
-                                className={`relative px-6 py-2 rounded-full text-sm font-semibold transition-colors ${active ? "text-stone-900" : "text-stone-500 hover:text-stone-900"} `} >
-                                {active && (
-                                    <motion.span
-                                        layoutId="active-pill"
-                                        className="absolute inset-0 rounded-full bg-[#9fe870]"
-                                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                                    />
-                                )}
-                                <span className="relative z-10">{cat}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-
-                {/* Services Grid */}
-                <motion.div layout className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <AnimatePresence mode="popLayout">
-                        {filtered.map(service => (
-                            <motion.div key={service.name} layout initial={{ opacity: 0, y: 24 }}
-                                animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 24 }}
-                                transition={{ duration: 0.35, ease: "easeOut" }} whileHover={{ y: -4 }}
-                                className="group relative bg-white rounded-2xl border border-stone-100 p-6 flex items-center justify-between cursor-pointer overflow-hidden" >
-                                {/* Accent Line */}
-                                <div className="absolute left-0 top-0 h-full w-1 bg-[#9fe870] scale-y-0 group-hover:scale-y-100 origin-top transition-transform duration-300" />
-
-                                <div className="flex items-center gap-5">
-                                    <div className="relative w-14 h-14 rounded-xl bg-stone-100 flex items-center justify-center">
-                                        <img
-                                            src={service.img}
-                                            alt={service.name}
-                                            className="w-9 h-9 transition-transform group-hover:scale-110"
-                                        />
-                                        <div className="absolute inset-0 rounded-xl bg-[#9fe870] blur-lg opacity-0 group-hover:opacity-30 transition-opacity" />
-                                    </div>
-
-                                    <div>
-                                        <h3 className="text-lg font-semibold text-stone-900">
-                                            {service.name}
-                                        </h3>
-                                        <span className="text-sm text-stone-500">
-                                            {service.category}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <BsArrowRightCircleFill className="text-2xl text-stone-400 group-hover:text-stone-900 transition-colors" />
-                            </motion.div>
-                        ))}
-                    </AnimatePresence>
-                </motion.div>
-            </div>
-        </section>
-    );
+                <BsArrowRightCircleFill className="text-2xl text-stone-400 group-hover:text-stone-900 transition-colors" />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      </div>
+    </section>
+  );
 };
 
 
 const PopularProjects = () => {
-    const projects = [
+    const services = [
         {
-            title: "Drywall & Insulation",
-            price: "$250",
+            title: "Cleaning & Maid Service",
             rating: "4.8",
-            img: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=800&auto=format&fit=crop",
-            highlight: false,
+            reviews: "14,600",
+            img: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=800&auto=format&fit=crop",
+            badge: "Popular",
         },
         {
-            title: "Flooring & Hardwood",
-            price: "$250",
+            title: "Pest Control",
             rating: "4.8",
-            img: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=800&auto=format&fit=crop",
-            highlight: true,
-        },
-        {
-            title: "Handyperson for small project",
-            price: "$250",
-            rating: "4.8",
-            img: "https://images.unsplash.com/photo-1600585152915-d208bec867a1?q=80&w=800&auto=format&fit=crop",
-            highlight: false,
-        },
-        {
-            title: "Fixtures & Pipes Repair / Replace",
-            price: "$250",
-            rating: "4.8",
-            img: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=800&auto=format&fit=crop",
-            highlight: false,
-        },
-        {
-            title: "Roof Installation & Repair",
-            price: "$250",
-            rating: "4.8",
-            img: "https://images.unsplash.com/photo-1604014237800-1c9102c219da?q=80&w=800&auto=format&fit=crop",
-            highlight: true,
-        },
-        {
-            title: "Bathroom Remodel",
-            price: "$250",
-            rating: "4.8",
+            reviews: "14,600",
             img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800&auto=format&fit=crop",
-            highlight: false,
+            badge: "Top Rated",
+        },
+        {
+            title: "Everything Moving",
+            rating: "4.8",
+            reviews: "14,600",
+            img: "https://images.unsplash.com/photo-1600585152915-d208bec867a1?q=80&w=800&auto=format&fit=crop",
+        },
+        {
+            title: "Handyman",
+            rating: "4.8",
+            reviews: "14,600",
+            img: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=800&auto=format&fit=crop",
         },
     ];
 
     return (
-        <section className="bg-white py-12">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Heading */}
-                <div className="mb-14">
-                    <h2 className="text-4xl font-bold text-stone-900">
-                        Popular home projects
+        <section className="bg-gradient-to-b from-white to-stone-50 py-16">
+            <div className="max-w-7xl mx-auto px-4">
+                {/* Header */}
+                <div className="mb-12">
+                    <h2 className="text-3xl md:text-4xl font-bold text-stone-900">
+                        Browse by category
                     </h2>
-                    <p className="mt-2 text-stone-500 max-w-xl">
-                        Professional services to keep your home in perfect condition
+                    <p className="text-stone-500 mt-2">
+                        Trusted professionals for every service
                     </p>
                 </div>
 
-                {/* Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {projects.map((item, i) => (
-                        <motion.div key={i} whileHover={{ y: -8 }} transition={{ duration: 0.3, ease: "easeOut" }}
-                            className="group bg-stone-50 rounded-2xl overflow-hidden border border-stone-100 hover:shadow-2xl" >
+                {/* Cards */}
+                <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                    {services.map((item, i) => (
+                        <motion.div
+                            key={i}
+                            whileHover={{ y: -8 }}
+                            transition={{ duration: 0.3 }}
+                            className="group relative bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl"
+                        >
                             {/* Image */}
-                            <div className="relative h-52 overflow-hidden">
-                                <img src={item.img} alt={item.title} loading="lazy"
-                                    onError={(e) => (e.currentTarget.src =
-                                        "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=800&auto=format&fit=crop")
-                                    }
-                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                            <div className="relative h-56 overflow-hidden">
+                                <img
+                                    src={item.img}
+                                    alt={item.title}
+                                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                                 />
 
-                                {/* Featured badge */}
-                                {item.highlight && (
-                                    <span className="absolute top-4 left-4 bg-[#9fe870] text-stone-900 text-xs font-bold px-3 py-1 rounded-full shadow">
-                                        Featured
+                                {/* Gradient overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
+
+                                {/* Badge */}
+                                {item.badge && (
+                                    <span className="absolute top-4 left-4 bg-white text-stone-900 text-xs font-semibold px-3 py-1 rounded-full shadow">
+                                        {item.badge}
                                     </span>
                                 )}
+
+                                {/* Arrow */}
+                                <div className="absolute top-4 right-4 bg-white/90 p-2 rounded-full opacity-0 group-hover:opacity-100 transition">
+                                    <FiArrowUpRight />
+                                </div>
                             </div>
 
                             {/* Content */}
-                            <div className="p-6 space-y-4">
-                                <div className="flex items-start justify-between gap-4">
-                                    <h3 className="font-semibold text-stone-900 leading-snug">
-                                        {item.title}
-                                    </h3>
+                            <div className="p-5 space-y-3">
+                                <h3 className="text-lg font-semibold text-stone-900">
+                                    {item.title}
+                                </h3>
 
-                                    <div className="flex items-center gap-1 text-sm text-stone-600 shrink-0">
-                                        <AiFillStar className="text-yellow-400" />
-                                        {item.rating}
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between pt-3">
-                                    <span className="text-xl font-bold text-stone-900">
-                                        {item.price}
+                                {/* Rating */}
+                                <div className="flex items-center gap-2 text-sm">
+                                    <AiFillStar className="text-yellow-400" />
+                                    <span className="font-medium">{item.rating}</span>
+                                    <span className="text-stone-400">
+                                        ({item.reviews} reviews)
                                     </span>
-
-                                    <button className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300
-                                        ${item.highlight ? "bg-[#9fe870] text-stone-900 hover:scale-105 hover:shadow" : "bg-stone-200 text-stone-800 hover:bg-stone-300"}`} >
-                                        Book now
-                                    </button>
                                 </div>
+
+                                {/* CTA */}
+                                <button className="mt-4 w-full rounded-xl bg-stone-900 text-white py-2 text-sm font-medium transition hover:bg-stone-800">
+                                    Book Service
+                                </button>
                             </div>
+
+                            {/* Hover glow */}
+                            <div className="absolute inset-0 rounded-3xl ring-1 ring-transparent group-hover:ring-stone-200 transition" />
                         </motion.div>
                     ))}
                 </div>
