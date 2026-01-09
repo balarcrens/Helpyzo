@@ -66,7 +66,7 @@ const AboutHero = () => (
                     About Us
                 </span>
 
-                <h1 className="text-5xl md:text-6xl font-extrabold text-white leading-tight">
+                <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white leading-tight">
                     Building trust through
                     <span className="block text-gradient bg-gradient-to-r from-[#9fe870] via-[#70ffac] to-[#9fe870] bg-clip-text text-transparent">
                         quality home services

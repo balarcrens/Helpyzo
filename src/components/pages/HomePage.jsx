@@ -1,14 +1,16 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from 'react';
+import { useState, useRef } from 'react';
 import { FiMapPin, FiSearch, FiPhoneCall, FiThumbsUp, FiArrowUpRight } from 'react-icons/fi';
 import Header from '../Layout/Header.jsx';
 import Layout from '../Layout/Layout.jsx';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { FaArrowRight, FaThermometerHalf, FaTools } from 'react-icons/fa'
-import { FaShapes, FaDroplet, FaLightbulb } from 'react-icons/fa6';
+import { FaDroplet, FaLightbulb } from 'react-icons/fa6';
 import { HiArrowLongRight } from 'react-icons/hi2';
 import { AiFillStar } from 'react-icons/ai';
+import { HiBadgeCheck } from "react-icons/hi";
 import { BsArrowRightCircleFill } from 'react-icons/bs';
+import { Link, useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
     return (
@@ -524,199 +526,270 @@ const ServicesList = () => {
             : services.filter(s => s.category === activeCategory);
 
     return (
-    <section className="bg-white py-20 font-sans">
-      <div className="max-w-7xl mx-auto px-6">
-        {/* Header */}
-        <div className="mb-14 flex flex-wrap flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-          <div className="space-y-3">
-            <span className="text-xs font-semibold tracking-widest text-[#7ccf52]">
-              SERVICES
-            </span>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-stone-900">
-              Popular services. <span className="text-stone-400">One place.</span>
-            </h2>
-          </div>
+        <section className="bg-white py-20 font-sans">
+            <div className="max-w-7xl mx-auto px-6">
+                {/* Header */}
+                <div className="mb-14 flex flex-wrap flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+                    <div className="space-y-3">
+                        <span className="text-xs font-semibold tracking-widest text-[#7ccf52]">
+                            SERVICES
+                        </span>
+                        <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-stone-900">
+                            Popular services. <span className="text-stone-400">One place.</span>
+                        </h2>
+                    </div>
 
-          <p className="max-w-sm text-base leading-relaxed text-stone-600">
-            Filter by category to quickly find the service you need.
-          </p>
-        </div>
-
-        {/* Category Tabs */}
-        <div className="flex flex-wrap gap-3 mb-12">
-          {categories.map((cat) => {
-            const active = activeCategory === cat;
-            return (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`relative px-6 py-2 rounded-full text-sm font-semibold transition-colors ${
-                  active
-                    ? "text-stone-900"
-                    : "text-stone-500 hover:text-stone-900"
-                }`}
-              >
-                {active && (
-                  <motion.span
-                    layoutId="active-pill"
-                    className="absolute inset-0 rounded-full bg-[#9fe870] shadow-md"
-                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                  />
-                )}
-                <span className="relative z-10">{cat}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Services Grid */}
-        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <AnimatePresence mode="popLayout">
-            {filtered.map((service) => (
-              <motion.div
-                key={service.name}
-                layout
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 24 }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-                whileHover={{ y: -4 }}
-                className="group relative bg-white rounded-2xl border border-stone-100 p-6 flex items-center justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-              >
-                {/* Accent Line */}
-                <div className="absolute left-0 top-0 h-full w-1 bg-[#9fe870] scale-y-0 group-hover:scale-y-100 origin-top transition-transform duration-300" />
-
-                <div className="flex items-center gap-5">
-                  <div className="relative w-14 h-14 rounded-xl bg-stone-100 flex items-center justify-center transition-transform group-hover:scale-105">
-                    <img
-                      src={service.img}
-                      alt={service.name}
-                      className="w-9 h-9"
-                    />
-                    <div className="absolute inset-0 rounded-xl bg-[#9fe870] blur-lg opacity-0 group-hover:opacity-20 transition-opacity" />
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold text-stone-900">
-                      {service.name}
-                    </h3>
-                    <span className="text-sm text-stone-500">
-                      {service.category}
-                    </span>
-                  </div>
+                    <p className="max-w-sm text-base leading-relaxed text-stone-600">
+                        Filter by category to quickly find the service you need.
+                    </p>
                 </div>
 
-                <BsArrowRightCircleFill className="text-2xl text-stone-400 group-hover:text-stone-900 transition-colors" />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
-      </div>
-    </section>
-  );
+                {/* Category Tabs */}
+                <div className="flex flex-wrap gap-3 mb-12">
+                    {categories.map((cat) => {
+                        const active = activeCategory === cat;
+                        return (
+                            <button
+                                key={cat}
+                                onClick={() => setActiveCategory(cat)}
+                                className={`relative px-6 py-2 rounded-full text-sm font-semibold transition-colors ${active
+                                    ? "text-stone-900"
+                                    : "text-stone-500 hover:text-stone-900"
+                                    }`}
+                            >
+                                {active && (
+                                    <motion.span
+                                        layoutId="active-pill"
+                                        className="absolute inset-0 rounded-full bg-[#9fe870] shadow-md"
+                                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                                    />
+                                )}
+                                <span className="relative z-10">{cat}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* Services Grid */}
+                <motion.div layout className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <AnimatePresence mode="popLayout">
+                        {filtered.map((service) => (
+                            <motion.div
+                                key={service.name}
+                                layout
+                                initial={{ opacity: 0, y: 24 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 24 }}
+                                transition={{ duration: 0.35, ease: "easeOut" }}
+                                whileHover={{ y: -4 }}
+                                className="group relative bg-white rounded-2xl border border-stone-100 p-6 flex items-center justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                            >
+                                {/* Accent Line */}
+                                <div className="absolute left-0 top-0 h-full w-1 bg-[#9fe870] scale-y-0 group-hover:scale-y-100 origin-top transition-transform duration-300" />
+
+                                <div className="flex items-center gap-5">
+                                    <div className="relative w-14 h-14 rounded-xl bg-stone-100 flex items-center justify-center transition-transform group-hover:scale-105">
+                                        <img
+                                            src={service.img}
+                                            alt={service.name}
+                                            className="w-9 h-9"
+                                        />
+                                        <div className="absolute inset-0 rounded-xl bg-[#9fe870] blur-lg opacity-0 group-hover:opacity-20 transition-opacity" />
+                                    </div>
+
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-stone-900">
+                                            {service.name}
+                                        </h3>
+                                        <span className="text-sm text-stone-500">
+                                            {service.category}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <BsArrowRightCircleFill className="text-2xl text-stone-400 group-hover:text-stone-900 transition-colors" />
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </motion.div>
+            </div>
+        </section>
+    );
 };
 
 
 const PopularProjects = () => {
+    const navigate = useNavigate();
     const services = [
         {
             title: "Cleaning & Maid Service",
-            rating: "4.8",
-            reviews: "14,600",
+            rating: "5.0",
+            reviews: "84",
+            price: "$80",
             img: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=800&auto=format&fit=crop",
             badge: "Popular",
+            slug: 'cleaning-service'
         },
         {
             title: "Pest Control",
-            rating: "4.8",
-            reviews: "14,600",
+            rating: "4.9",
+            reviews: "152",
+            price: "$65",
             img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800&auto=format&fit=crop",
             badge: "Top Rated",
+            slug: 'pest-control'
         },
         {
             title: "Everything Moving",
             rating: "4.8",
-            reviews: "14,600",
+            reviews: "91",
+            price: "$65",
             img: "https://images.unsplash.com/photo-1600585152915-d208bec867a1?q=80&w=800&auto=format&fit=crop",
+            slug: 'everything-moving'
         },
         {
             title: "Handyman",
-            rating: "4.8",
-            reviews: "14,600",
+            rating: "4.9",
+            reviews: "592",
+            price: "$40",
             img: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=800&auto=format&fit=crop",
+            slug: 'handyman'
         },
+        {
+            title: "Electrician & Wiring Service",
+            rating: "4.8",
+            reviews: "268",
+            price: "$55",
+            img: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=800&q=80",
+            badge: "Verified",
+            slug: 'electrical-wiring-service'
+        }
     ];
 
+    const sliderRef = useRef(null);
+    const isDragging = useRef(false);
+    const startX = useRef(0);
+    const scrollLeft = useRef(0);
+
+    const startDrag = (e) => {
+        isDragging.current = true;
+        sliderRef.current.classList.add("dragging");
+        startX.current = e.pageX || e.touches[0].pageX;
+        scrollLeft.current = sliderRef.current.scrollLeft;
+    };
+
+    const stopDrag = () => {
+        isDragging.current = false;
+        sliderRef.current.classList.remove("dragging");
+    };
+
+    const onDrag = (e) => {
+        if (!isDragging.current) return;
+        e.preventDefault();
+
+        const x = e.pageX || e.touches[0].pageX;
+        const walk = (x - startX.current) * 1.5; // smooth speed
+        sliderRef.current.scrollLeft = scrollLeft.current - walk;
+    };
+
     return (
-        <section className="bg-gradient-to-b from-white to-stone-50 py-16">
+        <section className="py-16">
             <div className="max-w-7xl mx-auto px-4">
-                {/* Header */}
-                <div className="mb-12">
-                    <h2 className="text-3xl md:text-4xl font-bold text-stone-900">
-                        Browse by category
+                <div className="mb-8">
+                    <h2 className="text-3xl font-bold text-stone-900">
+                        Top Rated Services Near You
                     </h2>
                     <p className="text-stone-500 mt-2">
                         Trusted professionals for every service
                     </p>
                 </div>
 
-                {/* Cards */}
-                <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                <div ref={sliderRef} className=" flex gap-6 overflow-x-auto no-scrollbar pb-6 cursor-grab active:cursor-grabbing scroll-smooth snap-x snap-mandatory"
+                    onMouseDown={startDrag}
+                    onMouseLeave={stopDrag}
+                    onMouseUp={stopDrag}
+                    onMouseMove={onDrag}
+                    onTouchStart={startDrag}
+                    onTouchEnd={stopDrag}
+                    onTouchMove={onDrag}
+                >
+
                     {services.map((item, i) => (
-                        <motion.div
-                            key={i}
-                            whileHover={{ y: -8 }}
-                            transition={{ duration: 0.3 }}
-                            className="group relative bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl"
+                        <div key={i} onClick={() => navigate(`/service/${item.slug}`)} onMouseDown={startDrag}
+                            className=" snap-start select-none cursor-grab active:cursor-grabbing bg-white rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.08)] transition flex-shrink-0 w-[85%] sm:w-[70%] md:w-[45%] lg:w-[360px]"
                         >
-                            {/* Image */}
-                            <div className="relative h-56 overflow-hidden">
-                                <img
-                                    src={item.img}
-                                    alt={item.title}
-                                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                            {/* IMAGE */}
+                            <div className="relative h-56 rounded-t-2xl overflow-hidden">
+                                <img src={item.img} alt={item.title} draggable={false}
+                                    className="h-full w-full object-cover pointer-events-none"
                                 />
 
-                                {/* Gradient overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
 
-                                {/* Badge */}
+                                <div className="absolute top-4 right-4 bg-white p-2 rounded-full shadow">
+                                    <HiBadgeCheck className="text-blue-600 text-lg" />
+                                </div>
+
                                 {item.badge && (
-                                    <span className="absolute top-4 left-4 bg-white text-stone-900 text-xs font-semibold px-3 py-1 rounded-full shadow">
+                                    <span className="absolute top-4 left-4 bg-white text-xs font-semibold px-3 py-1 rounded-full shadow">
                                         {item.badge}
                                     </span>
                                 )}
 
-                                {/* Arrow */}
-                                <div className="absolute top-4 right-4 bg-white/90 p-2 rounded-full opacity-0 group-hover:opacity-100 transition">
-                                    <FiArrowUpRight />
+                                {/* Avatar */}
+                                <div className="absolute bottom-2 left-4">
+                                    <img
+                                        src="https://i.pravatar.cc/60"
+                                        alt="provider"
+                                        className="w-12 h-12 rounded-full border-2 border-white shadow"
+                                    />
                                 </div>
                             </div>
 
-                            {/* Content */}
-                            <div className="p-5 space-y-3">
+                            {/* CONTENT */}
+                            <div className="pt-10 px-5 pb-5">
                                 <h3 className="text-lg font-semibold text-stone-900">
                                     {item.title}
                                 </h3>
 
-                                {/* Rating */}
-                                <div className="flex items-center gap-2 text-sm">
+                                <div className="flex items-center gap-2 text-sm mt-1">
                                     <AiFillStar className="text-yellow-400" />
-                                    <span className="font-medium">{item.rating}</span>
+                                    <span className="font-medium">
+                                        {item.rating}
+                                    </span>
                                     <span className="text-stone-400">
                                         ({item.reviews} reviews)
                                     </span>
                                 </div>
 
-                                {/* CTA */}
-                                <button className="mt-4 w-full rounded-xl bg-stone-900 text-white py-2 text-sm font-medium transition hover:bg-stone-800">
-                                    Book Service
-                                </button>
-                            </div>
+                                {/* TAGS */}
+                                <div className="flex gap-2 mt-3 flex-wrap">
+                                    <span className="px-3 py-1 bg-stone-100 rounded-full text-xs">
+                                        Professional
+                                    </span>
+                                    <span className="px-3 py-1 bg-stone-100 rounded-full text-xs">
+                                        Verified
+                                    </span>
+                                    <span className="px-3 py-1 bg-stone-100 rounded-full text-xs">
+                                        Fast Service
+                                    </span>
+                                </div>
 
-                            {/* Hover glow */}
-                            <div className="absolute inset-0 rounded-3xl ring-1 ring-transparent group-hover:ring-stone-200 transition" />
-                        </motion.div>
+                                {/* FOOTER */}
+                                <div className="flex items-center justify-between mt-5">
+                                    <p className="text-sm text-stone-600">
+                                        Starting at{" "}
+                                        <span className="font-semibold">
+                                            {item.price}
+                                        </span>
+                                    </p>
+
+                                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-medium transition">
+                                        Book Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     ))}
                 </div>
             </div>

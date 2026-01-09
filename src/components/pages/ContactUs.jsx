@@ -125,7 +125,7 @@ const ContactUs = () => {
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="w-full bg-[#9fe870] text-black font-bold py-4 rounded-full shadow-lg hover:shadow-2xl hover:scale-105 transition transform flex items-center justify-center gap-2"
+                                        className="w-full bg-[#9fe870] text-black font-bold py-4 rounded-xl shadow-lg hover:shadow-2xl hover:scale-102 transition transform flex items-center justify-center gap-2"
                                     >
                                         {isSubmitting ? "Sending..." : "Send Message"}
                                         <FiCheckCircle size={20} />
