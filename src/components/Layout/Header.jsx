@@ -149,7 +149,6 @@ const Header = () => {
 
                     {/* RIGHT SIDE ACTIONS */}
                     <div className="hidden lg:flex items-center gap-4">
-                        {/* 👤 If logged in -> show Profile */}
                         {isLoggedIn ? (
                             <div className="relative">
                                 <button
@@ -179,7 +178,7 @@ const Header = () => {
                                 {/* Login */}
                                 <button
                                     onClick={() => setIsLoginModal(true)}
-                                    className="bg-[#b4f481] cursor-pointer hover:bg-[#9fe870] text-black px-8 py-3 rounded-full font-bold text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-[#9fe870]/40"
+                                    className="bg-[#9FE870] cursor-pointer hover:bg-[#9fe870] text-white px-8 py-3 rounded-full font-bold text-sm transition-all hover:scale-[1.02] active:scale-95"
                                 >
                                     Login
                                 </button>

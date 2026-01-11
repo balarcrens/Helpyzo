@@ -4,7 +4,7 @@ import Layout from "../Layout/Layout";
 import Header from "../Layout/Header";
 import { FiCheckCircle } from "react-icons/fi";
 import { FaUsers, FaTools, FaSmile } from "react-icons/fa";
-import { motion, animate, useInView } from "framer-motion";
+import { motion, animate, useInView, useMotionValue, useSpring } from "framer-motion";
 
 const STATS = [
     { icon: <FaUsers />, value: 10000, suffix: "+", label: "Happy Customers" },
@@ -264,38 +264,73 @@ const AboutStatsShowcase = () => (
 );
 
 /* ---------- Call to Action ---------- */
-const AboutCTA = () => (
-    <section className="py-32 bg-gradient-to-r from-stone-900 via-stone-800 to-stone-900 text-center relative overflow-hidden">
-        {/* Floating Gradient Blob */}
-        <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-[#9fe870]/10 blur-3xl animate-pulse-slow" />
-        <div className="absolute -bottom-32 -right-16 w-96 h-96 rounded-full bg-[#9fe870]/5 blur-3xl animate-pulse-slow" />
+const AboutCTA = () => {
+    const [isHovering, setIsHovering] = useState(false);
 
-        <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="max-w-3xl mx-auto px-6 space-y-6"
+    // Mouse position
+    const mouseX = useMotionValue(0);
+    const mouseY = useMotionValue(0);
+
+    // Smooth movement
+    const smoothX = useSpring(mouseX, { stiffness: 150, damping: 25 });
+    const smoothY = useSpring(mouseY, { stiffness: 150, damping: 25 });
+
+    const handleMouseMove = (e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        mouseX.set(e.clientX - rect.left);
+        mouseY.set(e.clientY - rect.top);
+    };
+
+    return (
+        <section
+            onMouseMove={handleMouseMove}
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
+            className="py-32 bg-gradient-to-r from-stone-900 via-stone-800 to-stone-900 text-center relative overflow-hidden"
         >
-            <h2 className="text-4xl md:text-5xl font-extrabold text-white">
-                Ready to experience
-                <span className="block text-[#9fe870]"> stress-free home services?</span>
-            </h2>
+            <motion.div
+                className="pointer-events-none absolute w-64 h-64 rounded-full bg-[#9fe870]/30 blur-3xl"
+                style={{
+                    left: smoothX,
+                    top: smoothY,
+                    translateX: "-50%",
+                    translateY: "-50%",
+                    opacity: isHovering ? 1 : 0,
+                }}
+            />
 
-            <p className="text-gray-300 text-lg">
-                Book trusted professionals in minutes.
-            </p>
+            <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-[#9fe870]/10 blur-3xl animate-pulse-slow" />
+            <div className="absolute -bottom-32 -right-16 w-96 h-96 rounded-full bg-[#9fe870]/5 blur-3xl animate-pulse-slow" />
 
-            <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="mt-10 px-12 py-4 bg-[#9fe870] text-stone-900 font-bold rounded-full shadow-lg hover:shadow-xl transition"
+            <motion.div
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="relative z-10 max-w-3xl mx-auto px-6 space-y-6"
             >
-                Get Started
-            </motion.button>
-        </motion.div>
-    </section>
-);
+                <h2 className="text-4xl md:text-5xl font-extrabold text-white">
+                    Ready to experience
+                    <span className="block text-[#9fe870]">
+                        stress-free home services?
+                    </span>
+                </h2>
+
+                <p className="text-gray-300 text-lg">
+                    Book trusted professionals in minutes.
+                </p>
+
+                <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="mt-10 px-12 py-4 bg-[#9fe870] text-stone-900 font-bold rounded-full shadow-lg hover:shadow-xl transition"
+                >
+                    Get Started
+                </motion.button>
+            </motion.div>
+        </section>
+    );
+};
 
 /* ---------- Stat Card ---------- */
 const StatCard = ({ title, subtitle, desc }) => (

@@ -30,7 +30,6 @@ export default function ServiceDetail() {
             <Header />
 
             <div className="bg-gradient-to-b from-stone-100 to-white min-h-screen">
-
                 {/* HERO */}
                 <div className="h-[420px] w-full relative">
                     <img
@@ -90,10 +89,7 @@ export default function ServiceDetail() {
                                         "Pipeline Restoration",
                                         "High-Pressure Drain Cleaning",
                                     ].map(service => (
-                                        <div
-                                            key={service}
-                                            className="bg-stone-50 rounded-xl px-4 py-3 text-sm font-medium text-stone-700 shadow-sm"
-                                        >
+                                        <div key={service} className="bg-stone-50 rounded-xl px-4 py-3 text-sm font-medium text-stone-700 shadow-sm">
                                             {service}
                                         </div>
                                     ))}
@@ -123,15 +119,11 @@ export default function ServiceDetail() {
                                     {[1, 2].map(i => (
                                         <div key={i} className="rounded-2xl overflow-hidden shadow">
                                             <div className="grid grid-cols-2">
-                                                <img
-                                                    src="https://images.unsplash.com/photo-1600585152915-d208bec867a1"
-                                                    className="h-40 w-full object-cover"
-                                                    alt="Before"
+                                                <img src="https://images.unsplash.com/photo-1600585152915-d208bec867a1"
+                                                    className="h-40 w-full object-cover" alt="Before"
                                                 />
-                                                <img
-                                                    src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c"
-                                                    className="h-40 w-full object-cover"
-                                                    alt="After"
+                                                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c"
+                                                    className="h-40 w-full object-cover" alt="After"
                                                 />
                                             </div>
                                         </div>
@@ -145,9 +137,7 @@ export default function ServiceDetail() {
                                     Client Experiences
                                 </h3>
 
-                                <Swiper
-                                    modules={[Autoplay, Navigation]}
-                                    autoplay={{ delay: 4000 }}
+                                <Swiper modules={[Autoplay, Navigation]} autoplay={{ delay: 2000 }}
                                     navigation={{
                                         prevEl: ".prev-review",
                                         nextEl: ".next-review",
@@ -188,11 +178,8 @@ export default function ServiceDetail() {
                                 </h3>
 
                                 <div className="rounded-2xl overflow-hidden shadow mb-5">
-                                    <iframe
-                                        title="map"
-                                        src="https://maps.google.com/maps?q=Surat&output=embed"
-                                        className="w-full h-60"
-                                        loading="lazy"
+                                    <iframe title="map" src="https://maps.google.com/maps?q=Surat&output=embed"
+                                        className="w-full h-60" loading="lazy"
                                     />
                                 </div>
 
@@ -226,10 +213,7 @@ export default function ServiceDetail() {
                                             <span key={d} className="font-semibold text-stone-400">{d}</span>
                                         ))}
                                         {[...Array(31)].map((_, i) => (
-                                            <span
-                                                key={i}
-                                                className="py-2 rounded-xl cursor-pointer hover:bg-blue-100 transition"
-                                            >
+                                            <span key={i} className="py-2 rounded-xl cursor-pointer hover:bg-blue-100 transition">
                                                 {i + 1}
                                             </span>
                                         ))}
@@ -242,10 +226,7 @@ export default function ServiceDetail() {
                                 <h4 className="font-semibold mb-3">Available Slots</h4>
                                 <div className="grid grid-cols-2 gap-3">
                                     {["9:00 AM", "11:30 AM", "2:00 PM", "5:00 PM"].map(time => (
-                                        <button
-                                            key={time}
-                                            className="py-2 rounded-xl bg-stone-100 hover:bg-blue-100 transition text-sm"
-                                        >
+                                        <button key={time} className="py-2 rounded-xl bg-stone-100 hover:bg-blue-100 transition text-sm">
                                             {time}
                                         </button>
                                     ))}
@@ -267,11 +248,11 @@ export default function ServiceDetail() {
                             <div className="space-y-3 text-sm text-stone-600">
                                 <div className="flex items-center gap-3">
                                     <AiOutlinePhone className="text-blue-600" />
-                                    (300) 365-7729
+                                    +91 1234567890
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <AiOutlineMail className="text-blue-600" />
-                                    support@homefixpro.com
+                                    helpyzo@gmail.com
                                 </div>
                             </div>
                         </div>

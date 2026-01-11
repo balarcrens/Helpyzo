@@ -705,18 +705,11 @@ const PopularProjects = () => {
                 </div>
 
                 <div ref={sliderRef} className=" flex gap-6 overflow-x-auto no-scrollbar pb-6 cursor-grab active:cursor-grabbing scroll-smooth snap-x snap-mandatory"
-                    onMouseDown={startDrag}
-                    onMouseLeave={stopDrag}
-                    onMouseUp={stopDrag}
-                    onMouseMove={onDrag}
-                    onTouchStart={startDrag}
-                    onTouchEnd={stopDrag}
-                    onTouchMove={onDrag}
-                >
-
+                    onMouseDown={startDrag} onMouseLeave={stopDrag} onMouseUp={stopDrag} onMouseMove={onDrag}
+                    onTouchStart={startDrag} onTouchEnd={stopDrag} onTouchMove={onDrag} >
                     {services.map((item, i) => (
                         <div key={i} onClick={() => navigate(`/service/${item.slug}`)} onMouseDown={startDrag}
-                            className=" snap-start select-none cursor-grab active:cursor-grabbing bg-white rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.08)] transition flex-shrink-0 w-[85%] sm:w-[70%] md:w-[45%] lg:w-[360px]"
+                            className="snap-start select-none cursor-grab hover:cursor-pointer active:cursor-grabbing bg-white rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.08)] transition flex-shrink-0 w-[85%] sm:w-[70%] md:w-[45%] lg:w-[360px]"
                         >
                             {/* IMAGE */}
                             <div className="relative h-56 rounded-t-2xl overflow-hidden">
@@ -738,9 +731,7 @@ const PopularProjects = () => {
 
                                 {/* Avatar */}
                                 <div className="absolute bottom-2 left-4">
-                                    <img
-                                        src="https://i.pravatar.cc/60"
-                                        alt="provider"
+                                    <img src="https://i.pravatar.cc/60" alt="provider"
                                         className="w-12 h-12 rounded-full border-2 border-white shadow"
                                     />
                                 </div>
