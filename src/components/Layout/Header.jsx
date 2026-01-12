@@ -54,6 +54,10 @@ const Header = () => {
             path: "/",
         },
         {
+            label: "Services",
+            path: "/services",
+        },
+        {
             label: "Interior",
             dropdown: [
                 { label: "Kitchen", path: "/interior/kitchen" },

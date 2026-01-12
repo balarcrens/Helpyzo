@@ -7,6 +7,7 @@ import ContactUs from './components/pages/ContactUs.jsx'
 import './App.css'
 import ServiceDetail from './components/pages/ServiceDetail.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
+import Services from './components/pages/Services.jsx'
 
 const App = () => {
   return (
@@ -20,6 +21,7 @@ const App = () => {
         <ScrollToTop />
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/services" element={<Services />} />
           <Route path="/service/:slug" element={<ServiceDetail />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
