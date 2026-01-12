@@ -89,11 +89,11 @@ const Register = () => {
                 <input
                     type={type}
                     {...register(name, validation)}
-                    className={`w-full rounded-xl border border-white/5 bg-white/3 ${Icon ? 'pl-11' : 'px-4'} py-3 text-sm text-white transition-all placeholder:text-white/10 focus:border-[#9fe870]/40 focus:bg-white/[0.07] outline-none`}
+                    className={`w-full rounded-xl border border-white/5 bg-white/3 ${Icon ? 'pl-11' : 'px-4'} py-3 text-sm text-white transition-all placeholder-white/30 focus:border-[#9fe870]/40 focus:bg-white/[0.07] outline-none`}
                     placeholder={placeholder}
                 />
             </div>
-            {errors[name] && <span className="text-[10px] text-red-400 mt-1 ml-1 flex items-center gap-1"><FiAlertCircle /> {errors[name].message}</span>}
+            {errors[name] && <span className="text-[12px] text-red-400 mt-1 ml-1 flex items-center gap-1"><FiAlertCircle /> {errors[name].message}</span>}
         </div>
     );
 

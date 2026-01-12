@@ -74,14 +74,6 @@ const Header = () => {
             ],
         },
         {
-            label: "Lawn & Garden",
-            dropdown: [
-                { label: "Landscaping", path: "/garden/landscaping" },
-                { label: "Tree Care", path: "/garden/tree-care" },
-                { label: "Irrigation", path: "/garden/irrigation" },
-            ],
-        },
-        {
             label: "More",
             dropdown: [
                 { label: "About Us", path: "/about" },
