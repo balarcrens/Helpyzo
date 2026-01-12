@@ -56,11 +56,10 @@ const Header = () => {
 
       <header className="fixed top-0 z-50 w-full px-4 py-2 sm:px-6">
         <div
-          className={`mx-auto max-w-7xl transition-all duration-500 rounded-4xl px-6 py-3 flex items-center justify-between ${
-            isScrolled
+          className={`mx-auto max-w-7xl transition-all duration-500 rounded-4xl px-6 py-3 flex items-center justify-between ${isScrolled
               ? "bg-black/40 backdrop-blur-2xl border border-white/10 shadow-2xl"
               : "bg-black/20 backdrop-blur-none border border-white/5"
-          }`}
+            }`}
         >
           {/* Logo */}
           <div
@@ -80,11 +79,10 @@ const Header = () => {
                 onMouseLeave={() => setActiveDropdown(null)}
               >
                 <button
-                  className={`flex items-center cursor-pointer gap-1.5 px-5 py-2 text-sm font-medium transition-all rounded-full ${
-                    item.active
+                  className={`flex items-center cursor-pointer gap-1.5 px-5 py-2 text-sm font-medium transition-all rounded-full ${item.active
                       ? "bg-white/20 text-white"
                       : "text-gray-200 hover:text-white hover:bg-white/5"
-                  }`}
+                    }`}
                 >
                   {item.label}
                   {item.dropdown && <FiChevronDown className="text-xs opacity-70" />}
@@ -212,4 +210,3 @@ const Header = () => {
 };
 
 export default Header;
-  

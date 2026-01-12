@@ -44,7 +44,7 @@ const Footer = () => {
     return (
         <footer className="w-full font-serif bg-white pt-24">
             <div className="mx-auto">
-                <div className="mb-24 max-w-7xl mx-auto">
+                <div className="mb-24 max-w-7xl mx-20">
                     <div className="flex items-center gap-4 mb-10">
                         <h2 className="text-3xl font-bold tracking-tight text-stone-900">
                             Popular Cities

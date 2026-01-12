@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom'
 import HomePage from './components/pages/HomePage.jsx'
 import AboutUs from './components/pages/AboutUs.jsx'
 import Register from './components/pages/Register.jsx'
+import './App.css'
 
 const App = () => {
   return (

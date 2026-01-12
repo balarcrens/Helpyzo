@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { FiMapPin, FiSearch, FiPhoneCall, FiThumbsUp, FiArrowUpRight } from 'react-icons/fi';
 import Header from '../Layout/Header.jsx';
 import Layout from '../Layout/Layout.jsx';
@@ -635,8 +635,32 @@ const PopularProjects = () => {
         },
     ];
 
+    const sliderRef = useRef(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const startX = useRef(0);
+    const scrollLeft = useRef(0);
+
+    const onMouseDown = (e) => {
+        setIsDragging(true);
+        startX.current = e.pageX - sliderRef.current.offsetLeft;
+        scrollLeft.current = sliderRef.current.scrollLeft;
+    };
+
+    const onMouseLeave = () => setIsDragging(false);
+    const onMouseUp = () => setIsDragging(false);
+
+    const onMouseMove = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.pageX - sliderRef.current.offsetLeft;
+        const walk = (x - startX.current) * 1.5; // scroll speed
+        sliderRef.current.scrollLeft = scrollLeft.current - walk;
+    };
+
     return (
-        <section className="bg-gradient-to-b from-white to-stone-50 py-14">
+        <section className="bg-gradient-to-b  from-white to-stone-50 py-14" style={{
+
+        }}>
             <div className="max-w-7xl mx-auto px-4">
                 {/* Header */}
                 <div className="mb-10">
@@ -647,23 +671,29 @@ const PopularProjects = () => {
 
                 {/* Cards wrapper */}
                 <div
-                    className="
-            flex gap-5 overflow-x-auto pb-4
-            md:grid md:grid-cols-2 md:gap-8 md:overflow-visible
-            lg:grid-cols-4
-          "
+                    ref={sliderRef}
+                    onMouseDown={onMouseDown}
+                    onMouseLeave={onMouseLeave}
+                    onMouseUp={onMouseUp}
+                    onMouseMove={onMouseMove}
+                    className={`
+    flex gap-5 overflow-x-auto pb-4 select-none no-scrollbar
+    ${isDragging ? "cursor-grabbing" : "cursor-grab"}
+    md:grid md:grid-cols-2 md:gap-8 md:overflow-visible
+    lg:grid-cols-4
+  `}
                 >
+
                     {services.map((item, i) => (
                         <motion.div
                             key={i}
                             whileHover={{ y: -6 }}
-                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            transition={{ duration: 0.3 }}
                             className="
                 min-w-[260px] md:min-w-0
                 bg-white rounded-3xl
                 shadow-sm hover:shadow-xl
                 transition-shadow
-                group cursor-pointer
               "
                         >
                             {/* Image */}
@@ -671,21 +701,17 @@ const PopularProjects = () => {
                                 <img
                                     src={item.img}
                                     alt={item.title}
-                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                    draggable={false}
+                                    className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
                                 />
-
-                                {/* Hover arrow */}
-                                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur rounded-full p-2 opacity-0 group-hover:opacity-100 transition">
-                                    <FiArrowUpRight className="text-stone-900" />
+                                <div className="absolute top-4 right-4 bg-white/90 rounded-full p-2 opacity-0 hover:opacity-100 transition">
+                                    <FiArrowUpRight />
                                 </div>
                             </div>
 
                             {/* Content */}
                             <div className="p-4 space-y-2">
-                                <h3 className="text-lg font-semibold text-stone-900 leading-snug">
-                                    {item.title}
-                                </h3>
-
+                                <h3 className="text-lg font-semibold">{item.title}</h3>
                                 <div className="flex items-center gap-2 text-sm text-stone-600">
                                     <AiFillStar className="text-yellow-400" />
                                     <span>{item.rating}</span>
