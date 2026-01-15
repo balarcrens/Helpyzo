@@ -625,7 +625,7 @@ const PopularProjects = () => {
             title: "Cleaning & Maid Service",
             rating: "5.0",
             reviews: "84",
-            price: "$80",
+            price: "80",
             img: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=800&auto=format&fit=crop",
             badge: "Popular",
             slug: 'cleaning-service'
@@ -634,7 +634,7 @@ const PopularProjects = () => {
             title: "Pest Control",
             rating: "4.9",
             reviews: "152",
-            price: "$65",
+            price: "65",
             img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800&auto=format&fit=crop",
             badge: "Top Rated",
             slug: 'pest-control'
@@ -643,7 +643,7 @@ const PopularProjects = () => {
             title: "Everything Moving",
             rating: "4.8",
             reviews: "91",
-            price: "$65",
+            price: "65",
             img: "https://images.unsplash.com/photo-1600585152915-d208bec867a1?q=80&w=800&auto=format&fit=crop",
             slug: 'everything-moving'
         },
@@ -651,7 +651,7 @@ const PopularProjects = () => {
             title: "Handyman",
             rating: "4.9",
             reviews: "592",
-            price: "$40",
+            price: "40",
             img: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=800&auto=format&fit=crop",
             slug: 'handyman'
         },
@@ -659,7 +659,7 @@ const PopularProjects = () => {
             title: "Electrician & Wiring Service",
             rating: "4.8",
             reviews: "268",
-            price: "$55",
+            price: "55",
             img: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=800&q=80",
             badge: "Verified",
             slug: 'electrical-wiring-service'
@@ -670,9 +670,11 @@ const PopularProjects = () => {
     const isDragging = useRef(false);
     const startX = useRef(0);
     const scrollLeft = useRef(0);
+    const hasDragged = useRef(false);
 
     const startDrag = (e) => {
         isDragging.current = true;
+        hasDragged.current = false;
         sliderRef.current.classList.add("dragging");
         startX.current = e.pageX || e.touches[0].pageX;
         scrollLeft.current = sliderRef.current.scrollLeft;
@@ -686,10 +688,21 @@ const PopularProjects = () => {
     const onDrag = (e) => {
         if (!isDragging.current) return;
         e.preventDefault();
-
         const x = e.pageX || e.touches[0].pageX;
-        const walk = (x - startX.current) * 1.5; // smooth speed
+        const walk = (x - startX.current) * 1.3;
+        if (Math.abs(walk) > 6) hasDragged.current = true;
         sliderRef.current.scrollLeft = scrollLeft.current - walk;
+    };
+
+    const handleCardClick = (slug) => {
+        if (hasDragged.current) return;
+        navigate(`/service/${slug}`);
+    };
+
+    const badgeStyles = {
+        Popular: "bg-yellow-400 text-white",
+        "Top Rated": "bg-green-500 text-white",
+        Verified: "bg-blue-600 text-white",
     };
 
     return (
@@ -704,81 +717,90 @@ const PopularProjects = () => {
                     </p>
                 </div>
 
-                <div ref={sliderRef} className=" flex gap-6 overflow-x-auto no-scrollbar pb-6 cursor-grab active:cursor-grabbing scroll-smooth snap-x snap-mandatory"
-                    onMouseDown={startDrag} onMouseLeave={stopDrag} onMouseUp={stopDrag} onMouseMove={onDrag}
-                    onTouchStart={startDrag} onTouchEnd={stopDrag} onTouchMove={onDrag} >
+                <div
+                    ref={sliderRef}
+                    className="flex gap-6 overflow-x-auto no-scrollbar pb-2 cursor-grab active:cursor-grabbing select-none"
+                    onMouseDown={startDrag}
+                    onMouseMove={onDrag}
+                    onMouseUp={stopDrag}
+                    onMouseLeave={stopDrag}
+                    onTouchStart={startDrag}
+                    onTouchMove={onDrag}
+                    onTouchEnd={stopDrag}
+                >
                     {services.map((item, i) => (
-                        <div key={i} onClick={() => navigate(`/service/${item.slug}`)} onMouseDown={startDrag}
-                            className="snap-start select-none cursor-grab hover:cursor-pointer active:cursor-grabbing bg-white rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.08)] transition flex-shrink-0 w-[85%] sm:w-[70%] md:w-[45%] lg:w-[360px]"
+                        <div
+                            key={i}
+                            onClick={() => handleCardClick(item.slug)}
+                            className="group flex-shrink-0 w-[340px] bg-white rounded-3xl border border-stone-200 shadow-sm hover:shadow-2xl transition-all duration-300 cursor-pointer"
                         >
                             {/* IMAGE */}
-                            <div className="relative h-56 rounded-t-2xl overflow-hidden">
-                                <img src={item.img} alt={item.title} draggable={false}
-                                    className="h-full w-full object-cover pointer-events-none"
+                            <div className="relative h-56 rounded-t-3xl overflow-hidden">
+                                <img
+                                    src={item.img}
+                                    alt={item.title}
+                                    draggable={false}
+                                    className="h-full w-full object-cover pointer-events-none transition-transform duration-700 group-hover:scale-110"
                                 />
 
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                                {/* gradient overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
 
-                                <div className="absolute top-4 right-4 bg-white p-2 rounded-full shadow">
-                                    <HiBadgeCheck className="text-blue-600 text-lg" />
-                                </div>
-
+                                {/* BADGE */}
                                 {item.badge && (
-                                    <span className="absolute top-4 left-4 bg-white text-xs font-semibold px-3 py-1 rounded-full shadow">
+                                    <span
+                                        className={`absolute top-4 left-4 px-3 py-1 text-xs font-semibold rounded-full backdrop-blur-md ${badgeStyles[item.badge]}`}
+                                    >
                                         {item.badge}
                                     </span>
                                 )}
 
-                                {/* Avatar */}
-                                <div className="absolute bottom-2 left-4">
-                                    <img src="https://i.pravatar.cc/60" alt="provider"
-                                        className="w-12 h-12 rounded-full border-2 border-white shadow"
-                                    />
+                                {/* RATING FLOAT */}
+                                <div className="absolute bottom-4 left-4 flex items-center gap-1 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-medium shadow">
+                                    <AiFillStar className="text-yellow-400" />
+                                    {item.rating}
+                                    <span className="text-stone-500 text-xs">
+                                        ({item.reviews})
+                                    </span>
                                 </div>
                             </div>
 
                             {/* CONTENT */}
-                            <div className="pt-10 px-5 pb-5">
-                                <h3 className="text-lg font-semibold text-stone-900">
+                            <div className="p-5 space-y-3">
+                                <h3 className="font-semibold text-lg leading-snug text-stone-800">
                                     {item.title}
                                 </h3>
 
-                                <div className="flex items-center gap-2 text-sm mt-1">
-                                    <AiFillStar className="text-yellow-400" />
-                                    <span className="font-medium">
-                                        {item.rating}
-                                    </span>
-                                    <span className="text-stone-400">
-                                        ({item.reviews} reviews)
-                                    </span>
+                                <div className="flex items-center gap-2 text-sm text-stone-600">
+                                    <HiBadgeCheck className="text-blue-600" />
+                                    Background verified professional
                                 </div>
 
-                                {/* TAGS */}
-                                <div className="flex gap-2 mt-3 flex-wrap">
-                                    <span className="px-3 py-1 bg-stone-100 rounded-full text-xs">
-                                        Professional
-                                    </span>
-                                    <span className="px-3 py-1 bg-stone-100 rounded-full text-xs">
-                                        Verified
-                                    </span>
-                                    <span className="px-3 py-1 bg-stone-100 rounded-full text-xs">
-                                        Fast Service
-                                    </span>
+                                <div className="flex items-end justify-between pt-2">
+                                    <div>
+                                        <p className="text-xs text-stone-500">Starting from</p>
+                                        <p className="text-xl font-bold text-stone-800">
+                                            ${item.price}
+                                        </p>
+                                    </div>
+                                    <span className="text-xs text-stone-500">⏱ 2–3 hrs</span>
                                 </div>
+                            </div>
 
-                                {/* FOOTER */}
-                                <div className="flex items-center justify-between mt-5">
-                                    <p className="text-sm text-stone-600">
-                                        Starting at{" "}
-                                        <span className="font-semibold">
-                                            {item.price}
-                                        </span>
-                                    </p>
-
-                                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-medium transition">
-                                        Book Now
-                                    </button>
-                                </div>
+                            {/* CTA */}
+                            <div className="px-5 pb-5 flex gap-3">
+                                <button
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex-1 border border-stone-300 hover:border-stone-400 text-stone-700 py-2 rounded-xl text-sm font-medium transition"
+                                >
+                                    Details
+                                </button>
+                                <button
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-sm font-semibold transition shadow-md hover:shadow-lg"
+                                >
+                                    Book Now
+                                </button>
                             </div>
                         </div>
                     ))}
