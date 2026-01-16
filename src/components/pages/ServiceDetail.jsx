@@ -293,7 +293,7 @@ const BookingSidebar = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="bg-white rounded-[28px] max-h-fit p-4 sm:p-8 sticky top-24 space-y-6 border border-stone-100"
+            className="bg-white rounded-[28px] p-4 sm:p-8 sticky top-24 space-y-6 border-t border-stone-100"
         >
             <motion.button
                 whileHover={{ scale: 1.02 }}

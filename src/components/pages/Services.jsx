@@ -172,7 +172,7 @@ const ServicesPage = () => {
                     <div className="absolute inset-0 bg-gradient-to-r from-black/85 to-black/40" />
                 </div>
 
-                <div className="relative z-10 max-w-7xl mx-auto px-6 py-25">
+                <div className="relative z-10 max-w-7xl mx-auto px-6 py-30">
                     <span className="text-sm tracking-widest text-[#9fe870] font-medium uppercase">
                         Trusted Professionals
                     </span>
@@ -192,7 +192,7 @@ const ServicesPage = () => {
                     </div>
                 </div>
 
-                <div className="absolute left-0 right-0 -bottom-23 z-30">
+                <div className="absolute left-0 right-0 -bottom-23 md:-bottom-10 z-30">
                     <div className="max-w-5xl mx-auto px-4">
                         <div className="bg-white rounded-2xl shadow-xl p-4">
                             <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr_auto] gap-3">

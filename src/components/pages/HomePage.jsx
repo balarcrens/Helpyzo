@@ -375,9 +375,8 @@ const ServiceGallery = () => {
     return (
         <div className="bg-linear-to-b from-white to-stone-50 max-w-7xl mx-auto p-4 font-sans">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-auto md:h-112.5">
-
                 {/* Left Card: Large Feature */}
-                <div className="md:col-span-2 relative group overflow-hidden rounded-3xl">
+                <div className="md:col-span-2 col-span-1 relative group overflow-hidden rounded-3xl">
                     <img
                         src="https://images.unsplash.com/photo-1615856210162-9ae33390b1a2?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                         alt="Carpenter working"
@@ -706,7 +705,7 @@ const PopularProjects = () => {
     };
 
     return (
-        <section className="py-16">
+        <section className="py-12">
             <div className="max-w-7xl mx-auto px-4">
                 <div className="mb-8">
                     <h2 className="text-3xl font-bold text-stone-900">
@@ -717,9 +716,7 @@ const PopularProjects = () => {
                     </p>
                 </div>
 
-                <div
-                    ref={sliderRef}
-                    className="flex gap-6 overflow-x-auto no-scrollbar pb-2 cursor-grab active:cursor-grabbing select-none"
+                <div ref={sliderRef} className="flex gap-3 sm:gap-6 overflow-x-auto no-scrollbar pb-2 cursor-grab active:cursor-grabbing select-none"
                     onMouseDown={startDrag}
                     onMouseMove={onDrag}
                     onMouseUp={stopDrag}
@@ -729,10 +726,8 @@ const PopularProjects = () => {
                     onTouchEnd={stopDrag}
                 >
                     {services.map((item, i) => (
-                        <div
-                            key={i}
-                            onClick={() => handleCardClick(item.slug)}
-                            className="group flex-shrink-0 w-[340px] bg-white rounded-3xl border border-stone-200 shadow-sm hover:shadow-2xl transition-all duration-300 cursor-pointer"
+                        <div key={i} onClick={() => handleCardClick(item.slug)}
+                            className="group flex-shrink-0 max-w-[280px] sm:max-w-[340px] bg-white rounded-3xl border border-stone-200 shadow-sm hover:shadow-2xl transition-all duration-300 cursor-pointer"
                         >
                             {/* IMAGE */}
                             <div className="relative h-56 rounded-t-3xl overflow-hidden">
@@ -788,15 +783,13 @@ const PopularProjects = () => {
                             </div>
 
                             {/* CTA */}
-                            <div className="px-5 pb-5 flex gap-3">
-                                <button
-                                    onClick={(e) => e.stopPropagation()}
+                            <div className="px-5 sm:pb-5 flex gap-3">
+                                <button onClick={(e) => e.stopPropagation()}
                                     className="flex-1 border border-stone-300 hover:border-stone-400 text-stone-700 py-2 rounded-xl text-sm font-medium transition"
                                 >
                                     Details
                                 </button>
-                                <button
-                                    onClick={(e) => e.stopPropagation()}
+                                <button onClick={(e) => e.stopPropagation()}
                                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-sm font-semibold transition shadow-md hover:shadow-lg"
                                 >
                                     Book Now
