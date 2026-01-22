@@ -12,7 +12,6 @@ const Header = () => {
     const [isLoginModal, setIsLoginModal] = useState(false);
     const [mobileDropdown, setMobileDropdown] = useState(null);
 
-    // NEW: track login state
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     const navigate = useNavigate();
@@ -29,7 +28,6 @@ const Header = () => {
         setIsLoggedIn(!!token);
     }, []);
 
-    // optional if login happens in another tab
     useEffect(() => {
         const syncLogin = () => setIsLoggedIn(!!localStorage.getItem("token"));
         window.addEventListener("storage", syncLogin);
@@ -54,23 +52,15 @@ const Header = () => {
             path: "/",
         },
         {
-            label: "Services",
+            label: "Service",
             path: "/services",
         },
         {
-            label: "Interior",
+            label: "Services",
             dropdown: [
-                { label: "Kitchen", path: "/interior/kitchen" },
-                { label: "Bathroom", path: "/interior/bathroom" },
-                { label: "Living Room", path: "/interior/living-room" },
-            ],
-        },
-        {
-            label: "Exterior",
-            dropdown: [
-                { label: "Roofing", path: "/exterior/roofing" },
-                { label: "Painting", path: "/exterior/painting" },
-                { label: "Windows", path: "/exterior/windows" },
+                { label: "Cleaning", path: "/services?category=cleaning" },
+                { label: "Repair", path: "/services?category=repair" },
+                { label: "Installation", path: "/services?category=installation" }
             ],
         },
         {

@@ -11,6 +11,7 @@ import { AiFillStar } from 'react-icons/ai';
 import { HiBadgeCheck } from "react-icons/hi";
 import { BsArrowRightCircleFill } from 'react-icons/bs';
 import { Link, useNavigate } from 'react-router-dom';
+import ServiceCard from '../cards/ServiceCard.jsx';
 
 const HomePage = () => {
     return (
@@ -619,104 +620,95 @@ const ServicesList = () => {
 
 const PopularProjects = () => {
     const navigate = useNavigate();
-    const services = [
-        {
-            title: "Cleaning & Maid Service",
-            rating: "5.0",
-            reviews: "84",
-            price: "80",
-            img: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=800&auto=format&fit=crop",
-            badge: "Popular",
-            slug: 'cleaning-service'
-        },
-        {
-            title: "Pest Control",
-            rating: "4.9",
-            reviews: "152",
-            price: "65",
-            img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800&auto=format&fit=crop",
-            badge: "Top Rated",
-            slug: 'pest-control'
-        },
-        {
-            title: "Everything Moving",
-            rating: "4.8",
-            reviews: "91",
-            price: "65",
-            img: "https://images.unsplash.com/photo-1600585152915-d208bec867a1?q=80&w=800&auto=format&fit=crop",
-            slug: 'everything-moving'
-        },
-        {
-            title: "Handyman",
-            rating: "4.9",
-            reviews: "592",
-            price: "40",
-            img: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=800&auto=format&fit=crop",
-            slug: 'handyman'
-        },
-        {
-            title: "Electrician & Wiring Service",
-            rating: "4.8",
-            reviews: "268",
-            price: "55",
-            img: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=800&q=80",
-            badge: "Verified",
-            slug: 'electrical-wiring-service'
-        }
-    ];
 
     const sliderRef = useRef(null);
-    const isDragging = useRef(false);
+    const isDown = useRef(false);
     const startX = useRef(0);
     const scrollLeft = useRef(0);
-    const hasDragged = useRef(false);
+    const dragged = useRef(false);
+
+    const services = [
+        {
+            id: 1,
+            title: "Cleaning & Maid Service",
+            category: "Home Cleaning",
+            rating: "5.0",
+            reviews: 84,
+            price: 80,
+            startingFrom: true,
+            distance: 2.3,
+            verified: true,
+            badge: "Popular",
+            img: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=800&auto=format&fit=crop",
+            slug: "cleaning-service",
+        },
+        {
+            id: 2,
+            title: "Pest Control",
+            category: "Home Maintenance",
+            rating: "4.9",
+            reviews: 62,
+            price: 65,
+            startingFrom: true,
+            distance: 3.8,
+            verified: true,
+            badge: "Top Rated",
+            img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800&auto=format&fit=crop",
+            slug: "pest-control",
+        },
+        {
+            id: 3,
+            title: "Handyman",
+            category: "Repair Services",
+            rating: "4.9",
+            reviews: 41,
+            price: 40,
+            startingFrom: true,
+            distance: 1.6,
+            verified: true,
+            img: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=800&auto=format&fit=crop",
+            slug: "handyman",
+        },
+    ];
 
     const startDrag = (e) => {
-        isDragging.current = true;
-        hasDragged.current = false;
-        sliderRef.current.classList.add("dragging");
+        isDown.current = true;
+        dragged.current = false;
+        sliderRef.current.classList.add("cursor-grabbing");
         startX.current = e.pageX || e.touches[0].pageX;
         scrollLeft.current = sliderRef.current.scrollLeft;
     };
 
     const stopDrag = () => {
-        isDragging.current = false;
-        sliderRef.current.classList.remove("dragging");
+        isDown.current = false;
+        sliderRef.current.classList.remove("cursor-grabbing");
     };
 
     const onDrag = (e) => {
-        if (!isDragging.current) return;
-        e.preventDefault();
+        if (!isDown.current) return;
         const x = e.pageX || e.touches[0].pageX;
-        const walk = (x - startX.current) * 1.3;
-        if (Math.abs(walk) > 6) hasDragged.current = true;
+        const walk = (x - startX.current) * 1.1;
+        if (Math.abs(walk) > 5) dragged.current = true;
         sliderRef.current.scrollLeft = scrollLeft.current - walk;
     };
 
-    const handleCardClick = (slug) => {
-        if (hasDragged.current) return;
+    const handleClick = (slug) => {
+        if (dragged.current) return;
         navigate(`/service/${slug}`);
     };
 
-    const badgeStyles = {
-        Popular: "bg-yellow-400 text-white",
-        "Top Rated": "bg-green-500 text-white",
-        Verified: "bg-blue-600 text-white",
-    };
-
     return (
-        <section className="py-12">
+        <section className="py-14">
             <div className="max-w-7xl mx-auto px-4">
                 <div className="mb-8">
-                    <h2 className="text-3xl font-bold text-stone-900">
-                        Top Rated Services Near You
-                    </h2>
-                    <p className="text-stone-500 mt-2">
-                        Trusted professionals for every service
+                    <h2 className="text-3xl font-bold">Top Rated Services</h2>
+                    <p className="text-stone-500 mt-1">
+                        Trusted professionals near you
                     </p>
                 </div>
 
-                <div ref={sliderRef} className="flex gap-3 sm:gap-6 overflow-x-auto no-scrollbar pb-2 cursor-grab active:cursor-grabbing select-none"
+                <div ref={sliderRef}
+                    className="flex gap-4 overflow-x-auto no-scrollbar cursor-grab select-none scroll-smooth pb-2 snap-x snap-mandatory"
                     onMouseDown={startDrag}
                     onMouseMove={onDrag}
                     onMouseUp={stopDrag}
@@ -726,76 +718,11 @@ const PopularProjects = () => {
                     onTouchEnd={stopDrag}
                 >
                     {services.map((item, i) => (
-                        <div key={i} onClick={() => handleCardClick(item.slug)}
-                            className="group flex-shrink-0 max-w-[280px] sm:max-w-[340px] bg-white rounded-3xl border border-stone-200 shadow-sm hover:shadow-2xl transition-all duration-300 cursor-pointer"
-                        >
-                            {/* IMAGE */}
-                            <div className="relative h-56 rounded-t-3xl overflow-hidden">
-                                <img
-                                    src={item.img}
-                                    alt={item.title}
-                                    draggable={false}
-                                    className="h-full w-full object-cover pointer-events-none transition-transform duration-700 group-hover:scale-110"
-                                />
-
-                                {/* gradient overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-
-                                {/* BADGE */}
-                                {item.badge && (
-                                    <span
-                                        className={`absolute top-4 left-4 px-3 py-1 text-xs font-semibold rounded-full backdrop-blur-md ${badgeStyles[item.badge]}`}
-                                    >
-                                        {item.badge}
-                                    </span>
-                                )}
-
-                                {/* RATING FLOAT */}
-                                <div className="absolute bottom-4 left-4 flex items-center gap-1 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-medium shadow">
-                                    <AiFillStar className="text-yellow-400" />
-                                    {item.rating}
-                                    <span className="text-stone-500 text-xs">
-                                        ({item.reviews})
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* CONTENT */}
-                            <div className="p-5 space-y-3">
-                                <h3 className="font-semibold text-lg leading-snug text-stone-800">
-                                    {item.title}
-                                </h3>
-
-                                <div className="flex items-center gap-2 text-sm text-stone-600">
-                                    <HiBadgeCheck className="text-blue-600" />
-                                    Background verified professional
-                                </div>
-
-                                <div className="flex items-end justify-between pt-2">
-                                    <div>
-                                        <p className="text-xs text-stone-500">Starting from</p>
-                                        <p className="text-xl font-bold text-stone-800">
-                                            ${item.price}
-                                        </p>
-                                    </div>
-                                    <span className="text-xs text-stone-500">⏱ 2–3 hrs</span>
-                                </div>
-                            </div>
-
-                            {/* CTA */}
-                            <div className="px-5 sm:pb-5 flex gap-3">
-                                <button onClick={(e) => e.stopPropagation()}
-                                    className="flex-1 border border-stone-300 hover:border-stone-400 text-stone-700 py-2 rounded-xl text-sm font-medium transition"
-                                >
-                                    Details
-                                </button>
-                                <button onClick={(e) => e.stopPropagation()}
-                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-sm font-semibold transition shadow-md hover:shadow-lg"
-                                >
-                                    Book Now
-                                </button>
-                            </div>
-                        </div>
+                        <ServiceCard
+                            key={i}
+                            item={item}
+                            onClick={() => handleClick(item.slug)}
+                        />
                     ))}
                 </div>
             </div>

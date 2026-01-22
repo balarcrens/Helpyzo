@@ -1,26 +1,30 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
-import { useRef, useState, useMemo, useCallback } from "react";
+import { useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { AiFillStar } from "react-icons/ai";
-import { FiChevronDown, FiSearch } from "react-icons/fi";
+import {
+    FiChevronDown,
+    FiSearch,
+    FiMapPin,
+    FiClock,
+    FiSliders,
+} from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import Layout from "../Layout/Layout";
 import Header from "../Layout/Header";
-import { HiBadgeCheck } from "react-icons/hi";
-
-const badgeStyles = {
-    Popular: "bg-orange-100 text-orange-700",
-    "Top Rated": "bg-green-100 text-green-700",
-    Verified: "bg-blue-100 text-blue-700",
-};
+import ServiceCard from "../cards/ServiceCard";
 
 const ServicesPage = () => {
     const navigate = useNavigate();
 
     const [activeCategory, setActiveCategory] = useState("All Categories");
     const [openCategory, setOpenCategory] = useState(false);
+    const [openRating, setOpenRating] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+
+    const [onlyNearby, setOnlyNearby] = useState(false);
+    const [availableToday, setAvailableToday] = useState(false);
+    const [minRating, setMinRating] = useState(0);
 
     const serviceData = [
         {
@@ -35,6 +39,8 @@ const ServicesPage = () => {
                     duration: "2-3 hrs",
                     badge: "Popular",
                     isVerified: true,
+                    distance: 2.3,
+                    availableToday: true,
                     slug: "cleaning-service",
                     img: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=800&auto=format&fit=crop",
                 },
@@ -46,16 +52,20 @@ const ServicesPage = () => {
                     price: 65,
                     badge: "Top Rated",
                     isVerified: true,
+                    distance: 6.4,
+                    availableToday: false,
                     slug: "pest-control",
                     img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800&auto=format&fit=crop",
                 },
                 {
                     id: "clean-003",
                     title: "Bathroom Deep Cleaning",
-                    rating: 4.8,
+                    rating: 4.4,
                     reviews: 98,
                     price: 70,
                     isVerified: true,
+                    distance: 3.1,
+                    availableToday: true,
                     slug: "bathroom-cleaning",
                     img: "https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=800&auto=format&fit=crop",
                 },
@@ -71,6 +81,8 @@ const ServicesPage = () => {
                     reviews: 592,
                     price: 40,
                     isVerified: true,
+                    distance: 1.9,
+                    availableToday: true,
                     slug: "handyman",
                     img: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=800&auto=format&fit=crop",
                 },
@@ -82,16 +94,20 @@ const ServicesPage = () => {
                     price: 55,
                     badge: "Verified",
                     isVerified: true,
+                    distance: 5.6,
+                    availableToday: false,
                     slug: "electrical-wiring-service",
                     img: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=800&q=80",
                 },
                 {
                     id: "repair-003",
                     title: "Plumbing Service",
-                    rating: 4.7,
+                    rating: 4.2,
                     reviews: 214,
                     price: 60,
                     isVerified: true,
+                    distance: 4.2,
+                    availableToday: true,
                     slug: "plumbing-service",
                     img: "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?q=80&w=800&auto=format&fit=crop",
                 },
@@ -107,6 +123,8 @@ const ServicesPage = () => {
                     reviews: 103,
                     price: 70,
                     isVerified: true,
+                    distance: 2.8,
+                    availableToday: true,
                     slug: "led-installation",
                     img: "https://images.unsplash.com/photo-1558449028-b53a39d100fc?q=80&w=800&auto=format&fit=crop",
                 },
@@ -118,6 +136,8 @@ const ServicesPage = () => {
                     price: 90,
                     badge: "Top Rated",
                     isVerified: true,
+                    distance: 7.2,
+                    availableToday: false,
                     slug: "thermostat-installation",
                     img: "https://images.unsplash.com/photo-1558002038-1055907df827?q=80&w=800&auto=format&fit=crop",
                 },
@@ -128,6 +148,8 @@ const ServicesPage = () => {
                     reviews: 67,
                     price: 50,
                     isVerified: true,
+                    distance: 3.9,
+                    availableToday: true,
                     slug: "shelving-installation",
                     img: "https://images.unsplash.com/photo-1598300056393-4aac492f4344?q=80&w=800&auto=format&fit=crop",
                 },
@@ -141,6 +163,7 @@ const ServicesPage = () => {
         "Repair Services",
         "Installation Services",
     ];
+
     const filteredData = useMemo(() => {
         return serviceData
             .filter(section =>
@@ -150,70 +173,76 @@ const ServicesPage = () => {
             )
             .map(section => ({
                 ...section,
-                services: section.services.filter(service =>
-                    service.title.toLowerCase().includes(searchQuery.toLowerCase())
-                ),
+                services: section.services.filter(service => {
+                    const matchSearch = service.title
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase());
+                    const matchNearby = !onlyNearby || service.distance <= 5;
+                    const matchAvailable =
+                        !availableToday || service.availableToday;
+                    const matchRating = service.rating >= minRating;
+                    return (
+                        matchSearch &&
+                        matchNearby &&
+                        matchAvailable &&
+                        matchRating
+                    );
+                }),
             }))
             .filter(section => section.services.length > 0);
-    }, [activeCategory, searchQuery]);
+    }, [activeCategory, searchQuery, onlyNearby, availableToday, minRating]);
 
     return (
         <Layout>
-            <section className="relative z-20 min-h-[65vh] sm:min-h-[50vh] bg-gradient-to-r from-stone-900 via-stone-800 to-stone-900">
+            <section className="relative z-20 min-h-[65vh] bg-gradient-to-r from-stone-900 via-stone-800 to-stone-900">
                 <Header />
 
                 <div className="absolute inset-0">
                     <img
                         src="/hero.png"
-                        alt="Professional Services"
                         className="w-full h-full object-cover opacity-30"
-                        loading="lazy"
+                        alt=""
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/85 to-black/40" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-black/30" />
                 </div>
 
                 <div className="relative z-10 max-w-7xl mx-auto px-6 py-30">
-                    <span className="text-sm tracking-widest text-[#9fe870] font-medium uppercase">
+                    <span className="text-sm tracking-widest text-[#9fe870] uppercase font-medium">
                         Trusted Professionals
                     </span>
 
-                    <h1 className="text-5xl md:text-6xl font-bold text-white mt-3">
-                        All <span className="text-[#9fe870]">Services</span><br />In One Place
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mt-4">
+                        All <span className="text-[#9fe870]">Services</span>
+                        <br /> In One Place
                     </h1>
 
                     <p className="text-gray-300 mt-6 max-w-xl text-lg">
                         Compare verified experts, transparent pricing, and instant booking.
                     </p>
-
-                    <div className="flex gap-2 sm:gap-6 mt-6 text-sm text-gray-300 flex-wrap">
-                        <span>✔ 10,000+ Bookings</span>
-                        <span>✔ Background Verified</span>
-                        <span>✔ 24/7 Support</span>
-                    </div>
                 </div>
 
-                <div className="absolute left-0 right-0 -bottom-23 md:-bottom-10 z-30">
-                    <div className="max-w-5xl mx-auto px-4">
-                        <div className="bg-white rounded-2xl shadow-xl p-4">
-                            <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr_auto] gap-3">
+                {/* SEARCH + FILTER */}
+                <div className="absolute left-0 right-0 -bottom-30 sm:-bottom-24 z-30">
+                    <div className="max-w-6xl mx-auto px-4">
+                        <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl ring-1 ring-black/5 p-2.5 py-3.5 space-y-2">
 
+                            {/* SEARCH ROW */}
+                            <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr_auto] gap-2">
                                 <div className="relative">
                                     <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
                                     <input
-                                        type="text"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Search services..."
-                                        className="h-12 w-full pl-11 pr-4 rounded-xl outline-0 border-1 border-gray-200 focus:ring-2 focus:ring-[#9fe870]"
+                                        placeholder="Search for services or professionals"
+                                        className="h-11 sm:h-13 w-full pl-12 pr-4 rounded-2xl bg-stone-50 ring-1 ring-stone-200 focus:ring-2 focus:ring-[#9fe870] outline-none transition"
                                     />
                                 </div>
 
-                                <div
-                                    className="relative"
+                                <div className="relative"
                                     onMouseEnter={() => setOpenCategory(true)}
                                     onMouseLeave={() => setOpenCategory(false)}
                                 >
-                                    <button className="h-12 w-full px-4 rounded-xl border-1 focus:ring-2 focus:ring-[#9fe870] border-gray-100 flex justify-between items-center">
+                                    <button className="h-11 sm:h-13 w-full px-4 rounded-2xl bg-stone-50 ring-1 ring-stone-200 flex justify-between items-center hover:ring-[#9fe870]/40 transition">
                                         {activeCategory}
                                         <FiChevronDown />
                                     </button>
@@ -221,19 +250,18 @@ const ServicesPage = () => {
                                     <AnimatePresence>
                                         {openCategory && (
                                             <motion.div
-                                                initial={{ opacity: 0, y: 8 }}
+                                                initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: 8 }}
-                                                className="absolute top-full mt-2 w-full bg-stone-900 text-white rounded-xl p-2 z-40"
+                                                exit={{ opacity: 0, y: 10 }}
+                                                className="absolute top-full mt-2 w-full bg-stone-900/95 text-white rounded-2xl p-2 shadow-xl z-40"
                                             >
                                                 {categories.map(cat => (
-                                                    <div
-                                                        key={cat}
+                                                    <div key={cat}
                                                         onClick={() => {
                                                             setActiveCategory(cat);
                                                             setOpenCategory(false);
                                                         }}
-                                                        className="px-4 py-2 hover:bg-white/10 rounded-lg cursor-pointer"
+                                                        className="px-4 py-2 rounded-xl text-gray-300 hover:text-[#9fe870] hover:bg-white/5 cursor-pointer transition"
                                                     >
                                                         {cat}
                                                     </div>
@@ -243,39 +271,84 @@ const ServicesPage = () => {
                                     </AnimatePresence>
                                 </div>
 
-                                <button className="h-12 px-8 bg-stone-900 text-white rounded-xl">
+                                <button className="h-12 px-10 rounded-2xl bg-stone-900 text-white font-semibold shadow-lg hover:shadow-xl transition">
                                     Search
                                 </button>
+                            </div>
+
+                            {/* FILTERS */}
+                            <div className="flex flex-wrap gap-1 sm:gap-3">
+                                <button onClick={() => setOnlyNearby(!onlyNearby)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl ring-1 transition ${onlyNearby
+                                        ? "bg-stone-900 text-white ring-stone-900"
+                                        : "bg-white ring-stone-200 hover:ring-stone-300"
+                                        }`}
+                                >
+                                    <FiMapPin /> Nearby
+                                </button>
+
+                                <button onClick={() => setAvailableToday(!availableToday)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl ring-1 transition ${availableToday
+                                        ? "bg-stone-900 text-white ring-stone-900"
+                                        : "bg-white ring-stone-200 hover:ring-stone-300"
+                                        }`}
+                                >
+                                    <FiClock /> Available Today
+                                </button>
+
+                                <div className="relative"
+                                    onMouseEnter={() => setOpenRating(true)}
+                                    onMouseLeave={() => setOpenRating(false)}
+                                >
+                                    <button className="h-11 px-4 rounded-2xl bg-stone-50 ring-1 ring-stone-200 flex items-center justify-between gap-3 hover:ring-[#9fe870]/40 transition w-[170px]">
+                                        <div className="flex items-center gap-2 text-sm font-medium">
+                                            <FiSliders />
+                                            {minRating === 0 ? "All Ratings" : `${minRating}+ Rating`}
+                                        </div>
+                                        <FiChevronDown />
+                                    </button>
+
+                                    <AnimatePresence>
+                                        {openRating && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: 10 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="absolute top-full mt-2 w-full bg-stone-900/95 text-white rounded-2xl p-2 shadow-xl z-40"
+                                            >
+                                                {[0, 4, 4.5].map(val => (
+                                                    <div
+                                                        key={val}
+                                                        onClick={() => {
+                                                            setMinRating(val);
+                                                            setOpenRating(false);
+                                                        }}
+                                                        className={`px-4 py-2 rounded-xl cursor-pointer transition
+                            ${minRating === val
+                                                                ? "bg-white/10 text-[#9fe870]"
+                                                                : "text-gray-300 hover:text-[#9fe870] hover:bg-white/5"
+                                                            }
+                        `}
+                                                    >
+                                                        {val === 0 ? "All Ratings" : `${val}+ Rating`}
+                                                    </div>
+                                                ))}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* ---------------- RESULTS ---------------- */}
-            <section className="pt-30 pb-16 bg-white">
-                <div className="max-w-7xl mx-auto px-4 space-y-16">
-                    {filteredData.length === 0 && (
-                        <div className="text-center py-20">
-                            <p className="text-stone-500 text-lg">No services found</p>
-                            <button
-                                onClick={() => {
-                                    setSearchQuery("");
-                                    setActiveCategory("All Categories");
-                                }}
-                                className="mt-4 text-blue-600 font-medium"
-                            >
-                                Clear filters
-                            </button>
-                        </div>
-                    )}
-
+            {/* RESULTS */}
+            <section className="pt-40 pb-16 bg-white">
+                <div className="max-w-7xl mx-auto px-4 space-y-20">
                     {filteredData.map((section, index) => (
-                        <CategorySection
-                            key={index}
-                            section={section}
-                            navigate={navigate}
-                        />
+                        <CategorySection key={index} section={section} navigate={navigate} />
                     ))}
                 </div>
             </section>
@@ -285,44 +358,34 @@ const ServicesPage = () => {
 
 const CategorySection = ({ section, navigate }) => {
     const sliderRef = useRef(null);
-
-    const isDragging = useRef(false);
+    const isDown = useRef(false);
     const startX = useRef(0);
     const scrollLeft = useRef(0);
-    const hasDragged = useRef(false);
+    const dragged = useRef(false);
 
     const startDrag = (e) => {
-        isDragging.current = true;
-        hasDragged.current = false;
-
-        sliderRef.current.classList.add("dragging");
-
+        isDown.current = true;
+        dragged.current = false;
+        sliderRef.current.classList.add("cursor-grabbing");
         startX.current = e.pageX || e.touches[0].pageX;
         scrollLeft.current = sliderRef.current.scrollLeft;
     };
 
     const stopDrag = () => {
-        isDragging.current = false;
-        sliderRef.current.classList.remove("dragging");
+        isDown.current = false;
+        sliderRef.current.classList.remove("cursor-grabbing");
     };
 
     const onDrag = (e) => {
-        if (!isDragging.current) return;
-
-        e.preventDefault();
-
+        if (!isDown.current) return;
         const x = e.pageX || e.touches[0].pageX;
-        const walk = (x - startX.current) * 1.3;
-
-        if (Math.abs(walk) > 6) {
-            hasDragged.current = true;
-        }
-
+        const walk = (x - startX.current) * 1.1;
+        if (Math.abs(walk) > 5) dragged.current = true;
         sliderRef.current.scrollLeft = scrollLeft.current - walk;
     };
 
-    const handleCardClick = (slug) => {
-        if (hasDragged.current) return;
+    const handleClick = (slug) => {
+        if (dragged.current) return;
         navigate(`/service/${slug}`);
     };
 
@@ -335,15 +398,9 @@ const CategorySection = ({ section, navigate }) => {
                         Hand-picked professionals near you
                     </p>
                 </div>
-                <span className="text-sm text-stone-600">
-                    {section.services.length}+ services
-                </span>
             </div>
 
-            {/* SLIDER */}
-            <div
-                ref={sliderRef}
-                className="flex gap-4 overflow-x-auto no-scrollbar pb-2 cursor-grab active:cursor-grabbing select-none"
+            <div ref={sliderRef} className="flex gap-3 overflow-x-auto no-scrollbar pb-2 cursor-grab select-none scroll-smooth snap-x snap-mandatory"
                 onMouseDown={startDrag}
                 onMouseMove={onDrag}
                 onMouseUp={stopDrag}
@@ -352,86 +409,12 @@ const CategorySection = ({ section, navigate }) => {
                 onTouchMove={onDrag}
                 onTouchEnd={stopDrag}
             >
-                {section.services.map((item) => (
-                    <div
+                {section.services.map(item => (
+                    <ServiceCard
                         key={item.id}
-                        onClick={() => handleCardClick(item.slug)}
-                        className="group flex-shrink-0 w-[340px] bg-white rounded-3xl border border-stone-200 shadow-sm hover:shadow-2xl transition-all duration-300 cursor-pointer"
-                    >
-                        {/* IMAGE */}
-                        <div className="relative h-56 rounded-t-3xl overflow-hidden">
-                            <img
-                                src={item.img}
-                                alt={item.title}
-                                draggable={false}
-                                loading="lazy"
-                                className="h-full w-full object-cover pointer-events-none transition-transform duration-700 group-hover:scale-110"
-                            />
-
-                            {/* gradient overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-
-                            {/* BADGE */}
-                            {item.badge && (
-                                <span
-                                    className={`absolute top-4 left-4 px-3 py-1 text-xs font-semibold rounded-full backdrop-blur-md ${badgeStyles[item.badge]}`}
-                                >
-                                    {item.badge}
-                                </span>
-                            )}
-
-                            {/* RATING FLOAT */}
-                            <div className="absolute bottom-4 left-4 flex items-center gap-1 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-medium shadow">
-                                <AiFillStar className="text-yellow-400" />
-                                {item.rating}
-                                <span className="text-stone-500 text-xs">
-                                    ({item.reviews})
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* CONTENT */}
-                        <div className="p-5 space-y-3">
-                            <h3 className="font-semibold text-lg leading-snug text-stone-800">
-                                {item.title}
-                            </h3>
-
-                            {/* TRUST LINE */}
-                            <div className="flex items-center gap-2 text-sm text-stone-600">
-                                <HiBadgeCheck className="text-blue-600" />
-                                Background verified professional
-                            </div>
-
-                            {/* PRICE */}
-                            <div className="flex items-end justify-between pt-2">
-                                <div>
-                                    <p className="text-xs text-stone-500">Starting from</p>
-                                    <p className="text-xl font-bold text-stone-800">
-                                        ${item.price}
-                                    </p>
-                                </div>
-                                <span className="text-xs text-stone-500">
-                                    ⏱ {item.duration || "2–3 hrs"}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* CTA */}
-                        <div className="px-5 pb-5 flex gap-3">
-                            <button
-                                onClick={(e) => e.stopPropagation()}
-                                className="flex-1 border border-stone-300 hover:border-stone-400 text-stone-700 py-2 rounded-xl text-sm font-medium transition"
-                            >
-                                Details
-                            </button>
-                            <button
-                                onClick={(e) => e.stopPropagation()}
-                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-sm font-semibold transition shadow-md hover:shadow-lg"
-                            >
-                                Book Now
-                            </button>
-                        </div>
-                    </div>
+                        item={item}
+                        onClick={() => handleClick(item.slug)}
+                    />
                 ))}
             </div>
         </div>

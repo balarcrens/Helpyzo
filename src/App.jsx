@@ -8,6 +8,7 @@ import './App.css'
 import ServiceDetail from './components/pages/ServiceDetail.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
 import Services from './components/pages/Services.jsx'
+import FAQ from './components/pages/FAQ.jsx'
 
 const App = () => {
   return (
@@ -26,6 +27,7 @@ const App = () => {
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/faq" element={<FAQ />} />
         </Routes>
       </div>
     </>
