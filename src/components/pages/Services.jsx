@@ -12,7 +12,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Layout from "../Layout/Layout";
 import Header from "../Layout/Header";
-import ServiceCard from "../cards/ServiceCard";
+import ServiceCard from "../Cards/ServiceCard";
 
 const ServicesPage = () => {
     const navigate = useNavigate();
