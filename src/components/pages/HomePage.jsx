@@ -11,7 +11,7 @@ import { AiFillStar } from 'react-icons/ai';
 import { HiBadgeCheck } from "react-icons/hi";
 import { BsArrowRightCircleFill } from 'react-icons/bs';
 import { Link, useNavigate } from 'react-router-dom';
-import ServiceCard from '../cards/ServiceCard.jsx';
+import ServiceCard from '../Cards/ServiceCard.jsx';
 
 const HomePage = () => {
     return (
