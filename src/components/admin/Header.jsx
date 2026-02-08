@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 
 export default function Header({ role, onMenuClick }) {
     const location = useLocation().pathname;
-    const currentPage = location.split("/")[2] || "home";
+    const currentPage = location.split("/")[2] || "";
 
     return (
         <motion.header

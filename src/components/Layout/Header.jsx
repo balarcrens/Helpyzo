@@ -52,15 +52,16 @@ const Header = () => {
             path: "/",
         },
         {
-            label: "Service",
-            path: "/services",
+            label: "Category",
+            path: "/category",
         },
         {
             label: "Services",
             dropdown: [
-                { label: "Cleaning", path: "/services?category=cleaning" },
-                { label: "Repair", path: "/services?category=repair" },
-                { label: "Installation", path: "/services?category=installation" }
+                { label: "Home & Kitchen Cleaning", path: "/category/home-cleaning" },
+                { label: "Plumbing & Sanitary Services", path: "/category/plumbing-sanitary" },
+                { label: "AC Cleaning & Repair", path: "/category/ac-cleaning" },
+                { label: "Electrical Repair", path: "/category/electrical-repair" }
             ],
         },
         {
@@ -80,14 +81,14 @@ const Header = () => {
             <header className="fixed top-0 z-50 w-full px-4 py-2 sm:px-6">
                 <div
                     className={`mx-auto max-w-7xl transition-all duration-500 rounded-4xl px-6 py-3 flex items-center justify-between ${isScrolled
-                        ? "bg-black/40 backdrop-blur-2xl border border-white/10 shadow-2xl"
+                        ? "bg-black/20 backdrop-blur-md border border-white/10 shadow-2xl"
                         : "bg-black/20 backdrop-blur-none border border-white/5"
                         }`}
                 >
                     {/* Logo */}
                     <div
                         onClick={() => navigate("/")}
-                        className="flex items-center gap-2 text-white group cursor-pointer shrink-0"
+                        className="flex items-center gap-2 mx-4 text-white group cursor-pointer shrink-0"
                     >
                         <img src="/helpyZo.png" width={150} />
                     </div>

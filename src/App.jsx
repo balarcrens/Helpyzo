@@ -7,7 +7,6 @@ import ContactUs from './components/pages/ContactUs.jsx'
 import './App.css'
 import ServiceDetail from './components/pages/ServiceDetail.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
-import Services from './components/pages/Services.jsx'
 import FAQ from './components/pages/FAQ.jsx'
 import AdminLayout from './components/admin/AdminLayout.jsx'
 import SuperDashboard from './components/pages/superadmin/Dashboard.jsx'
@@ -17,6 +16,8 @@ import AdminDashboard from './components/pages/admin/Dashboard.jsx'
 import Bookings from './components/pages/admin/Bookings.jsx'
 import AdminServices from './components/pages/admin/AdminServices.jsx'
 import NotFound from './components/pages/NotFound.jsx'
+import Category from './components/pages/Category.jsx'
+import ServicePage from './components/pages/Services.jsx'
 
 const CURRENT_ROLE = "superadmin";
 
@@ -32,12 +33,13 @@ const App = () => {
                 <ScrollToTop />
                 <Routes>
                     <Route path="/" element={<HomePage />} />
-                    <Route path="/services" element={<Services />} />
-                    <Route path="/service/:slug" element={<ServiceDetail />} />
+                    <Route path="/category/:category" element={<ServicePage />} />
+                    <Route path="/category/:category/:slug" element={<ServiceDetail />} />
                     <Route path="/about" element={<AboutUs />} />
                     <Route path="/contact" element={<ContactUs />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/faq" element={<FAQ />} />
+                    <Route path="/category" element={<Category />} />
                     <Route path="*" element={<NotFound />} />
                     <Route
                         path="/"

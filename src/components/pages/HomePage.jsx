@@ -631,7 +631,7 @@ const PopularProjects = () => {
         {
             id: 1,
             title: "Cleaning & Maid Service",
-            category: "Home Cleaning",
+            category: "home-cleaning",
             rating: "5.0",
             reviews: 84,
             price: 80,
@@ -645,7 +645,7 @@ const PopularProjects = () => {
         {
             id: 2,
             title: "Pest Control",
-            category: "Home Maintenance",
+            category: "home-cleaning",
             rating: "4.9",
             reviews: 62,
             price: 65,
@@ -659,7 +659,7 @@ const PopularProjects = () => {
         {
             id: 3,
             title: "Handyman",
-            category: "Repair Services",
+            category: "home-cleaning",
             rating: "4.9",
             reviews: 41,
             price: 40,
@@ -692,9 +692,9 @@ const PopularProjects = () => {
         sliderRef.current.scrollLeft = scrollLeft.current - walk;
     };
 
-    const handleClick = (slug) => {
+    const handleClick = (category, slug) => {
         if (dragged.current) return;
-        navigate(`/service/${slug}`);
+        navigate(`/category/${category}/${slug}`);
     };
 
     return (
@@ -721,7 +721,7 @@ const PopularProjects = () => {
                         <ServiceCard
                             key={i}
                             item={item}
-                            onClick={() => handleClick(item.slug)}
+                            onClick={() => handleClick(item.category, item.slug)}
                         />
                     ))}
                 </div>
