@@ -54,33 +54,25 @@ const Header = () => {
             path: "/",
         },
         {
-            label: "Interior",
+            label: "Service",
+            path: "/services",
+        },
+        {
+            label: "Services",
             dropdown: [
-                { label: "Kitchen", path: "/interior/kitchen" },
-                { label: "Bathroom", path: "/interior/bathroom" },
-                { label: "Living Room", path: "/interior/living-room" },
+                { label: "Cleaning", path: "/services/cleaning" },
+                { label: "Repair", path: "/services/repair" },
+                { label: "Installation", path: "/services/installation" },
+                { label: "Maintenance", path: "/services/maintenance" },
             ],
         },
         {
-            label: "Exterior",
-            dropdown: [
-                { label: "Roofing", path: "/exterior/roofing" },
-                { label: "Painting", path: "/exterior/painting" },
-                { label: "Windows", path: "/exterior/windows" },
-            ],
-        },
-        {
-            label: "Lawn & Garden",
-            dropdown: [
-                { label: "Landscaping", path: "/garden/landscaping" },
-                { label: "Tree Care", path: "/garden/tree-care" },
-                { label: "Irrigation", path: "/garden/irrigation" },
-            ],
+            label: "About Us",
+            path: "/about",
         },
         {
             label: "More",
             dropdown: [
-                { label: "About Us", path: "/about" },
                 { label: "Contact", path: "/contact" },
                 { label: "FAQ", path: "/faq" },
             ],

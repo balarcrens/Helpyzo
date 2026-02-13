@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/static-components */
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -9,6 +10,8 @@ import {
 } from "react-icons/fi";
 import Layout from "../Layout/Layout";
 import Header from "../Layout/Header";
+import { motion, AnimatePresence } from "framer-motion";
+import { FiChevronDown } from "react-icons/fi";
 
 const countries = ["India", "United States", "United Kingdom", "Canada", "Australia", "UAE", "Singapore"];
 
@@ -21,6 +24,8 @@ const partnerSteps = [
 const Register = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
+    const [openCountry, setOpenCountry] = useState(false);
+    const [selectedCountry, setSelectedCountry] = useState("Select country");
 
     const roleParam = (searchParams.get("role") || "customer").toLowerCase();
     const stepParam = Number(searchParams.get("step") || 1);
@@ -32,7 +37,6 @@ const Register = () => {
         defaultValues: { country: "India" }
     });
 
-    // Sync Params
     useEffect(() => {
         setSearchParams({ role: normalizedRole, step: String(normalizedStep) }, { replace: true });
     }, [normalizedRole, normalizedStep, setSearchParams]);
@@ -77,7 +81,7 @@ const Register = () => {
         setTimeout(() => {
             setIsLoading(false);
             alert("Registration Successful!");
-        }, 2000);
+        }, 1000);
     };
 
     // Custom UI Components
@@ -89,11 +93,11 @@ const Register = () => {
                 <input
                     type={type}
                     {...register(name, validation)}
-                    className={`w-full rounded-xl border border-white/5 bg-white/3 ${Icon ? 'pl-11' : 'px-4'} py-3 text-sm text-white transition-all placeholder:text-white/10 focus:border-[#9fe870]/40 focus:bg-white/[0.07] outline-none`}
+                    className={`w-full rounded-xl border border-white/5 bg-white/3 ${Icon ? 'pl-11' : 'px-4'} py-3 text-sm text-white transition-all placeholder-white/30 focus:border-[#9fe870]/40 focus:bg-white/[0.07] outline-none`}
                     placeholder={placeholder}
                 />
             </div>
-            {errors[name] && <span className="text-[10px] text-red-400 mt-1 ml-1 flex items-center gap-1"><FiAlertCircle /> {errors[name].message}</span>}
+            {errors[name] && <span className="text-[12px] text-red-400 mt-1 ml-1 flex items-center gap-1"><FiAlertCircle /> {errors[name].message}</span>}
         </div>
     );
 
@@ -206,11 +210,45 @@ const Register = () => {
                                                     <InputGroup label="Landmark" name="landmark" placeholder="Near Apollo Hospital, etc." />
                                                     <InputGroup label="City" name="city" placeholder="City" validation={{ required: "City required" }} />
                                                     <InputGroup label="Pincode / ZIP" placeholder="Pincode" name="pincode" validation={{ required: "Required" }} />
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 ml-1">Country</label>
-                                                        <select {...register("country")} className="w-full rounded-xl border border-white/5 bg-stone-800 px-4 py-3 text-sm text-white focus:border-[#9fe870]/40 outline-none">
-                                                            {countries.map(c => <option key={c} value={c}>{c}</option>)}
-                                                        </select>
+                                                    <div className="flex flex-col gap-1.5 relative">
+                                                        <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 ml-1"> Country </label>
+
+                                                        <button type="button" onClick={() => setOpenCountry(prev => !prev)}
+                                                            className="flex items-center justify-between w-full rounded-xl border border-white/5 bg-white/3 px-4 py-3 text-sm text-white hover:border-[#9fe870]/40 transition"
+                                                        >
+                                                            <span className={selectedCountry === "Select country" ? "text-white/40" : ""}>
+                                                                {selectedCountry}
+                                                            </span>
+                                                            <FiChevronDown
+                                                                className={`text-xs transition-transform ${openCountry ? "rotate-180" : ""}`}
+                                                            />
+                                                        </button>
+                                                        <AnimatePresence>
+                                                            {openCountry && (
+                                                                <motion.div
+                                                                    initial={{ opacity: 0, y: 10 }}
+                                                                    animate={{ opacity: 1, y: 0 }}
+                                                                    exit={{ opacity: 0, y: 10 }}
+                                                                    transition={{ duration: 0.15 }}
+                                                                    className="absolute overflow-y-auto custom-scrollbar-minimal top-full left-0 mt-2 w-full max-h-40 rounded-2xl bg-stone-900/95 backdrop-blur-xl border border-white/10 shadow-2xl p-2 z-50"
+                                                                >
+                                                                    {countries.map((country) => (
+                                                                        <div key={country}
+                                                                            onClick={() => {
+                                                                                setSelectedCountry(country);
+                                                                                setValue("country", country);
+                                                                                setOpenCountry(false);
+                                                                            }}
+                                                                            className="px-4 py-2 text-sm text-gray-300 hover:text-[#9fe870] hover:bg-white/5 rounded-lg cursor-pointer transition"
+                                                                        >
+                                                                            {country}
+                                                                        </div>
+                                                                    ))}
+                                                                </motion.div>
+                                                            )}
+                                                        </AnimatePresence>
+
+                                                        <input type="hidden" {...register("country")} />
                                                     </div>
                                                 </div>
                                             </div>
