@@ -26,7 +26,7 @@ const Login = ({ onClose }) => {
         try {
             setLoading(true);
 
-            const res = await axios.post("http://localhost:3000/api/users/login", {
+            const res = await axios.post("https://helpyzo-backend.vercel.app/api/users/login", {
                 email: email.toLowerCase().trim(),
                 password,
             });

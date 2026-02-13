@@ -100,7 +100,7 @@ const Register = () => {
             };
 
             const res = await axios.post(
-                "http://localhost:3000/api/users/register",
+                "https://helpyzo-backend.vercel.app/api/users/register",
                 payload
             );
 
