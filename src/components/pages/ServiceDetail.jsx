@@ -24,11 +24,15 @@ import "swiper/css/navigation";
 
 import Layout from "../Layout/Layout";
 import Header from "../Layout/Header";
-import { useParams } from "react-router-dom";
-import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useContext, useState } from "react";
+import axios from "axios";
+import AuthContext from "../../context/Auth/AuthContext";
 
 export default function ServiceDetail() {
     const { slug } = useParams();
+    const { isLoggedIn, user } = useContext(AuthContext);
+    const navigate = useNavigate();
 
     const [issue, setIssue] = useState("");
     const [issueLabel, setIssueLabel] = useState("");
@@ -42,6 +46,9 @@ export default function ServiceDetail() {
     const currentYear = today.getFullYear();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+
+    const [selectedTime, setSelectedTime] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const calendarDays = [
         ...Array(firstDayOfMonth).fill(null),
@@ -57,6 +64,95 @@ export default function ServiceDetail() {
                 };
             }),
     ];
+
+    const handleBooking = async () => {
+        if (!isLoggedIn) {
+            alert("Please login to book a service");
+            navigate("/register");
+            return;
+        }
+
+        if (!issue || !selectedDate || !selectedTime) {
+            alert("Please select issue, date and time");
+            return;
+        }
+
+        const bookingPayload = {
+            partner: "PARTNER_ID_HERE",
+            service: "SERVICE_ID_HERE",
+
+            scheduledAt: {
+                date: new Date(selectedDate),
+                timeSlot: {
+                    start: selectedTime,
+                    end: null,
+                },
+            },
+
+            duration:
+                serviceType === "normal"
+                    ? 60
+                    : serviceType === "urgent"
+                        ? 45
+                        : 30,
+
+            serviceAddress: {
+                street: user?.address?.street,
+                city: user?.address?.city,
+                state: user?.address?.state,
+                zipCode: user?.address?.zipCode,
+                country: user?.address?.country,
+            },
+
+            location: {
+                type: user?.location?.type,
+                coordinates: user?.location?.coordinates,
+            },
+
+            pricing: {
+                servicePrice:
+                    serviceType === "normal"
+                        ? 499
+                        : serviceType === "urgent"
+                            ? 799
+                            : 1199,
+                visitingFee: 49,
+                discount: 0,
+                tax: 0,
+                totalAmount:
+                    (serviceType === "normal"
+                        ? 499
+                        : serviceType === "urgent"
+                            ? 799
+                            : 1199) + 49,
+            },
+
+            notes: {
+                userNote:
+                    issue === "other"
+                        ? customIssue
+                        : `${issueLabel} (${serviceType})`,
+            },
+        };
+
+        try {
+            setLoading(true);
+
+            const res = await axios.post("/api/bookings", bookingPayload, {
+                headers: { Authorization: localStorage.getItem("auth-token") },
+            });
+
+            if (!res.data.success) {
+                throw new Error(res.data.message);
+            }
+
+            alert("Booking created successfully!");
+        } catch (err) {
+            alert(err.response?.data?.message || err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <Layout>
@@ -268,6 +364,10 @@ export default function ServiceDetail() {
                             calendarDays={calendarDays}
                             selectedDate={selectedDate}
                             setSelectedDate={setSelectedDate}
+                            selectedTime={selectedTime}
+                            setSelectedTime={setSelectedTime}
+                            handleBooking={handleBooking}
+                            loading={loading}
                         />
                     </div>
 
@@ -286,7 +386,8 @@ const BookingSidebar = ({
     issueOpen, setIssueOpen,
     customIssue, setCustomIssue,
     serviceType, setServiceType,
-    calendarDays, selectedDate, setSelectedDate
+    calendarDays, selectedDate, setSelectedDate,
+    selectedTime, setSelectedTime, handleBooking, loading
 }) => {
     return (
         <motion.div
@@ -296,11 +397,11 @@ const BookingSidebar = ({
             className="bg-white rounded-[28px] p-4 sm:p-8 sticky top-24 space-y-6 border-t border-stone-100"
         >
             <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-semibold tracking-wide hover:opacity-95 transition"
+                onClick={handleBooking}
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-semibold tracking-wide hover:opacity-95 transition disabled:opacity-60"
             >
-                Schedule Service
+                {loading ? "Scheduling..." : "Schedule Service"}
             </motion.button>
 
             {/* ISSUE SELECT */}
@@ -398,7 +499,12 @@ const BookingSidebar = ({
             <div>
                 <h4 className="font-semibold mb-2 flex items-center gap-2"><FiClock /> Preferred Time</h4>
                 <motion.div whileFocus={{ scale: 1.02 }} className="bg-gradient-to-br from-stone-100 to-stone-200 rounded-2xl p-4 shadow-inner">
-                    <input type="time" className="w-full bg-transparent outline-none text-lg font-semibold" />
+                    <input
+                        type="time"
+                        value={selectedTime}
+                        onChange={(e) => setSelectedTime(e.target.value)}
+                        className="w-full bg-transparent outline-none text-lg font-semibold"
+                    />
                 </motion.div>
                 <p className="text-xs text-stone-500 mt-1">Availability confirmed after provider approval</p>
             </div>

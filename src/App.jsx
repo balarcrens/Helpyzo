@@ -16,20 +16,18 @@ import AdminDashboard from './components/pages/admin/Dashboard.jsx'
 import Bookings from './components/pages/admin/Bookings.jsx'
 import AdminServices from './components/pages/admin/AdminServices.jsx'
 import NotFound from './components/pages/NotFound.jsx'
+import ProtectedRoute from './components/ProtectedRoute.jsx'
 import Category from './components/pages/Category.jsx'
 import ServicePage from './components/pages/Services.jsx'
+import Profile from './components/pages/Profile.jsx'
+import PartnerDetail from './components/pages/superadmin/PartnerDetail.jsx'
 
 const CURRENT_ROLE = "superadmin";
 
 const App = () => {
     return (
         <>
-            <div
-                className='font-serif min-h-screen'
-                style={{
-                    // cursor: 'url("https://cdn.jsdelivr.net/gh/dhameliyahit/buket/images/1766134050847-cursor.png"), auto'
-                }}
-            >
+            <div className='font-serif min-h-screen'>
                 <ScrollToTop />
                 <Routes>
                     <Route path="/" element={<HomePage />} />
@@ -41,6 +39,8 @@ const App = () => {
                     <Route path="/faq" element={<FAQ />} />
                     <Route path="/category" element={<Category />} />
                     <Route path="*" element={<NotFound />} />
+                    <Route path="/category" element={<Category />} />
+                    <Route path="/profile" element={<Profile />} />
                     <Route
                         path="/"
                         element={<Navigate to={`/${CURRENT_ROLE}`} />}
@@ -48,16 +48,21 @@ const App = () => {
 
                     <Route
                         path="/superadmin"
-                        element={<AdminLayout role="superadmin" />}
+                        element={<ProtectedRoute allowedRoles={["superadmin"]}>
+                            <AdminLayout role="superadmin" />
+                        </ProtectedRoute>}
                     >
                         <Route index element={<SuperDashboard />} />
                         <Route path="partners" element={<Partners />} />
+                        <Route path="partners/:id" element={<PartnerDetail />} />
                         <Route path="categories" element={<Categories />} />
                     </Route>
 
                     <Route
                         path="/admin"
-                        element={<AdminLayout role="admin" />}
+                        element={<ProtectedRoute allowedRoles={["admin"]}>
+                            <AdminLayout role="admin" />
+                        </ProtectedRoute>}
                     >
                         <Route index element={<AdminDashboard />} />
                         <Route path="services" element={<AdminServices />} />

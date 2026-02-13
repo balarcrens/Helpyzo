@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FiMapPin, FiSearch, FiPhoneCall, FiThumbsUp, FiArrowUpRight } from 'react-icons/fi';
 import Header from '../Layout/Header.jsx';
 import Layout from '../Layout/Layout.jsx';
@@ -8,7 +8,6 @@ import { FaArrowRight, FaThermometerHalf, FaTools } from 'react-icons/fa'
 import { FaDroplet, FaLightbulb } from 'react-icons/fa6';
 import { HiArrowLongRight } from 'react-icons/hi2';
 import { AiFillStar } from 'react-icons/ai';
-import { HiBadgeCheck } from "react-icons/hi";
 import { BsArrowRightCircleFill } from 'react-icons/bs';
 import { Link, useNavigate } from 'react-router-dom';
 import ServiceCard from '../Cards/ServiceCard.jsx';
