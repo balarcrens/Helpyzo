@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-vars */
-/* eslint-disable react-hooks/static-components */
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -12,6 +11,7 @@ import Layout from "../Layout/Layout";
 import Header from "../Layout/Header";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiChevronDown } from "react-icons/fi";
+import axios from "axios";
 
 const countries = ["India", "United States", "United Kingdom", "Canada", "Australia", "UAE", "Singapore"];
 
@@ -25,13 +25,12 @@ const Register = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
     const [openCountry, setOpenCountry] = useState(false);
-    const [selectedCountry, setSelectedCountry] = useState("Select country");
+    const [selectedCountry, setSelectedCountry] = useState("India");
 
     const roleParam = (searchParams.get("role") || "customer").toLowerCase();
     const stepParam = Number(searchParams.get("step") || 1);
     const normalizedRole = roleParam === "partner" ? "partner" : "customer";
     const normalizedStep = normalizedRole === "partner" ? Math.min(Math.max(stepParam, 1), 3) : 1;
-
     const { register, handleSubmit, trigger, setValue, formState: { errors }, reset } = useForm({
         mode: "onTouched",
         defaultValues: { country: "India" }
@@ -67,21 +66,68 @@ const Register = () => {
         });
     };
 
-    const onFinalSubmit = (data) => {
-        setIsLoading(true);
-        const normalizedData = {
-            ...data,
-            fullName: data.fullName.trim(),
-            email: data.email.toLowerCase().trim(),
-            role: normalizedRole,
-            submittedAt: new Date().toISOString(),
-        };
+    useEffect(() => {
+        setValue("latitude", 20.5937);
+        setValue("longitude", 78.9629);
+    }, [setValue]);
 
-        console.log("SENDING TO API:", normalizedData);
-        setTimeout(() => {
+    const onFinalSubmit = async (data) => {
+        setIsLoading(true);
+
+        try {
+            const payload = {
+                name: data.fullName.trim(),
+                email: data.email.toLowerCase().trim(),
+                phone: data.phone,
+                password: data.password,
+                role: normalizedRole === "customer" ? "user" : "partner",
+
+                address: {
+                    street: data.addressLine,
+                    city: data.city,
+                    state: data.state || "NA",
+                    zipCode: data.pincode,
+                    country: data.country || "India",
+                },
+
+                location: {
+                    type: "Point",
+                    coordinates: [
+                        Number(data.longitude),
+                        Number(data.latitude),
+                    ],
+                },
+            };
+
+            const res = await axios.post(
+                "http://localhost:3000/api/users/register",
+                payload
+            );
+
+            // console.log("API RESPONSE:", res.data);
+            alert("Registration successful");
+
+            localStorage.setItem("auth-token", res.data.token);
+            localStorage.setItem("userInfo", JSON.stringify(res.data));
+
+            reset();
+
+        } catch (err) {
+            console.error("REGISTER ERROR:", err);
+
+            const message =
+                err.response?.data?.message ||
+                err.message ||
+                "Something went wrong";
+
+            alert(
+                Array.isArray(err.response?.data?.errors)
+                    ? err.response.data.errors.join("\n")
+                    : message
+            );
+        } finally {
             setIsLoading(false);
-            alert("Registration Successful!");
-        }, 1000);
+        }
     };
 
     // Custom UI Components
@@ -209,6 +255,7 @@ const Register = () => {
                                                     </div>
                                                     <InputGroup label="Landmark" name="landmark" placeholder="Near Apollo Hospital, etc." />
                                                     <InputGroup label="City" name="city" placeholder="City" validation={{ required: "City required" }} />
+                                                    <InputGroup label="State" name="state" placeholder="State" validation={{ required: "State required" }} />
                                                     <InputGroup label="Pincode / ZIP" placeholder="Pincode" name="pincode" validation={{ required: "Required" }} />
                                                     <div className="flex flex-col gap-1.5 relative">
                                                         <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 ml-1"> Country </label>
@@ -254,6 +301,9 @@ const Register = () => {
                                             </div>
                                         </div>
                                     )}
+
+                                    <input type="hidden" {...register("latitude")} />
+                                    <input type="hidden" {...register("longitude")} />
 
                                     {/* Step 2: Business (Partner Only) */}
                                     {normalizedRole === "partner" && normalizedStep === 2 && (

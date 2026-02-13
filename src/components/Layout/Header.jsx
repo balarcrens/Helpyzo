@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import AuthContext from "../../context/Auth/AuthContext";
 import { FiHome, FiChevronDown, FiMenu, FiX } from "react-icons/fi";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,13 +7,12 @@ import Login from "../pages/Login";
 import { useNavigate } from "react-router-dom";
 
 const Header = () => {
+    const { isLoggedIn, logout, loading } = useContext(AuthContext);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [isLoginModal, setIsLoginModal] = useState(false);
     const [mobileDropdown, setMobileDropdown] = useState(null);
-
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     const navigate = useNavigate();
 
@@ -22,21 +22,8 @@ const Header = () => {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setIsLoggedIn(!!token);
-    }, []);
-
-    useEffect(() => {
-        const syncLogin = () => setIsLoggedIn(!!localStorage.getItem("token"));
-        window.addEventListener("storage", syncLogin);
-        return () => window.removeEventListener("storage", syncLogin);
-    }, []);
-
     const handleLogout = () => {
-        localStorage.removeItem("token");
-        setIsLoggedIn(false);
+        logout();
         navigate("/");
     };
 
@@ -52,15 +39,16 @@ const Header = () => {
             path: "/",
         },
         {
-            label: "Service",
-            path: "/services",
+            label: "Category",
+            path: "/category",
         },
         {
             label: "Services",
             dropdown: [
-                { label: "Cleaning", path: "/services?category=cleaning" },
-                { label: "Repair", path: "/services?category=repair" },
-                { label: "Installation", path: "/services?category=installation" }
+                { label: "Home & Kitchen Cleaning", path: "/category/home-cleaning" },
+                { label: "Plumbing & Sanitary Services", path: "/category/plumbing-sanitary" },
+                { label: "AC Cleaning & Repair", path: "/category/ac-cleaning" },
+                { label: "Electrical Repair", path: "/category/electrical-repair" }
             ],
         },
         {
@@ -73,36 +61,29 @@ const Header = () => {
         },
     ];
 
+    if (loading) return null;
+
     return (
         <>
             {isLoginModal && <Login onClose={() => setIsLoginModal(false)} />}
 
             <header className="fixed top-0 z-50 w-full px-4 py-2 sm:px-6">
-                <div
-                    className={`mx-auto max-w-7xl transition-all duration-500 rounded-4xl px-6 py-3 flex items-center justify-between ${isScrolled
-                        ? "bg-black/40 backdrop-blur-2xl border border-white/10 shadow-2xl"
-                        : "bg-black/20 backdrop-blur-none border border-white/5"
-                        }`}
+                <div className={`mx-auto max-w-7xl transition-all duration-500 rounded-4xl px-6 py-3 flex items-center justify-between 
+                        ${isScrolled ? "bg-black/40 backdrop-blur-md border border-white/10 shadow-2xl" : "bg-black/40 backdrop-blur-none border border-white/5"}`}
                 >
                     {/* Logo */}
-                    <div
-                        onClick={() => navigate("/")}
-                        className="flex items-center gap-2 text-white group cursor-pointer shrink-0"
-                    >
+                    <div onClick={() => navigate("/")} className="flex items-center gap-2 mx-4 text-white group cursor-pointer shrink-0">
                         <img src="/helpyZo.png" width={150} />
                     </div>
 
                     {/* Desktop Nav */}
                     <nav className="hidden lg:flex items-center bg-white/10 backdrop-blur-md border border-white/10 rounded-full px-1 py-1">
                         {navItems.map((item, i) => (
-                            <div
-                                key={i}
-                                className="relative"
+                            <div key={i} className="relative"
                                 onMouseEnter={() => setActiveDropdown(item.label)}
                                 onMouseLeave={() => setActiveDropdown(null)}
                             >
-                                <button
-                                    onClick={() => item.path && navigate(item.path)}
+                                <button onClick={() => item.path && navigate(item.path)}
                                     className="flex items-center gap-1.5 px-5 py-2 text-sm font-medium transition-all rounded-full text-gray-200 hover:text-white hover:bg-white/5"
                                 >
                                     {item.label}
@@ -118,9 +99,7 @@ const Header = () => {
                                             className="absolute top-full left-0 mt-2 w-48 rounded-2xl bg-stone-900/95 backdrop-blur-xl border border-white/10 shadow-2xl p-2"
                                         >
                                             {item.dropdown.map((sub, idx) => (
-                                                <div
-                                                    key={idx}
-                                                    onClick={() => navigate(sub.path)}
+                                                <div key={idx} onClick={() => navigate(sub.path)}
                                                     className="px-4 py-2 text-sm text-gray-300 hover:text-[#9fe870] hover:bg-white/5 rounded-lg cursor-pointer"
                                                 >
                                                     {sub.label}
@@ -136,45 +115,49 @@ const Header = () => {
                     {/* RIGHT SIDE ACTIONS */}
                     <div className="hidden lg:flex items-center gap-4">
                         {isLoggedIn ? (
-                            <div className="relative">
-                                <button
-                                    className="cursor-pointer border border-white/20 px-6 py-2 rounded-full text-white font-medium hover:bg-white/10"
-                                    onClick={() => navigate("/profile")}
+                            <div className="flex items-center gap-3">
+                                {/* Profile */}
+                                <button onClick={() => navigate("/profile")}
+                                    className="group flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-2.5 text-white text-sm font-medium backdrop-blur-md transition-all hover:bg-white/10 hover:border-white/30"
                                 >
+                                    <span className="w-2 h-2 rounded-full bg-[#9FE870] animate-pulse" />
                                     Profile
                                 </button>
 
-                                <button
-                                    onClick={handleLogout}
-                                    className="ml-3 cursor-pointer text-red-400 hover:text-red-300 text-sm"
+                                {/* Divider */}
+                                <span className="h-6 w-px bg-white/20" />
+
+                                {/* Logout */}
+                                <button onClick={handleLogout}
+                                    className="border border-transparent rounded-full px-4 py-2 text-sm font-medium text-white transition-all hover:text-red-500 hover:bg-white/60 active:scale-95"
                                 >
                                     Logout
                                 </button>
                             </div>
                         ) : (
-                            <>
-                                {/* Sign In */}
-                                <button
-                                    onClick={() => navigate("/register")}
-                                    className="cursor-pointer border border-stone-400 hover:bg-white/10 text-white px-8 py-3 rounded-full font-bold text-sm transition-all active:scale-95"
+                            <div className="flex items-center gap-3">
+                                {/* Sign Up – Secondary */}
+                                <button onClick={() => navigate("/register")}
+                                    className="rounded-full border border-white/25 bg-white/5 px-7 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/10 hover:border-white/40 active:scale-95"
                                 >
                                     Sign Up
                                 </button>
 
-                                {/* Login */}
-                                <button
-                                    onClick={() => setIsLoginModal(true)}
-                                    className="bg-[#9FE870] cursor-pointer hover:bg-[#9fe870] text-white px-8 py-3 rounded-full font-bold text-sm transition-all hover:scale-[1.02] active:scale-95"
+                                {/* Login – Primary */}
+                                <button onClick={() => setIsLoginModal(true)}
+                                    className="relative overflow-hidden rounded-full bg-[#9FE870] px-8 py-2.5 text-sm font-bold text-black shadow-lg shadow-[#9FE870]/30 transition-all hover:shadow-xl hover:shadow-[#9FE870]/40 hover:scale-[1.03] active:scale-95"
                                 >
-                                    Login
+                                    <span className="relative z-10">Login</span>
+
+                                    {/* Subtle shine effect */}
+                                    <span className="absolute inset-0 bg-white/20 opacity-0 transition-opacity hover:opacity-100" />
                                 </button>
-                            </>
+                            </div>
                         )}
                     </div>
 
                     {/* Mobile toggle */}
-                    <button
-                        className="lg:hidden cursor-pointer text-white p-2"
+                    <button className="lg:hidden cursor-pointer text-white p-2"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
                         {isMobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
@@ -238,16 +221,16 @@ const Header = () => {
 
                                 {isLoggedIn ? (
                                     <>
-                                        <button onClick={() => navigate("/profile")} className="mt-2 bg-white/10 text-white w-full py-4 rounded-2xl font-bold" >
+                                        <button onClick={() => navigate("/profile")} className="mt-1 bg-white/10 text-white w-full py-3 rounded-2xl font-bold" >
                                             Profile
                                         </button>
 
-                                        <button onClick={handleLogout} className="mt-2 bg-red-500/20 text-red-300 w-full py-4 rounded-2xl font-bold" >
+                                        <button onClick={handleLogout} className="mt-1 bg-red-500/20 text-red-300 w-full py-3 rounded-2xl font-bold" >
                                             Logout
                                         </button>
                                     </>
                                 ) : (
-                                    <button className="mt-4 cursor-pointer bg-[#b4f481] text-black w-full py-4 rounded-2xl font-bold"
+                                    <button className="mt-2 cursor-pointer bg-[#b4f481] text-black w-full py-3 rounded-2xl font-bold"
                                         onClick={() => setIsLoginModal(true)}>
                                         Login
                                     </button>
