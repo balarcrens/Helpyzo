@@ -3,8 +3,8 @@ import React, { useContext, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiEye, FiEyeOff, FiLock, FiMail, FiX, FiAlertCircle } from "react-icons/fi";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import AuthContext from "../../context/Auth/AuthContext";
+import { partnerAPI, userAPI } from "../../services/api";
 
 const Login = ({ onClose }) => {
     const { login } = useContext(AuthContext);
@@ -13,9 +13,11 @@ const Login = ({ onClose }) => {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [isPartner, setIsPartner] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        e.stopPropagation();
         setError("");
 
         if (!email || !password) {
@@ -26,16 +28,23 @@ const Login = ({ onClose }) => {
         try {
             setLoading(true);
 
-            const res = await axios.post("https://helpyzo-backend.vercel.app/api/users/login", {
-                email: email.toLowerCase().trim(),
-                password,
-            });
+            const payloadEmail = email.toLowerCase().trim();
 
-            login(res.data.data.token, res.data.data.user);
+            const res = isPartner
+                ? await partnerAPI.login(payloadEmail, password)
+                : await userAPI.login(payloadEmail, password);
 
-            if (res.data.success) {
-                onClose(); // close modal on success
+            if (!res?.data?.success) {
+                throw new Error("Login failed");
             }
+
+            login(
+                res.data.token,
+                isPartner ? res.data.partner : res.data.user
+            );
+
+            onClose();
+
         } catch (err) {
             setError(
                 err.response?.data?.message ||
@@ -134,6 +143,31 @@ const Login = ({ onClose }) => {
                                 </div>
                             </label>
 
+                            <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-2 py-1.5 cursor-pointer transition hover:border-[#9fe870]/40">
+                                <input
+                                    type="checkbox"
+                                    checked={isPartner}
+                                    onChange={(e) => setIsPartner(e.target.checked)}
+                                    className="peer hidden"
+                                />
+
+                                {/* Custom checkbox */}
+                                <div className="flex h-5 w-5 items-center justify-center rounded-md border border-white/30 peer-checked:border-[#9fe870] peer-checked:bg-[#9fe870] transition">
+                                    {isPartner && (
+                                        <span className="h-2.5 w-2.5 rounded-sm bg-stone-900" />
+                                    )}
+                                </div>
+
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-medium text-white">
+                                        Business Partner <span className="text-xs text-white/50">
+                                            ( Login as service provider )
+                                        </span>
+                                    </span>
+
+                                </div>
+                            </label>
+
                             <button
                                 type="submit"
                                 disabled={loading}
@@ -141,6 +175,7 @@ const Login = ({ onClose }) => {
                             >
                                 {loading ? "LOGGING IN..." : "Log in"}
                             </button>
+
 
                             <div className="text-center text-sm text-white/50">
                                 New here?{" "}

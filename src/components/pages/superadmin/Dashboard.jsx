@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-unused-vars */
 import {
     FaUsers,
     FaTools,
@@ -6,20 +8,48 @@ import {
     FaArrowUp,
     FaArrowDown,
 } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import { useBookings } from "../../../hooks/useData";
+import { userAPI, partnerAPI } from "../../../services/api";
 
 export default function Dashboard() {
+    const { bookings, fetchBookings } = useBookings();
+    const [users, setUsers] = useState([]);
+    const [partners, setPartners] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const [bookingsRes, usersRes, partnersRes] = await Promise.all([
+                    fetchBookings(),
+                    userAPI.getAllUsers(),
+                    partnerAPI.getAllPartners(),
+                ]);
+                setUsers(usersRes.data.users);
+                setPartners(partnersRes.data.partners);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
     const stats = [
         {
             title: "Total Users",
-            value: "1,240",
+            value: (users && Array.isArray(users)) ? users.length : 0,
             change: "+12%",
             trend: "up",
             icon: <FaUsers />,
             gradient: "from-blue-500 to-indigo-600",
         },
         {
-            title: "Active Services",
-            value: "58",
+            title: "Active Partners",
+            value: (partners && Array.isArray(partners)) ? partners.filter(p => p && p.isActive).length : 0,
             change: "+5%",
             trend: "up",
             icon: <FaTools />,
@@ -27,7 +57,7 @@ export default function Dashboard() {
         },
         {
             title: "Total Bookings",
-            value: "312",
+            value: (bookings && Array.isArray(bookings)) ? bookings.length : 0,
             change: "-3%",
             trend: "down",
             icon: <FaClipboardList />,
@@ -35,7 +65,7 @@ export default function Dashboard() {
         },
         {
             title: "Partners",
-            value: "26",
+            value: (partners && Array.isArray(partners)) ? partners.length : 0,
             change: "+2%",
             trend: "up",
             icon: <FaUserTie />,
@@ -43,16 +73,12 @@ export default function Dashboard() {
         },
     ];
 
-    const recentBookings = [
-        { id: "#BK1023", user: "Rahul Sharma", service: "AC Repair", status: "Completed" },
-        { id: "#BK1024", user: "Amit Patel", service: "Plumbing", status: "Pending" },
-        { id: "#BK1025", user: "Neha Singh", service: "Cleaning", status: "Cancelled" },
-    ];
-
     const statusColor = {
-        Completed: "bg-green-100 text-green-700",
-        Pending: "bg-yellow-100 text-yellow-700",
-        Cancelled: "bg-red-100 text-red-700",
+        completed: "bg-green-100 text-green-700",
+        pending: "bg-yellow-100 text-yellow-700",
+        cancelled: "bg-red-100 text-red-700",
+        confirmed: "bg-blue-100 text-blue-700",
+        "in-progress": "bg-indigo-100 text-indigo-700",
     };
 
     return (
@@ -129,25 +155,29 @@ export default function Dashboard() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {recentBookings.map((item, i) => (
-                                    <tr
-                                        key={i}
-                                        className="hover:bg-gray-50 transition"
-                                    >
-                                        <td className="py-4 font-medium text-gray-900">
-                                            {item.id}
-                                        </td>
-                                        <td>{item.user}</td>
-                                        <td>{item.service}</td>
-                                        <td>
-                                            <span
-                                                className={`px-4 py-1.5 rounded-full text-xs font-semibold ${statusColor[item.status]}`}
-                                            >
-                                                {item.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {(bookings && Array.isArray(bookings)) ? (
+                                    bookings.slice(0, 5).map((item) => (
+                                        <tr
+                                            key={item?._id}
+                                            className="hover:bg-gray-50 transition"
+                                        >
+                                            <td className="py-4 font-medium text-gray-900">
+                                                {item?._id?.slice(-6).toUpperCase() || 'N/A'}
+                                            </td>
+                                            <td>{item?.user?.name || 'Unknown'}</td>
+                                            <td>{item?.serviceId || 'N/A'}</td>
+                                            <td>
+                                                <span
+                                                    className={`px-4 py-1.5 rounded-full text-xs font-semibold capitalize ${statusColor[item?.status] || ''}`}
+                                                >
+                                                    {item?.status || 'unknown'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr><td colSpan="4" className="py-4 text-center text-gray-500">No bookings available</td></tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -168,20 +198,18 @@ export default function Dashboard() {
                         </li>
 
                         <li className="flex justify-between">
-                            <span className="text-gray-500">Server Load</span>
-                            <span className="text-yellow-600 font-semibold">
-                                Moderate
-                            </span>
+                            <span className="text-gray-500">Active Users</span>
+                            <span className="font-semibold text-gray-900">{(users && Array.isArray(users)) ? users.length : 0}</span>
                         </li>
 
                         <li className="flex justify-between">
-                            <span className="text-gray-500">Pending Approvals</span>
-                            <span className="font-semibold text-gray-900">4</span>
+                            <span className="text-gray-500">Pending Bookings</span>
+                            <span className="font-semibold text-gray-900">{(bookings && Array.isArray(bookings)) ? bookings.filter(b => b && b.status === "pending").length : 0}</span>
                         </li>
 
                         <li className="flex justify-between">
                             <span className="text-gray-500">System Alerts</span>
-                            <span className="text-red-600 font-semibold">1</span>
+                            <span className="text-green-600 font-semibold">0</span>
                         </li>
                     </ul>
                 </div>

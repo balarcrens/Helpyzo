@@ -1,20 +1,32 @@
 import React, { useState, useEffect, useContext } from "react";
 import AuthContext from "../../context/Auth/AuthContext";
-import { FiHome, FiChevronDown, FiMenu, FiX } from "react-icons/fi";
+import { FiHome, FiChevronDown, FiMenu, FiX, FiLogOut, FiUser, FiLayout } from "react-icons/fi";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import Login from "../pages/Login";
 import { useNavigate } from "react-router-dom";
 
 const Header = () => {
-    const { isLoggedIn, logout, loading } = useContext(AuthContext);
+    const { isLoggedIn, logout, loading, user, isSuperAdmin } = useContext(AuthContext);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [isLoginModal, setIsLoginModal] = useState(false);
     const [mobileDropdown, setMobileDropdown] = useState(null);
+    const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
     const navigate = useNavigate();
+
+    // Get initials from user name
+    const getInitials = (name) => {
+        if (!name) return "U";
+        return name
+            .split(" ")
+            .map((word) => word[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2);
+    };
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -22,15 +34,11 @@ const Header = () => {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    const handleLogout = () => {
-        logout();
-        navigate("/");
-    };
-
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsMobileMenuOpen(false);
         setMobileDropdown(null);
+        setIsProfileMenuOpen(false);
     }, [navigate]);
 
     const navItems = [
@@ -68,11 +76,11 @@ const Header = () => {
             {isLoginModal && <Login onClose={() => setIsLoginModal(false)} />}
 
             <header className="fixed top-0 z-50 w-full px-4 py-2 sm:px-6">
-                <div className={`mx-auto max-w-7xl transition-all duration-500 rounded-4xl px-6 py-3 flex items-center justify-between 
+                <div className={`mx-auto max-w-7xl transition-all duration-500 rounded-4xl pl-4 pr-6 py-3 flex items-center justify-between 
                         ${isScrolled ? "bg-black/40 backdrop-blur-md border border-white/10 shadow-2xl" : "bg-black/40 backdrop-blur-none border border-white/5"}`}
                 >
                     {/* Logo */}
-                    <div onClick={() => navigate("/")} className="flex items-center gap-2 mx-4 text-white group cursor-pointer shrink-0">
+                    <div onClick={() => navigate("/")} className="flex items-center gap-2 text-white group cursor-pointer shrink-0">
                         <img src="/helpyZo.png" width={150} />
                     </div>
 
@@ -116,23 +124,71 @@ const Header = () => {
                     <div className="hidden lg:flex items-center gap-4">
                         {isLoggedIn ? (
                             <div className="flex items-center gap-3">
-                                {/* Profile */}
-                                <button onClick={() => navigate("/profile")}
-                                    className="group flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-2.5 text-white text-sm font-medium backdrop-blur-md transition-all hover:bg-white/10 hover:border-white/30"
-                                >
-                                    <span className="w-2 h-2 rounded-full bg-[#9FE870] animate-pulse" />
-                                    Profile
-                                </button>
+                                {/* Profile Avatar Dropdown */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                                        className="w-10 h-10 rounded-full bg-gradient-to-br from-[#9FE870] to-[#7ec850] flex items-center justify-center text-black font-bold text-sm hover:scale-110 transition-transform"
+                                    >
+                                        {getInitials(user?.name)}
+                                    </button>
 
-                                {/* Divider */}
-                                <span className="h-6 w-px bg-white/20" />
+                                    {/* Profile Dropdown Menu */}
+                                    <AnimatePresence>
+                                        {isProfileMenuOpen && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: 10 }}
+                                                className="absolute right-0 mt-3 w-48 rounded-2xl bg-stone-900/95 backdrop-blur-xl border border-white/10 shadow-2xl p-2 z-50"
+                                            >
+                                                {/* Profile Option */}
+                                                <button
+                                                    onClick={() => {
+                                                        navigate("/profile");
+                                                        setIsProfileMenuOpen(false);
+                                                    }}
+                                                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-[#9fe870] hover:bg-white/5 rounded-lg cursor-pointer transition-all"
+                                                >
+                                                    <FiUser size={16} />
+                                                    <span>Profile</span>
+                                                </button>
 
-                                {/* Logout */}
-                                <button onClick={handleLogout}
-                                    className="border border-transparent rounded-full px-4 py-2 text-sm font-medium text-white transition-all hover:text-red-500 hover:bg-white/60 active:scale-95"
-                                >
-                                    Logout
-                                </button>
+                                                {/* Dashboard Option - Conditional */}
+                                                <button
+                                                    onClick={() => {
+                                                        if (isSuperAdmin) {
+                                                            navigate("/superadmin");
+                                                        } else {
+                                                            navigate("/admin");
+                                                        }
+                                                        setIsProfileMenuOpen(false);
+                                                    }}
+                                                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-[#9fe870] hover:bg-white/5 rounded-lg cursor-pointer transition-all"
+                                                >
+                                                    <FiLayout size={16} />
+                                                    <span>Dashboard</span>
+                                                </button>
+
+                                                {/* Divider */}
+                                                <div className="h-px bg-white/10 my-2" />
+
+                                                {/* Logout Option */}
+                                                <button
+                                                    onClick={() => {
+                                                        logout();
+                                                        navigate("/");
+                                                        setIsProfileMenuOpen(false);
+                                                    }}
+                                                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-300 hover:text-red-400 hover:bg-red-500/10 rounded-lg cursor-pointer transition-all"
+                                                >
+                                                    <FiLogOut size={16} />
+                                                    <span>Logout</span>
+                                                </button>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
                             </div>
                         ) : (
                             <div className="flex items-center gap-3">
@@ -221,11 +277,32 @@ const Header = () => {
 
                                 {isLoggedIn ? (
                                     <>
-                                        <button onClick={() => navigate("/profile")} className="mt-1 bg-white/10 text-white w-full py-3 rounded-2xl font-bold" >
+                                        <button onClick={() => {
+                                            navigate("/profile");
+                                            setIsMobileMenuOpen(false);
+                                        }} className="mt-1 bg-white/10 text-white w-full py-3 rounded-2xl font-bold flex items-center justify-center gap-2" >
+                                            <FiUser size={16} />
                                             Profile
                                         </button>
 
-                                        <button onClick={handleLogout} className="mt-1 bg-red-500/20 text-red-300 w-full py-3 rounded-2xl font-bold" >
+                                        <button onClick={() => {
+                                            if (isSuperAdmin) {
+                                                navigate("/superadmin");
+                                            } else {
+                                                navigate("/admin");
+                                            }
+                                            setIsMobileMenuOpen(false);
+                                        }} className="mt-2 bg-blue-500/20 text-blue-300 w-full py-3 rounded-2xl font-bold flex items-center justify-center gap-2" >
+                                            <FiLayout size={16} />
+                                            Dashboard
+                                        </button>
+
+                                        <button onClick={() => {
+                                            logout();
+                                            navigate("/");
+                                            setIsMobileMenuOpen(false);
+                                        }} className="mt-2 bg-red-500/20 text-red-300 w-full py-3 rounded-2xl font-bold flex items-center justify-center gap-2" >
+                                            <FiLogOut size={16} />
                                             Logout
                                         </button>
                                     </>

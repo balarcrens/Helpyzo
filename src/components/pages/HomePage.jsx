@@ -13,6 +13,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import ServiceCard from '../Cards/ServiceCard.jsx';
 
 const HomePage = () => {
+    // useEffect(() => {
+    //     console.log(localStorage.getItem("auth-token"));
+    //     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    //     console.log(userInfo);
+    // }, []);
+
     return (
         <>
             <Layout>

@@ -12,19 +12,25 @@ import {
     FiCamera,
     FiTrash2,
     FiX,
+    FiStar,
 } from "react-icons/fi";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import Layout from "../Layout/Layout";
 import Header from "../Layout/Header";
 import AuthContext from "../../context/Auth/AuthContext.jsx";
+import { useUser } from "../../hooks/useAuth";
+import { useBookings } from "../../hooks/useData";
+import StarRating from "../StarRating";
+import RatingModal from "../RatingModal";
 
 const ProfilePage = () => {
-    const { user, setUser, logout } = useContext(AuthContext);
+    const { user, logout } = useContext(AuthContext);
+    const { updateProfile, changePassword } = useUser();
 
     return (
         <Layout>
             <Header />
-            <Profile user={user} setUser={setUser} logout={logout} />
+            <Profile user={user} logout={logout} updateProfile={updateProfile} changePassword={changePassword} />
         </Layout>
     );
 };
@@ -34,6 +40,16 @@ export default ProfilePage;
 const Profile = ({ user }) => {
     const [editOpen, setEditOpen] = useState(false);
     const [passwordOpen, setPasswordOpen] = useState(false);
+    const [bookings, setBookings] = useState([]);
+    const [selectedBooking, setSelectedBooking] = useState(null);
+    const [showRatingModal, setShowRatingModal] = useState(false);
+    const { fetchUserBookings } = useBookings();
+
+    useEffect(() => {
+        if (user?.role === 'client') {
+            fetchUserBookings();
+        }
+    }, [user]);
 
     if (!user) {
         return (
@@ -117,12 +133,41 @@ const Profile = ({ user }) => {
 
                             <ProfileMap address={user.address} />
                         </GlassCard>
+
+                        {/* Bookings Section for Clients */}
+                        {user.role === 'client' && (
+                            <GlassCard title="My Bookings" icon={<FiCalendar />}>
+                                <UserBookingsList 
+                                    bookings={bookings} 
+                                    onRate={(booking) => {
+                                        setSelectedBooking(booking);
+                                        setShowRatingModal(true);
+                                    }}
+                                />
+                            </GlassCard>
+                        )}
                     </div>
                 </div>
             </section>
 
             <EditProfileModal open={editOpen} setOpen={setEditOpen} user={user} />
             <ChangePasswordModal open={passwordOpen} setOpen={setPasswordOpen} />
+
+            {selectedBooking && (
+                <RatingModal
+                    isOpen={showRatingModal}
+                    bookingId={selectedBooking._id}
+                    partnerName={selectedBooking.partner?.name || 'Service Partner'}
+                    serviceName={selectedBooking.serviceName || 'Service'}
+                    onClose={() => {
+                        setShowRatingModal(false);
+                        setSelectedBooking(null);
+                    }}
+                    onSuccess={() => {
+                        fetchUserBookings();
+                    }}
+                />
+            )}
         </>
     );
 };
@@ -247,5 +292,102 @@ const ProfileMap = ({ address }) => {
                 referrerPolicy="no-referrer-when-downgrade"
             />
         </div>
+    );
+};
+
+const UserBookingsList = ({ bookings, onRate }) => {
+    const completedBookings = bookings.filter(b => b.status === 'completed');
+    const otherBookings = bookings.filter(b => b.status !== 'completed');
+
+    if (bookings.length === 0) {
+        return (
+            <div className="text-center py-8 text-stone-500">
+                <p>No bookings yet</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            {/* Other Bookings */}
+            {otherBookings.length > 0 && (
+                <div>
+                    <h4 className="text-sm font-semibold text-stone-700 mb-3">Active Bookings</h4>
+                    <div className="space-y-2">
+                        {otherBookings.map((booking) => (
+                            <BookingItem key={booking._id} booking={booking} canRate={false} />
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Completed Bookings */}
+            {completedBookings.length > 0 && (
+                <div>
+                    <h4 className="text-sm font-semibold text-stone-700 mb-3">Completed Services</h4>
+                    <div className="space-y-2">
+                        {completedBookings.map((booking) => (
+                            <BookingItem 
+                                key={booking._id} 
+                                booking={booking} 
+                                canRate={!booking.rating}
+                                onRate={() => onRate(booking)}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const BookingItem = ({ booking, canRate, onRate }) => {
+    const statusColors = {
+        pending: 'bg-yellow-50 border-yellow-200 text-yellow-700',
+        confirmed: 'bg-blue-50 border-blue-200 text-blue-700',
+        'in-progress': 'bg-purple-50 border-purple-200 text-purple-700',
+        completed: 'bg-green-50 border-green-200 text-green-700',
+        cancelled: 'bg-red-50 border-red-200 text-red-700',
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-white/60 rounded-xl p-4 border border-white/40"
+        >
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h5 className="font-semibold text-stone-900">{booking.serviceName}</h5>
+                    <p className="text-sm text-stone-600">
+                        {booking.partner?.name} • ${booking.amount}
+                    </p>
+                    <p className="text-xs text-stone-500 mt-1">
+                        {new Date(booking.bookedDate).toLocaleDateString()}
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusColors[booking.status]}`}>
+                        {booking.status}
+                    </span>
+                    
+                    {booking.rating ? (
+                        <div className="flex items-center gap-2">
+                            <StarRating rating={booking.rating} size="sm" showLabel={false} />
+                            <span className="text-xs text-stone-600">Rated</span>
+                        </div>
+                    ) : canRate && (
+                        <button
+                            onClick={onRate}
+                            className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition flex items-center gap-1"
+                        >
+                            <FiStar className="w-3 h-3" />
+                            Rate
+                        </button>
+                    )}
+                </div>
+            </div>
+        </motion.div>
     );
 };

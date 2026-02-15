@@ -5,50 +5,39 @@ import {
     FaBan,
     FaEye,
     FaUserSlash,
+    FaTools,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { usePartners } from "../../../hooks/useData";
+import { partnerAPI } from "../../../services/api";
 
 export default function Partners() {
     const navigate = useNavigate();
+    const { partners, loading } = usePartners();
+    const [error, setError] = useState(null);
 
     const stats = [
-        { label: "Total Partners", value: 26, icon: <FaUserTie />, color: "text-indigo-600" },
-        { label: "Active", value: 18, icon: <FaCheckCircle />, color: "text-green-600" },
-        { label: "Pending", value: 6, icon: <FaClock />, color: "text-yellow-600" },
-        { label: "Blocked", value: 2, icon: <FaBan />, color: "text-red-600" },
+        { label: "Total Partners", value: (partners && Array.isArray(partners)) ? partners.length : 0, icon: <FaUserTie />, color: "text-indigo-600" },
+        { label: "Active", value: (partners && Array.isArray(partners)) ? partners.filter(p => p && p.isActive).length : 0, icon: <FaCheckCircle />, color: "text-green-600" },
+        { label: "Inactive", value: (partners && Array.isArray(partners)) ? partners.filter(p => p && !p.isActive).length : 0, icon: <FaClock />, color: "text-yellow-600" },
+        { label: "Total Services", value: (partners && Array.isArray(partners)) ? partners.reduce((sum, p) => sum + (p && p.services && Array.isArray(p.services) ? p.services.length : 0), 0) : 0, icon: <FaTools />, color: "text-red-600" },
     ];
 
-    const partners = [
-        {
-            id: 1,
-            name: "Amit Electricals",
-            owner: "Amit Patel",
-            phone: "+91 98765 43210",
-            service: "Electrician",
-            status: "Active",
-        },
-        {
-            id: 2,
-            name: "CleanPro Services",
-            owner: "Neha Singh",
-            phone: "+91 91234 56789",
-            service: "Cleaning",
-            status: "Pending",
-        },
-        {
-            id: 3,
-            name: "CoolCare AC",
-            owner: "Rahul Sharma",
-            phone: "+91 99887 66554",
-            service: "AC Repair",
-            status: "Blocked",
-        },
-    ];
+    const handleDelete = async (partnerId) => {
+        if (confirm("Are you sure you want to delete this partner?")) {
+            try {
+                await partnerAPI.deletePartner(partnerId);
+                window.location.reload();
+            } catch (err) {
+                setError(err.response?.data?.message || "Failed to delete partner");
+            }
+        }
+    };
 
     const statusStyle = {
-        Active: "bg-green-100 text-green-700",
-        Pending: "bg-yellow-100 text-yellow-700",
-        Blocked: "bg-red-100 text-red-700",
+        true: "bg-green-100 text-green-700",
+        false: "bg-red-100 text-red-700",
     };
 
     return (
@@ -85,57 +74,72 @@ export default function Partners() {
 
             {/* Partner Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {partners.map((partner) => (
-                    <div
-                        key={partner.id}
-                        className="bg-white rounded-3xl shadow-sm p-6 hover:shadow-md transition"
-                    >
-                        <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center text-xl font-bold text-indigo-600">
-                                {partner.name.charAt(0)}
+                {loading ? (
+                    <div className="col-span-full text-center py-8">Loading partners...</div>
+                ) : error ? (
+                    <div className="col-span-full text-center py-8 text-red-600">{error}</div>
+                ) : !partners || partners.length === 0 ? (
+                    <div className="col-span-full text-center py-8 text-gray-500">No partners found</div>
+                ) : (
+                    partners.map((partner) => (
+                        <div
+                            key={partner._id}
+                            className="bg-white rounded-3xl shadow-sm p-6 hover:shadow-md transition"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center text-xl font-bold text-indigo-600">
+                                    {partner?.name?.charAt(0) || '?'}
+                                </div>
+
+                                <div className="flex-1">
+                                    <h3 className="font-semibold text-lg text-gray-900">
+                                        {partner?.name || 'Unknown'}
+                                    </h3>
+                                    <p className="text-sm text-gray-500">
+                                        {(partner && partner.services && Array.isArray(partner.services)) ? partner.services.length : 0} services
+                                    </p>
+                                </div>
+
+                                <span
+                                    className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyle[partner?.isActive] || ''}`}
+                                >
+                                    {partner?.isActive ? "Active" : "Inactive"}
+                                </span>
                             </div>
 
-                            <div className="flex-1">
-                                <h3 className="font-semibold text-lg text-gray-900">
-                                    {partner.name}
-                                </h3>
-                                <p className="text-sm text-gray-500">
-                                    {partner.service}
+                            <div className="mt-5 space-y-2 text-sm text-gray-600">
+                                <p>
+                                    <span className="font-medium text-gray-900">Email:</span>{" "}
+                                    {partner?.email || 'N/A'}
+                                </p>
+                                <p>
+                                    <span className="font-medium text-gray-900">Phone:</span>{" "}
+                                    {partner?.phone || 'N/A'}
+                                </p>
+                                <p>
+                                    <span className="font-medium text-gray-900">Business:</span>{" "}
+                                    {partner?.business?.name || "N/A"}
                                 </p>
                             </div>
 
-                            <span
-                                className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyle[partner.status]}`}
-                            >
-                                {partner.status}
-                            </span>
-                        </div>
+                            <div className="mt-6 flex gap-3">
+                                <button
+                                    onClick={() => navigate(`/superadmin/partners/${partner?._id}`)}
+                                    className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition"
+                                >
+                                    <FaEye /> View
+                                </button>
 
-                        <div className="mt-5 space-y-2 text-sm text-gray-600">
-                            <p>
-                                <span className="font-medium text-gray-900">Owner:</span>{" "}
-                                {partner.owner}
-                            </p>
-                            <p>
-                                <span className="font-medium text-gray-900">Phone:</span>{" "}
-                                {partner.phone}
-                            </p>
+                                <button
+                                    onClick={() => partner?._id && handleDelete(partner._id)}
+                                    className="flex-1 flex items-center justify-center gap-2 bg-red-100 text-red-700 py-2 rounded-xl text-sm font-semibold hover:bg-red-200 transition"
+                                >
+                                    <FaUserSlash /> Delete
+                                </button>
+                            </div>
                         </div>
-
-                        <div className="mt-6 flex gap-3">
-                            <button
-                                onClick={() => navigate(`/superadmin/partners/${partner.id}`)}
-                                className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition"
-                            >
-                                <FaEye /> View
-                            </button>
-
-                            <button className="flex-1 flex items-center justify-center gap-2 bg-red-100 text-red-700 py-2 rounded-xl text-sm font-semibold hover:bg-red-200 transition">
-                                <FaUserSlash /> Disable
-                            </button>
-                        </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
         </div>
     );

@@ -7,7 +7,7 @@ import Header from "./Header";
 import Footer from "./Footer";
 import { useEffect } from "react";
 
-export default function AdminLayout({ role }) {
+export default function AdminLayout() {
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -19,7 +19,6 @@ export default function AdminLayout({ role }) {
         <div className="flex min-h-screen bg-gray-50">
             {/* Sidebar */}
             <Sidebar
-                role={role}
                 isOpen={sidebarOpen}
                 onClose={() => setSidebarOpen(false)}
             />
@@ -28,7 +27,6 @@ export default function AdminLayout({ role }) {
             <div className="flex-1 flex flex-col">
                 {/* Header */}
                 <Header
-                    role={role}
                     onMenuClick={() => setSidebarOpen(true)}
                 />
 

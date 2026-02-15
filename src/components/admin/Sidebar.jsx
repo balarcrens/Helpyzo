@@ -6,23 +6,31 @@ import {
     Grid,
     Briefcase,
     CalendarCheck,
+    LogOut,
 } from "lucide-react";
+import AuthContext from "../../context/Auth/AuthContext";
+import { useContext } from "react";
 
 const menus = {
     superadmin: [
         { name: "Dashboard", path: "/superadmin", icon: LayoutDashboard },
         { name: "Partners", path: "/superadmin/partners", icon: Users },
         { name: "Categories", path: "/superadmin/categories", icon: Grid },
+        { name: "Home", path: "/", icon: LogOut },
     ],
     admin: [
         { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
         { name: "Services", path: "/admin/services", icon: Briefcase },
         { name: "Bookings", path: "/admin/bookings", icon: CalendarCheck },
+        { name: "Home", path: "/", icon: LogOut },
     ],
 };
 
-export default function Sidebar({ role, isOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose }) {
     const location = useLocation().pathname;
+    const { user } = useContext(AuthContext);
+    const role = user?.role === "partner" ? "admin" : user?.role;
+    const roleMenus = menus?.[role] || [];
 
     return (
         <>
@@ -59,7 +67,7 @@ export default function Sidebar({ role, isOpen, onClose }) {
 
                 {/* Menu */}
                 <nav className="flex-1 px-3 py-2 space-y-1.5">
-                    {menus[role].map((item) => {
+                    {roleMenus.map((item) => {
                         const Icon = item.icon;
                         const active = location === item.path;
 

@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -12,15 +13,14 @@ import {
 import Layout from "../Layout/Layout";
 import Header from "../Layout/Header";
 import ServiceCard from "../Cards/ServiceCard";
-import { SERVICES_DATA } from "../data/services.data";
+import StarRating from "../StarRating";
+import { partnerAPI } from "../../services/api";
 
 export default function ServicePage() {
     const { category } = useParams();
     const navigate = useNavigate();
-    const data = useMemo(
-        () => SERVICES_DATA.find((c) => c.slug === category),
-        [category]
-    );
+    const [partners, setPartners] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const [search, setSearch] = useState("");
     const [onlyNearby, setOnlyNearby] = useState(false);
@@ -28,21 +28,65 @@ export default function ServicePage() {
     const [minRating, setMinRating] = useState(0);
     const [openRating, setOpenRating] = useState(false);
 
+    useEffect(() => {
+        fetchPartners();
+    }, [category, minRating, search]);
+
+    const fetchPartners = async () => {
+        try {
+            setLoading(true);
+            
+            // Fetch all partners with services populated with category details
+            const res = await partnerAPI.getAllPartners({
+                minRating: minRating,
+                isActive: true
+            });
+
+            console.log(res?.data?.partners?.services);
+            
+            
+            setPartners(res.data.partners || []);
+        } catch (err) {
+            console.error("Failed to fetch partners:", err);
+            setPartners([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const filteredServices = useMemo(() => {
-        if (!data) return [];
+        if (!partners || !Array.isArray(partners)) return [];
 
-        return data.services.filter((s) => {
-            const matchSearch = s.title
-                .toLowerCase()
-                .includes(search.toLowerCase());
-            const matchNearby = !onlyNearby || s.distance <= 5;
-            const matchAvailable = !availableToday || s.availableToday;
-            const matchRating = s.rating >= minRating;
-            return matchSearch && matchNearby && matchAvailable && matchRating;
+        return partners.flatMap(partner => {
+            if (!partner || !partner.services || !Array.isArray(partner.services)) return [];
+            
+            return partner.services
+                .filter(s => {
+                    if (!s || !s.name) return false;
+                    
+                    // Match service to the selected category by category.name
+                    const categoryMatch = s.category && s.category.name 
+                        && s.category.name.toLowerCase() === category?.toLowerCase();
+                    
+                    const matchSearch = s.name
+                        .toLowerCase()
+                        .includes(search.toLowerCase());
+                    const matchRating = (partner.rating || 0) >= minRating;
+                    
+                    return categoryMatch && matchSearch && matchRating;
+                })
+                .map(service => ({
+                    ...service,
+                    partnerId: partner._id,
+                    partnerName: partner.name,
+                    partnerPhone: partner.phone,
+                    partnerRating: partner.rating || 0,
+                    partnerRatings: partner.totalRatings || 0,
+                }))
         });
-    }, [data, search, onlyNearby, availableToday, minRating]);
+    }, [partners, search, minRating, category]);
 
-    if (!data) {
+    if (!category) {
         return (
             <Layout>
                 <div className="min-h-[50vh] flex items-center justify-center">
@@ -53,24 +97,12 @@ export default function ServicePage() {
     }
 
     /* ==================================================
-       SECTION FILTERS
+       SECTION FILTERS - Simplified for actual data structure
     ================================================== */
     const sections = [
         {
-            title: "Nearby Services",
-            filter: (s) => s.distance <= 5,
-        },
-        {
-            title: "Services in Your City",
-            filter: (s) => s.city === "city",
-        },
-        {
-            title: "Available Today",
-            filter: (s) => s.availableToday,
-        },
-        {
-            title: "Nearest in State",
-            filter: (s) => s.city === "state",
+            title: `${category ? category.charAt(0).toUpperCase() + category.slice(1) : 'Available'} Services`,
+            filter: (s) => true, // Show all filtered services
         },
     ];
 
@@ -91,15 +123,15 @@ export default function ServicePage() {
 
                 <div className="relative z-10 max-w-7xl mx-auto px-6 py-28">
                     <span className="text-sm tracking-widest text-[#9fe870] uppercase font-medium">
-                        {data.title}
+                        Services
                     </span>
 
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mt-4">
-                        Professional Services<br />Near You
+                        {category && (category.charAt(0).toUpperCase() + category.slice(1))} Services<br />Near You
                     </h1>
 
                     <p className="text-gray-300 mt-6 max-w-xl text-lg">
-                        {data.heroDesc}
+                        Find verified professionals for your {category} needs.
                     </p>
                 </div>
             </section>
@@ -183,33 +215,45 @@ export default function ServicePage() {
 
             {/* ================= SECTION WISE SERVICES ================= */}
             <section className="pt-32 pb-20 space-y-14 bg-white">
-                {sections.map((section) => {
-                    const items = filteredServices.filter(section.filter);
-                    if (!items.length) return null;
+                {loading ? (
+                    <div className="max-w-7xl mx-auto px-4 text-center text-stone-500">
+                        Loading services...
+                    </div>
+                ) : filteredServices.length > 0 ? (
+                    sections.map((section) => {
+                        const items = filteredServices.filter(section.filter);
+                        if (!items.length) return null;
 
-                    return (
-                        <div key={section.title} className="max-w-7xl mx-auto px-4">
-                            <h2 className="text-2xl font-semibold mb-5">
-                                {section.title}
-                            </h2>
+                        return (
+                            <div key={section.title} className="max-w-7xl mx-auto px-4">
+                                <h2 className="text-2xl font-semibold mb-5">
+                                    {section.title}
+                                </h2>
 
-                            <div className="flex gap-6 overflow-x-auto pb-3 scrollbar-hide">
-                                {items.map((item) => (
-                                    <div key={item.id} className="min-w-[280px]">
-                                        <ServiceCard
-                                            item={item}
-                                            onClick={() =>
-                                                navigate(
-                                                    `/category/${category}/${item.slug}`
-                                                )
-                                            }
-                                        />
-                                    </div>
-                                ))}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {items.map((item) => (
+                                        <div key={item._id} className="w-full">
+                                            <ServiceCard
+                                                item={item}
+                                                onClick={() =>
+                                                    navigate(
+                                                        `/category/${category}/${item._id}`
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })
+                ) : (
+                    <div className="max-w-7xl mx-auto px-4 text-center py-20">
+                        <p className="text-stone-500 text-lg">
+                            No services found for {category}
+                        </p>
+                    </div>
+                )}
             </section>
         </Layout>
     );

@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
-import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useEffect, useState, useContext } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import {
     FiCheckCircle, FiChevronLeft, FiChevronRight, FiMapPin,
@@ -11,26 +11,33 @@ import Layout from "../Layout/Layout";
 import Header from "../Layout/Header";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiChevronDown } from "react-icons/fi";
-import axios from "axios";
+import { userAPI, partnerAPI, categoryAPI } from "../../services/api";
+import AuthContext from "../../context/Auth/AuthContext";
 
 const countries = ["India", "United States", "United Kingdom", "Canada", "Australia", "UAE", "Singapore"];
 
 const partnerSteps = [
     { id: 1, title: "Personal", description: "Identity details" },
     { id: 2, title: "Business", description: "Service info" },
-    { id: 3, title: "Verification", description: "Document upload" },
 ];
+
+const BACKEND_URL = import.meta.env.BACKEND_URL || "http://localhost:3000";
 
 const Register = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
     const [openCountry, setOpenCountry] = useState(false);
     const [selectedCountry, setSelectedCountry] = useState("India");
-
+    const [categories, setCategories] = useState([]);
+    const [error, setError] = useState("");
+    const navigate = useNavigate();
+    const { login } = useContext(AuthContext);
+    
     const roleParam = (searchParams.get("role") || "customer").toLowerCase();
     const stepParam = Number(searchParams.get("step") || 1);
     const normalizedRole = roleParam === "partner" ? "partner" : "customer";
-    const normalizedStep = normalizedRole === "partner" ? Math.min(Math.max(stepParam, 1), 3) : 1;
+    const normalizedStep = normalizedRole === "partner" ? Math.min(Math.max(stepParam, 1), 2) : 1;
+    const isPartner = normalizedRole === "partner";
     const { register, handleSubmit, trigger, setValue, formState: { errors }, reset } = useForm({
         mode: "onTouched",
         defaultValues: { country: "India" }
@@ -38,93 +45,91 @@ const Register = () => {
 
     useEffect(() => {
         setSearchParams({ role: normalizedRole, step: String(normalizedStep) }, { replace: true });
-    }, [normalizedRole, normalizedStep, setSearchParams]);
+        // Fetch categories for partners
+        if (isPartner) {
+            fetchCategories();
+        }
+    }, [normalizedRole, normalizedStep, setSearchParams, isPartner]);
+
+    const fetchCategories = async () => {
+        try {
+            const res = await categoryAPI.getAllCategories();
+            setCategories(res.data.categories);
+        } catch (err) {
+            console.error("Failed to fetch categories", err);
+        }
+    };
 
     const handleRoleChange = (role) => {
         reset();
         setSearchParams({ role, step: "1" });
     };
 
-    const handleUseLocation = () => {
-        if (!navigator.geolocation) return alert("Geolocation not supported");
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-            const { latitude, longitude } = pos.coords;
-            setValue("latitude", latitude);
-            setValue("longitude", longitude);
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
-                const data = await res.json();
-                const addr = data.address;
-                setValue("city", addr.city || addr.town || addr.suburb || "");
-                setValue("pincode", addr.postcode || "");
-                setValue("addressLine", `${addr.house_number || ''} ${addr.road || ''}`.trim());
-                setValue("landmark", addr.neighbourhood || addr.suburb || "");
-            } catch (err) {
-                console.log("Geocode Error:", err);
-                alert("Could not fetch address details automatically.");
-            }
-        });
-    };
-
-    useEffect(() => {
-        setValue("latitude", 20.5937);
-        setValue("longitude", 78.9629);
-    }, [setValue]);
 
     const onFinalSubmit = async (data) => {
         setIsLoading(true);
+        setError("");
 
         try {
-            const payload = {
-                name: data.fullName.trim(),
-                email: data.email.toLowerCase().trim(),
-                phone: data.phone,
-                password: data.password,
-                role: normalizedRole === "customer" ? "user" : "partner",
+            if (isPartner) {
+                const partnerData = {
+                    name: data.fullName.trim(),
+                    email: data.email.toLowerCase().trim(),
+                    phone: data.phone,
+                    password: data.password,
+                    address: {
+                        street: data.addressLine || "",
+                        city: data.city || "",
+                        state: data.state || "",
+                        pincode: data.pincode || "",
+                        country: selectedCountry,
+                    },
+                    business: {
+                        name: data.businessName?.trim() || "",
+                        phone: data.phone,
+                        contact: data.businessName?.trim() || "",
+                    },
+                    services: data.serviceName ? [
+                        {
+                            name: data.serviceName.trim(),
+                            category: data.category,
+                            description: data.serviceDescription || "",
+                            price: Number(data.price || 0),
+                            duration: data.duration || "1 hour",
+                        },
+                    ] : [],
+                    workingHours: {
+                        days: data.workingDays || [],
+                        fromTime: data.fromTime || "09:00",
+                        toTime: data.toTime || "18:00",
+                    },
+                    paymentMethods: data.paymentMethods || ["cash"],
+                };
 
-                address: {
-                    street: data.addressLine,
-                    city: data.city,
-                    state: data.state || "NA",
-                    zipCode: data.pincode,
-                    country: data.country || "India",
-                },
+                const res = await partnerAPI.register(partnerData);
+                login(res.data.token, res.data.partner);
+            } else {
+                const userData = {
+                    name: data.fullName.trim(),
+                    email: data.email.toLowerCase().trim(),
+                    phone: data.phone,
+                    password: data.password,
+                    address: {
+                        street: data.addressLine || "",
+                        city: data.city || "",
+                        state: data.state || "",
+                        pincode: data.pincode || "",
+                        country: selectedCountry,
+                    },
+                };
 
-                location: {
-                    type: "Point",
-                    coordinates: [
-                        Number(data.longitude),
-                        Number(data.latitude),
-                    ],
-                },
-            };
+                const res = await userAPI.register(userData);
+                login(res.data.token, res.data.user);
+            }
 
-            const res = await axios.post(
-                "https://helpyzo-backend.vercel.app/api/users/register",
-                payload
-            );
-
-            // console.log("API RESPONSE:", res.data);
-            alert("Registration successful");
-
-            localStorage.setItem("auth-token", res.data.token);
-            localStorage.setItem("userInfo", JSON.stringify(res.data));
-
-            reset();
-
+            navigate("/");
         } catch (err) {
-            console.error("REGISTER ERROR:", err);
-
-            const message =
-                err.response?.data?.message ||
-                err.message ||
-                "Something went wrong";
-
-            alert(
-                Array.isArray(err.response?.data?.errors)
-                    ? err.response.data.errors.join("\n")
-                    : message
-            );
+            setError(err.response?.data?.message || "Registration failed. Please try again.");
         } finally {
             setIsLoading(false);
         }
@@ -245,10 +250,6 @@ const Register = () => {
 
                                             {/* Address Sub-Section */}
                                             <div className="md:col-span-2 mt-4">
-                                                <div className="flex justify-between items-center mb-4">
-                                                    <h3 className="text-xs font-black tracking-widest text-[#9fe870]">LOCATION DETAILS</h3>
-                                                    <button type="button" onClick={handleUseLocation} className="text-[10px] cursor-pointer font-bold text-white/60 hover:text-[#9fe870] underline flex items-center gap-1"><FiMapPin /> AUTO-DETECT</button>
-                                                </div>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/2 p-6 rounded-3xl border border-white/5">
                                                     <div className="md:col-span-2">
                                                         <InputGroup label="Address Line" name="addressLine" placeholder="House/Flat No, Street Name" validation={{ required: "Address is required" }} />
@@ -302,53 +303,78 @@ const Register = () => {
                                         </div>
                                     )}
 
-                                    <input type="hidden" {...register("latitude")} />
-                                    <input type="hidden" {...register("longitude")} />
-
                                     {/* Step 2: Business (Partner Only) */}
                                     {normalizedRole === "partner" && normalizedStep === 2 && (
-                                        <div className="grid grid-cols-1 gap-6 animate-in fade-in slide-in-from-right-4">
-                                            <InputGroup label="Business / Shop Name" name="businessName" placeholder="Elite Plumbing Services" validation={{ required: "Required" }} />
-                                            <div className="grid md:grid-cols-2 gap-6">
-                                                <div className="flex flex-col gap-1.5">
-                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">Category</label>
-                                                    <select {...register("category", { required: "Select category" })} className="w-full rounded-xl border border-white/5 bg-stone-800 px-4 py-3 text-sm text-white focus:border-[#9fe870]/40 outline-none">
-                                                        <option value="">Select Service</option>
-                                                        <option value="plumbing">Plumbing</option>
-                                                        <option value="electrical">Electrical</option>
-                                                        <option value="cleaning">Home Cleaning</option>
-                                                    </select>
-                                                </div>
-                                                <InputGroup label="Years of Experience" name="experience" type="number" placeholder="e.g. 5" validation={{ required: "Required" }} />
-                                            </div>
-                                            <InputGroup label="Service Radius (km)" name="serviceArea" placeholder="How far can you travel?" validation={{ required: "Required" }} />
-                                            <InputGroup label="Website / Portfolio URL" name="website" placeholder="https://..." />
-                                        </div>
-                                    )}
+                                        <div className="grid grid-cols-1 gap-6">
 
-                                    {/* Step 3: Verification (Partner Only) */}
-                                    {normalizedRole === "partner" && normalizedStep === 3 && (
-                                        <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
-                                            <div className="bg-[#9fe870]/5 border border-[#9fe870]/20 p-6 rounded-3xl">
-                                                <h4 className="text-[#9fe870] text-sm font-bold mb-2">Identity Check</h4>
-                                                <p className="text-stone-400 text-xs leading-relaxed">Please provide your government ID details. This info is encrypted and never shared publicly.</p>
+                                            <InputGroup label="Business / Shop Name" name="businessName" validation={{ required: "Required" }}
+                                            />
+
+                                            <InputGroup label="Service Name" name="serviceName" placeholder="e.g. Bathroom Plumbing" validation={{ required: "Required" }}
+                                            />
+
+                                            <InputGroup label="Years of Experience" name="yearsOfExperience" type="number" placeholder="e.g. 5"
+                                            />
+
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">
+                                                    Service Category
+                                                </label>
+                                                <select
+                                                    {...register("category", { required: "Select category" })}
+                                                    className="w-full rounded-xl border border-white/5 bg-stone-800 px-4 py-3 text-sm text-white"
+                                                >
+                                                    <option value="">Select</option>
+                                                    <option value="plumbing">Plumbing</option>
+                                                    <option value="electrical">Electrical</option>
+                                                    <option value="cleaning">Cleaning</option>
+                                                </select>
                                             </div>
-                                            <div className="grid md:grid-cols-2 gap-6">
-                                                <div className="flex flex-col gap-1.5">
-                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">ID Document Type</label>
-                                                    <select {...register("idType", { required: "Required" })} className="w-full rounded-xl border border-white/5 bg-stone-800 px-4 py-3 text-sm text-white focus:border-[#9fe870]/40 outline-none">
-                                                        <option value="">Select Type</option>
-                                                        <option value="aadhaar">Aadhaar Card</option>
-                                                        <option value="passport">Passport</option>
-                                                        <option value="license">Driving License</option>
-                                                    </select>
-                                                </div>
-                                                <InputGroup label="Document ID Number" name="idNumber" placeholder="Enter ID number" validation={{ required: "Required" }} />
-                                            </div>
-                                            <label className="flex items-start gap-3 cursor-pointer group mt-4">
-                                                <input type="checkbox" {...register("agree", { required: "You must agree" })} className="mt-1 accent-[#9fe870]" />
-                                                <span className="text-xs text-stone-500 group-hover:text-white transition-colors">I certify that all provided information is accurate and I agree to the service partner terms.</span>
+
+                                            <InputGroup label="Service Description" name="serviceDescription" placeholder="Describe your service"
+                                            />
+
+                                            <InputGroup label="Service Price (₹)" name="price" type="number"
+                                            />
+
+                                            <InputGroup label="Service Duration (minutes)" name="duration"
+                                                type="number"
+                                                validation={{ min: { value: 15, message: "Minimum 15 minutes" } }}
+                                            />
+
+                                            <InputGroup label="Visiting Fee (₹)" name="visitingFee" type="number"
+                                            />
+
+                                            <label className="flex items-center gap-3">
+                                                <input
+                                                    type="checkbox"
+                                                    {...register("whatsapp")}
+                                                    className="accent-[#9fe870]"
+                                                />
+                                                <span className="text-xs text-stone-400">
+                                                    Available on WhatsApp
+                                                </span>
                                             </label>
+
+                                            <div className="space-y-2">
+                                                <label className="text-xs text-white/40 uppercase tracking-widest">
+                                                    Payment Methods
+                                                </label>
+
+                                                {["cash", "card", "upi", "online"].map(method => (
+                                                    <label key={method} className="flex items-center gap-3">
+                                                        <input
+                                                            type="checkbox"
+                                                            value={method}
+                                                            {...register("paymentMethods")}
+                                                            className="accent-[#9fe870]"
+                                                        />
+                                                        <span className="text-sm capitalize text-stone-400">
+                                                            {method}
+                                                        </span>
+                                                    </label>
+                                                ))}
+                                            </div>
                                         </div>
                                     )}
 
@@ -360,7 +386,7 @@ const Register = () => {
                                             </button>
                                         ) : <div />}
 
-                                        {normalizedRole === "partner" && normalizedStep < 3 ? (
+                                        {normalizedRole === "partner" && normalizedStep < 2 ? (
                                             <button
                                                 type="button"
                                                 onClick={async () => {
