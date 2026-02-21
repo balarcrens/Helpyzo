@@ -1,18 +1,29 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FiCheck, FiX, FiClock } from "react-icons/fi";
 import { useBookings } from "../../../hooks/useData";
+import { usePartner } from "../../../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 export default function Bookings() {
+    const navigate = useNavigate();
+    const { user } = usePartner();
     const { bookings, fetchPartnerBookings, updateBookingStatus, loading } = useBookings();
     const [statusFilter, setStatusFilter] = useState("all");
+
+    useEffect(() => {
+        if (user?._id) {
+            fetchPartnerBookings(user._id);
+        }
+    }, [user?._id]);
 
     useEffect(() => {
         fetchPartnerBookings();
     }, []);
 
-    const filteredBookings = statusFilter === "all" 
-        ? bookings 
+    const filteredBookings = statusFilter === "all"
+        ? bookings
         : bookings.filter(b => b.status === statusFilter);
 
     const handleStatusChange = async (bookingId, newStatus) => {
@@ -49,11 +60,10 @@ export default function Bookings() {
                         <button
                             key={status}
                             onClick={() => setStatusFilter(status)}
-                            className={`px-4 py-2 rounded-lg font-semibold capitalize transition ${
-                                statusFilter === status
-                                    ? "bg-[#9fe870] text-stone-900"
-                                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                            }`}
+                            className={`px-4 py-2 rounded-lg font-semibold capitalize transition ${statusFilter === status
+                                ? "bg-[#9fe870] text-stone-900"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                }`}
                         >
                             {status}
                         </button>
@@ -70,65 +80,98 @@ export default function Bookings() {
                     {filteredBookings.map((booking) => (
                         <motion.div
                             key={booking._id}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="bg-white p-4 rounded-xl border border-gray-200"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition"
                         >
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* TOP BAR */}
+                            <div className="flex flex-wrap justify-between items-center px-5 py-4 border-b border-gray-200">
                                 <div>
-                                    <p className="text-gray-600 text-sm">Customer</p>
+                                    <p className="text-xs text-gray-500">Booking ID</p>
+                                    <p className="font-mono text-sm font-semibold">
+                                        #{booking.bookingNumber || booking._id.slice(-6)}
+                                    </p>
+                                </div>
+
+                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(booking.status)}`}>
+                                    {booking.status}
+                                </span>
+                            </div>
+
+                            {/* MAIN CONTENT */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-5 py-4">
+                                {/* CUSTOMER */}
+                                <div>
+                                    <p className="text-xs text-gray-500 mb-1">Customer</p>
                                     <p className="font-semibold">{booking.user?.name}</p>
-                                    <p className="text-gray-600 text-sm">{booking.user?.phone}</p>
+                                    <p className="text-sm text-gray-500">{booking.user?.phone}</p>
                                 </div>
+
+                                {/* SERVICE & DATE */}
                                 <div>
-                                    <p className="text-gray-600 text-sm">Booking Details</p>
-                                    <p className="font-semibold">₹{booking.amount}</p>
-                                    <p className="text-gray-600 text-sm">{new Date(booking.bookedDate).toLocaleDateString()}</p>
-                                    <p className="text-gray-600 text-sm">{booking.paymentMethod}</p>
+                                    <p className="text-xs text-gray-500 mb-1">Service</p>
+                                    <p className="font-semibold">{booking.serviceName}</p>
+                                    <p className="text-sm text-gray-500">
+                                        {new Date(booking.bookedDate).toLocaleDateString()} • {booking.scheduledTime}
+                                    </p>
                                 </div>
-                                <div className="flex flex-col gap-2">
-                                    <span className={`${getStatusColor(booking.status)} px-3 py-1 rounded-lg text-sm font-semibold w-fit`}>
-                                        {booking.status}
-                                    </span>
+
+                                {/* PAYMENT */}
+                                <div>
+                                    <p className="text-xs text-gray-500 mb-1">Payment</p>
+                                    <p className="font-semibold text-lg">₹{booking.amount}</p>
+                                    <p className="text-sm text-gray-500 capitalize">
+                                        {booking.paymentMethod}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* FOOTER ACTIONS */}
+                            <div className="flex justify-between items-center px-5 py-4 border-t border-gray-200">
+                                <button
+                                    onClick={() => navigate(`${booking._id}`)}
+                                    className="text-sm font-semibold text-blue-600 hover:underline"
+                                >
+                                    View Details →
+                                </button>
+
+                                <div className="flex gap-2">
                                     {booking.status === "pending" && (
-                                        <div className="flex gap-2">
+                                        <>
                                             <button
                                                 onClick={() => handleStatusChange(booking._id, "confirmed")}
-                                                className="flex-1 bg-green-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:bg-green-600 flex items-center justify-center gap-1"
+                                                className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-semibold"
                                             >
-                                                <FiCheck /> Confirm
+                                                Confirm
                                             </button>
                                             <button
                                                 onClick={() => handleStatusChange(booking._id, "cancelled")}
-                                                className="flex-1 bg-red-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:bg-red-600 flex items-center justify-center gap-1"
+                                                className="px-4 py-1.5 bg-red-600 text-white rounded-lg text-sm font-semibold"
                                             >
-                                                <FiX /> Cancel
+                                                Cancel
                                             </button>
-                                        </div>
+                                        </>
                                     )}
+
                                     {booking.status === "confirmed" && (
                                         <button
                                             onClick={() => handleStatusChange(booking._id, "in-progress")}
-                                            className="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:bg-blue-600 flex items-center justify-center gap-1"
+                                            className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-semibold"
                                         >
-                                            <FiClock /> Start
+                                            Start Job
                                         </button>
                                     )}
+
                                     {booking.status === "in-progress" && (
                                         <button
                                             onClick={() => handleStatusChange(booking._id, "completed")}
-                                            className="bg-purple-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:bg-purple-600 flex items-center justify-center gap-1"
+                                            className="px-4 py-1.5 bg-purple-600 text-white rounded-lg text-sm font-semibold"
                                         >
-                                            <FiCheck /> Complete
+                                            Complete
                                         </button>
                                     )}
                                 </div>
                             </div>
-                            {booking.notes && (
-                                <div className="mt-3 pt-3 border-t border-gray-200">
-                                    <p className="text-sm text-gray-600"><strong>Notes:</strong> {booking.notes}</p>
-                                </div>
-                            )}
                         </motion.div>
                     ))}
                 </div>

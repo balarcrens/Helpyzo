@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { AiFillStar } from "react-icons/ai";
 import { HiBadgeCheck } from "react-icons/hi";
 import { FiMapPin } from "react-icons/fi";
-import StarRating, { VerificationBadge } from "../StarRating";
+import StarRating from "../StarRating";
 
 const ServiceCard = ({ item, onClick }) => {
     return (
@@ -51,10 +51,10 @@ const ServiceCard = ({ item, onClick }) => {
                 </div>
 
                 {/* Star Rating */}
-                {(item.partnerRating || item.rating) && (
-                    <StarRating 
-                        rating={item.partnerRating || item.rating} 
-                        totalRatings={item.partnerRatings || item.totalRatings || 0} 
+                {(item.partnerRating || item.rating !== 0) && (
+                    <StarRating
+                        rating={item.partnerRating || item.rating}
+                        totalRatings={item.partnerRatings || item.totalRatings}
                         size="sm"
                     />
                 )}
@@ -66,11 +66,11 @@ const ServiceCard = ({ item, onClick }) => {
 
                 <div className="flex justify-between items-center pt-2">
                     <div>
-                        <p className="text-lg font-bold">${item.price || item.visitingFees || 0}</p>
-                        {item.distance && (
+                        <p className="text-lg font-bold">₹{item.finalPrice || item.visitingFees || 0}</p>
+                        {item?.serviceArea?.radiusKm && (
                             <p className="flex items-center gap-1 text-xs text-stone-500">
                                 <FiMapPin className="text-[11px]" />
-                                {item.distance} km away
+                                {item?.serviceArea?.radiusKm} km radius area
                             </p>
                         )}
                     </div>

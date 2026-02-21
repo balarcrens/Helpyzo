@@ -6,36 +6,35 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
     const popularCities = [
-        "Atlanta", "Denver", "Jacksonville", "Nashville", "New York",
+        "Surat", "Ahemadabad", "Bharuch", "Vadodara", "Mumbai",
         "San Diego", "Seattle", "Chicago", "Miami", "Dallas",
         "Austin", "Boston", "Houston", "Los Angeles", "Phoenix"
     ];
 
     const footerLinks = [
         {
-            title: "Company",
+            title: "Quick Links",
             links: [
                 { label: "About Us", path: "/about" },
                 { label: "Careers", path: "/careers" },
-                { label: "Press", path: "/press" },
-                { label: "Blog", path: "/blog" },
+                { label: "FAQ", path: "/faq" },
             ],
         },
         {
             title: "Support",
             links: [
-                { label: "Help Center", path: "/help" },
+                { label: "Help Center", path: "/help-center" },
                 { label: "Safety", path: "/safety" },
                 { label: "Terms of Use", path: "/terms" },
-                { label: "Privacy Policy", path: "/privacy" },
+                { label: "Privacy Policy", path: "/privacy-policy" },
             ],
         },
         {
             title: "Services",
             links: [
-                { label: "Interior", path: "/services/interior" },
-                { label: "Exterior", path: "/services/exterior" },
-                { label: "Lawn & Garden", path: "/services/lawn-garden" },
+                { label: "Kitchen Cleaning", path: "/services/kitchen-cleaning" },
+                { label: "Bathroom Plumbing", path: "/services/rathroom-plumbing" },
+                { label: "Appliance Reparing", path: "/services/appliance-reparing" },
                 { label: "More", path: "/services" },
             ],
         },
@@ -139,7 +138,7 @@ const Footer = () => {
                     </div>
 
                     <div className="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-stone-500">
-                        <p>© 2024 HavenWorks. All rights reserved.</p>
+                        <p>© 2026 HavenWorks. All rights reserved.</p>
                         <div className="flex gap-8">
                             <Link to="/privacy" className="hover:text-white">Privacy Policy</Link>
                             <Link to="/terms" className="hover:text-white">Terms of Service</Link>

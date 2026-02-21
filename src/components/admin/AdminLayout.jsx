@@ -24,7 +24,7 @@ export default function AdminLayout() {
             />
 
             {/* Main Section */}
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col lg:ml-60">
                 {/* Header */}
                 <Header
                     onMenuClick={() => setSidebarOpen(true)}

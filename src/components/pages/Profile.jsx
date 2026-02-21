@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -20,24 +21,28 @@ import Header from "../Layout/Header";
 import AuthContext from "../../context/Auth/AuthContext.jsx";
 import { useUser } from "../../hooks/useAuth";
 import { useBookings } from "../../hooks/useData";
-import StarRating from "../StarRating";
 import RatingModal from "../RatingModal";
 
+
 const ProfilePage = () => {
-    const { user, logout } = useContext(AuthContext);
+    const { user } = useContext(AuthContext);
     const { updateProfile, changePassword } = useUser();
 
     return (
         <Layout>
             <Header />
-            <Profile user={user} logout={logout} updateProfile={updateProfile} changePassword={changePassword} />
+            <Profile
+                user={user}
+                updateProfile={updateProfile}
+                changePassword={changePassword}
+            />
         </Layout>
     );
 };
 
 export default ProfilePage;
 
-const Profile = ({ user }) => {
+const Profile = ({ user, updateProfile, changePassword }) => {
     const [editOpen, setEditOpen] = useState(false);
     const [passwordOpen, setPasswordOpen] = useState(false);
     const [bookings, setBookings] = useState([]);
@@ -46,99 +51,125 @@ const Profile = ({ user }) => {
     const { fetchUserBookings } = useBookings();
 
     useEffect(() => {
-        if (user?.role === 'client') {
-            fetchUserBookings();
+        if (user?.role === "client") {
+            getBookings();
         }
     }, [user]);
 
     if (!user) {
         return (
-            <div className="min-h-[60vh] flex items-center justify-center text-stone-500 text-lg animate-pulse">
+            <div className="min-h-[60vh] flex items-center justify-center text-stone-500 text-lg">
                 Loading profile...
             </div>
         );
     }
 
+    const getBookings = async () => {
+        try {
+            const data = await fetchUserBookings();
+            setBookings(data);
+        } catch (err) {
+            console.error("Failed to fetch bookings", err);
+        }
+    };
+
     return (
         <>
-            <section className="bg-gradient-to-br from-slate-100 via-white to-slate-50 py-24">
-                <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-10">
-                    {/* LEFT CARD */}
-                    <motion.aside
-                        initial={{ opacity: 0, y: 40 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white/70 backdrop-blur-xl rounded-[32px] p-8 border border-white/40 lg:sticky lg:top-28"
+            <section className="bg-gradient-to-r from-stone-900 to-stone-800 text-white pt-26 pb-14">
+                <div className="max-w-7xl mx-auto px-4 flex justify-center sm:justify-start items-center gap-6">
+                    <img
+                        src={
+                            user.avatar?.url ||
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                user.name
+                            )}&background=111827&color=fff`
+                        }
+                        className="w-24 h-24 rounded-full ring-4 ring-white/20"
+                    />
+
+                    <div>
+                        <h1 className="text-3xl font-bold text-center">{user.name}</h1>
+                        <p className="text-sm text-stone-300 text-center capitalize">
+                            {user.role}
+                        </p>
+
+                        <span
+                            className={`inline-block mt-2 px-4 py-1 rounded-full text-xs font-semibold ${user.isActive
+                                ? "bg-emerald-500/20 text-emerald-300"
+                                : "bg-red-500/20 text-red-300"
+                                }`}
+                        >
+                            {user.isActive ? "Active Account" : "Inactive"}
+                        </span>
+                    </div>
+                </div>
+            </section>
+
+            <div className="lg:hidden bg-white shadow-sm border-b border-slate-200">
+                <div className="max-w-7xl mx-auto px-4 py-5 grid grid-cols-3 gap-4 text-center">
+                    <button
+                        onClick={() => setEditOpen(true)}
+                        className="flex flex-col items-center gap-2 bg-slate-50 rounded-2xl py-4 shadow-sm hover:bg-slate-100 transition"
                     >
-                        <div className="flex flex-col items-center text-center">
-                            <label className="relative group cursor-pointer">
-                                <img src={
-                                    user.avatar?.url ||
-                                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                        user.name
-                                    )}&background=111827&color=fff`
-                                }
-                                    className="w-36 h-36 rounded-full object-cover ring-4 ring-white shadow-lg transition group-hover:scale-105"
-                                />
-                                <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                                    <FiCamera className="text-white text-2xl" />
-                                </div>
-                                <input type="file" hidden />
-                            </label>
+                        <FiEdit className="text-xl text-stone-900" />
+                        <span className="text-xs font-semibold text-stone-800">
+                            Edit
+                        </span>
+                    </button>
 
-                            <h2 className="text-2xl font-bold mt-5">{user.name}</h2>
-                            <p className="text-xs uppercase tracking-widest text-stone-500">
-                                {user.role}
-                            </p>
+                    <button
+                        onClick={() => setPasswordOpen(true)}
+                        className="flex flex-col items-center gap-2 bg-slate-50 rounded-2xl py-4 shadow-sm hover:bg-slate-100 transition"
+                    >
+                        <FiLock className="text-xl text-stone-900" />
+                        <span className="text-xs font-semibold text-stone-800">
+                            Password
+                        </span>
+                    </button>
 
-                            <span
-                                className={`mt-4 px-5 py-1 rounded-full text-xs font-semibold ${user.isActive
-                                    ? "bg-emerald-100 text-emerald-700"
-                                    : "bg-red-100 text-red-700"
-                                    }`}
-                            >
-                                {user.isActive ? "Active Account" : "Inactive"}
-                            </span>
+                    <button
+                        className="flex flex-col items-center gap-2 bg-red-50 rounded-2xl py-4 shadow-sm hover:bg-red-100 transition"
+                    >
+                        <FiTrash2 className="text-xl text-red-600" />
+                        <span className="text-xs font-semibold text-red-700">
+                            Deactivate
+                        </span>
+                    </button>
+                </div>
+            </div>
 
-                            <div className="w-full mt-8 space-y-3">
-                                <ActionBtn
-                                    icon={<FiEdit />}
-                                    label="Edit Profile"
-                                    onClick={() => setEditOpen(true)}
-                                />
-                                <ActionBtn
-                                    icon={<FiLock />}
-                                    label="Change Password"
-                                    onClick={() => setPasswordOpen(true)}
-                                />
-                                <ActionBtn icon={<FiTrash2 />} label="Deactivate" danger />
-                            </div>
-                        </div>
-                    </motion.aside>
+            <section className="bg-slate-100 min-h-screen py-7">
+                <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-4 gap-4">
 
-                    {/* RIGHT */}
-                    <div className="lg:col-span-2 space-y-10">
+                    {/* ===== RIGHT CONTENT ===== */}
+                    <div className="lg:col-span-3 space-y-8">
+
                         <GlassCard title="Personal Information" icon={<FiUser />}>
                             <Info label="Email" value={user.email} icon={<FiMail />} />
                             <Info label="Phone" value={user.phone} icon={<FiPhone />} />
                             <Info label="Role" value={user.role} icon={<FiShield />} />
-                            <Info label="Joined" value={new Date(user.createdAt).toDateString()}
+                            <Info
+                                label="Joined"
+                                value={new Date(user.createdAt).toDateString()}
                                 icon={<FiCalendar />}
                             />
                         </GlassCard>
 
                         <GlassCard title="Address Details" icon={<FiMapPin />}>
                             <AddressLine value={user.address?.street} />
-                            <AddressLine value={`${user.address?.city}, ${user.address?.state}`} />
-                            <AddressLine value={`${user.address?.zipCode}, ${user.address?.country}`} />
-
+                            <AddressLine
+                                value={`${user.address?.city}, ${user.address?.state}`}
+                            />
+                            <AddressLine
+                                value={`${user.address?.pincode}, ${user.address?.country}`}
+                            />
                             <ProfileMap address={user.address} />
                         </GlassCard>
 
-                        {/* Bookings Section for Clients */}
-                        {user.role === 'client' && (
+                        {user.role === "client" && (
                             <GlassCard title="My Bookings" icon={<FiCalendar />}>
-                                <UserBookingsList 
-                                    bookings={bookings} 
+                                <UserBookingsList
+                                    bookings={bookings}
                                     onRate={(booking) => {
                                         setSelectedBooking(booking);
                                         setShowRatingModal(true);
@@ -147,50 +178,167 @@ const Profile = ({ user }) => {
                             </GlassCard>
                         )}
                     </div>
+                    <div className="sticky top-24 space-y-4 hidden lg:flex flex-col">
+                        <button
+                            onClick={() => setEditOpen(true)}
+                            className="flex flex-col w-full items-center gap-2 bg-slate-50 rounded-2xl py-4 shadow-sm hover:bg-slate-100 transition"
+                        >
+                            <FiEdit className="text-xl text-stone-900" />
+                            <span className="text-xs font-semibold text-stone-800">
+                                Edit
+                            </span>
+                        </button>
+
+                        <button
+                            onClick={() => setPasswordOpen(true)}
+                            className="flex flex-col w-full items-center gap-2 bg-slate-50 rounded-2xl py-4 shadow-sm hover:bg-slate-100 transition"
+                        >
+                            <FiLock className="text-xl text-stone-900" />
+                            <span className="text-xs font-semibold text-stone-800">
+                                Password
+                            </span>
+                        </button>
+
+                        <button
+                            className="flex flex-col w-full  items-center gap-2 bg-red-50 rounded-2xl py-4 shadow-sm hover:bg-red-100 transition"
+                        >
+                            <FiTrash2 className="text-xl text-red-600" />
+                            <span className="text-xs font-semibold text-red-700">
+                                Deactivate
+                            </span>
+                        </button>
+                    </div>
                 </div>
             </section>
 
-            <EditProfileModal open={editOpen} setOpen={setEditOpen} user={user} />
-            <ChangePasswordModal open={passwordOpen} setOpen={setPasswordOpen} />
+            <EditProfileModal
+                open={editOpen}
+                setOpen={setEditOpen}
+                user={user}
+                updateProfile={updateProfile}
+            />
+
+            <ChangePasswordModal
+                open={passwordOpen}
+                setOpen={setPasswordOpen}
+                changePassword={changePassword}
+            />
 
             {selectedBooking && (
                 <RatingModal
                     isOpen={showRatingModal}
                     bookingId={selectedBooking._id}
-                    partnerName={selectedBooking.partner?.name || 'Service Partner'}
-                    serviceName={selectedBooking.serviceName || 'Service'}
+                    partnerName={selectedBooking.partner?.name}
+                    serviceName={selectedBooking.serviceName}
                     onClose={() => {
                         setShowRatingModal(false);
                         setSelectedBooking(null);
                     }}
-                    onSuccess={() => {
-                        fetchUserBookings();
-                    }}
+                    onSuccess={() => fetchUserBookings()}
                 />
             )}
         </>
     );
 };
 
-const EditProfileModal = ({ open, setOpen, user }) => {
+const EditProfileModal = ({ open, setOpen, user, updateProfile }) => {
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+
     const [form, setForm] = useState({
-        name: user.name,
-        phone: user.phone,
+        name: user.name || "",
+        phone: user.phone || "",
         street: user.address?.street || "",
         city: user.address?.city || "",
         state: user.address?.state || "",
-        zipCode: user.address?.zipCode || "",
+        country: user.address?.country || "India",
+        pincode: user.address?.pincode || "",
     });
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+
+        try {
+            setLoading(true);
+
+            const payload = {
+                name: form.name,
+                phone: form.phone,
+                address: {
+                    street: form.street,
+                    city: form.city,
+                    state: form.state,
+                    country: form.country || "India",
+                    pincode: form.pincode,
+                },
+            };
+
+            await updateProfile(payload);
+
+            setOpen(false);
+        } catch (err) {
+            setError(
+                err?.response?.data?.message ||
+                "Failed to update profile"
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <Modal open={open} onClose={() => setOpen(false)} title="Edit Profile">
-            <GlassInput label="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            <GlassInput label="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-            <GlassInput label="Street" value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} />
-            <GlassInput label="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-            <GlassInput label="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
-            <GlassInput label="Zip Code" value={form.zipCode} onChange={(e) => setForm({ ...form, zipCode: e.target.value })} />
-            <PrimaryBtn label="Save Changes" />
+            <form onSubmit={handleSubmit} className="space-y-5">
+                {error && (
+                    <p className="text-sm text-red-600 bg-red-50 p-2 rounded-lg">
+                        {error}
+                    </p>
+                )}
+
+                <GlassInput
+                    label="Name"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
+
+                <GlassInput
+                    label="Phone"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                />
+
+                <GlassInput
+                    label="Street"
+                    value={form.street}
+                    onChange={(e) => setForm({ ...form, street: e.target.value })}
+                />
+
+                <GlassInput
+                    label="City"
+                    value={form.city}
+                    onChange={(e) => setForm({ ...form, city: e.target.value })}
+                />
+
+                <GlassInput
+                    label="State"
+                    value={form.state}
+                    onChange={(e) => setForm({ ...form, state: e.target.value })}
+                />
+
+                <GlassInput
+                    label="Country"
+                    value={form.country}
+                    onChange={(e) => setForm({ ...form, country: e.target.value })}
+                />
+                <GlassInput
+                    label="Pin Code"
+                    value={form.pincode}
+                    onChange={(e) => setForm({ ...form, pincode: e.target.value })}
+                />
+
+                <PrimaryBtn label={loading ? "Saving..." : "Save Changes"} />
+            </form>
         </Modal>
     );
 };
@@ -213,7 +361,7 @@ const Modal = ({ open, onClose, title, children }) => (
                 className="fixed inset-0 bg-black/40 backdrop-blur flex items-center justify-center z-50"
             >
                 <motion.div initial={{ scale: 0.9, y: 40 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 40 }}
-                    className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 w-full max-w-md shadow-2xl border border-white/40"
+                    className="bg-white/80 backdrop-blur-xl rounded-3xl p-4 sm:p-8 w-full max-w-md shadow-2xl border border-white/40"
                 >
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-xl font-semibold">{title}</h3>
@@ -227,8 +375,8 @@ const Modal = ({ open, onClose, title, children }) => (
 );
 
 const GlassCard = ({ title, icon, children }) => (
-    <motion.div className="bg-white/70 backdrop-blur-md rounded-[32px] p-8 border border-white/40">
-        <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+    <motion.div className="bg-white rounded-3xl shadow-md p-3 sm:p-8">
+        <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
             {icon} {title}
         </h3>
         <div className="space-y-4">{children}</div>
@@ -236,17 +384,17 @@ const GlassCard = ({ title, icon, children }) => (
 );
 
 const Info = ({ label, value, icon }) => (
-    <div className="flex items-center gap-4 bg-white/60 rounded-2xl border-b border-gray-200 p-2.5 hover:bg-white/80 transition">
-        <div className="text-lg">{icon}</div>
+    <div className="flex items-center gap-4 bg-slate-50 rounded-xl p-4">
+        <div className="text-xl text-stone-700">{icon}</div>
         <div>
             <p className="text-xs uppercase text-stone-500">{label}</p>
-            <p className="font-semibold">{value || "—"}</p>
+            <p className="font-semibold text-stone-900">{value || "—"}</p>
         </div>
     </div>
 );
 
 const AddressLine = ({ value }) => (
-    <p className="bg-white/60 rounded-xl text-sm">{value || "—"}</p>
+    <p className="bg-slate-50 rounded-xl px-4 py-2 text-sm">{value || "—"}</p>
 );
 
 const GlassInput = ({ label, type = "text", ...props }) => (
@@ -258,15 +406,6 @@ const GlassInput = ({ label, type = "text", ...props }) => (
             {label}
         </label>
     </div>
-);
-
-const ActionBtn = ({ icon, label, danger, onClick }) => (
-    <button onClick={onClick} className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold transition ${danger
-        ? "bg-red-100 text-red-700 hover:bg-red-200"
-        : "bg-stone-900 text-white hover:bg-stone-800"
-        }`}>
-        {icon} {label}
-    </button>
 );
 
 const PrimaryBtn = ({ label }) => (
@@ -296,98 +435,112 @@ const ProfileMap = ({ address }) => {
 };
 
 const UserBookingsList = ({ bookings, onRate }) => {
-    const completedBookings = bookings.filter(b => b.status === 'completed');
-    const otherBookings = bookings.filter(b => b.status !== 'completed');
-
-    if (bookings.length === 0) {
+    if (!bookings || bookings.length === 0) {
         return (
-            <div className="text-center py-8 text-stone-500">
-                <p>No bookings yet</p>
+            <div className="text-center py-10 text-stone-500">
+                <p className="text-sm">No bookings yet</p>
             </div>
         );
     }
 
-    return (
-        <div className="space-y-4">
-            {/* Other Bookings */}
-            {otherBookings.length > 0 && (
-                <div>
-                    <h4 className="text-sm font-semibold text-stone-700 mb-3">Active Bookings</h4>
-                    <div className="space-y-2">
-                        {otherBookings.map((booking) => (
-                            <BookingItem key={booking._id} booking={booking} canRate={false} />
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Completed Bookings */}
-            {completedBookings.length > 0 && (
-                <div>
-                    <h4 className="text-sm font-semibold text-stone-700 mb-3">Completed Services</h4>
-                    <div className="space-y-2">
-                        {completedBookings.map((booking) => (
-                            <BookingItem 
-                                key={booking._id} 
-                                booking={booking} 
-                                canRate={!booking.rating}
-                                onRate={() => onRate(booking)}
-                            />
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
-
-const BookingItem = ({ booking, canRate, onRate }) => {
-    const statusColors = {
-        pending: 'bg-yellow-50 border-yellow-200 text-yellow-700',
-        confirmed: 'bg-blue-50 border-blue-200 text-blue-700',
-        'in-progress': 'bg-purple-50 border-purple-200 text-purple-700',
-        completed: 'bg-green-50 border-green-200 text-green-700',
-        cancelled: 'bg-red-50 border-red-200 text-red-700',
+    const statusStyles = {
+        pending: "bg-yellow-50 text-yellow-700 border-yellow-200",
+        confirmed: "bg-blue-50 text-blue-700 border-blue-200",
+        "in-progress": "bg-purple-50 text-purple-700 border-purple-200",
+        completed: "bg-green-50 text-green-700 border-green-200",
+        cancelled: "bg-red-50 text-red-700 border-red-200",
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-white/60 rounded-xl p-4 border border-white/40"
-        >
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                    <h5 className="font-semibold text-stone-900">{booking.serviceName}</h5>
-                    <p className="text-sm text-stone-600">
-                        {booking.partner?.name} • ${booking.amount}
-                    </p>
-                    <p className="text-xs text-stone-500 mt-1">
-                        {new Date(booking.bookedDate).toLocaleDateString()}
-                    </p>
-                </div>
+        <div className="relative">
+            <div className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory no-scrollbar">
+                {bookings.map((booking) => (
+                    <div
+                        key={booking._id}
+                        className="min-w-[300px] sm:min-w-[340px] snap-start 
+                                   bg-white rounded-2xl border border-slate-200 
+                                   shadow-sm hover:shadow-md transition"
+                    >
+                        {/* Header */}
+                        <div className="p-5 border-b border-slate-100">
+                            <div className="flex justify-between items-start gap-3">
+                                <h5 className="font-semibold text-stone-900 leading-snug">
+                                    {booking.serviceName}
+                                </h5>
 
-                <div className="flex items-center gap-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusColors[booking.status]}`}>
-                        {booking.status}
-                    </span>
-                    
-                    {booking.rating ? (
-                        <div className="flex items-center gap-2">
-                            <StarRating rating={booking.rating} size="sm" showLabel={false} />
-                            <span className="text-xs text-stone-600">Rated</span>
+                                <span
+                                    className={`text-[11px] px-3 py-1 rounded-full font-semibold border 
+                                    ${statusStyles[booking.status]}`}
+                                >
+                                    {booking.status}
+                                </span>
+                            </div>
+
+                            <p className="text-xs text-stone-500 mt-1">
+                                Booking ID •{" "}
+                                <span className="font-medium text-stone-700">
+                                    {booking.bookingNumber}
+                                </span>
+                            </p>
                         </div>
-                    ) : canRate && (
-                        <button
-                            onClick={onRate}
-                            className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition flex items-center gap-1"
-                        >
-                            <FiStar className="w-3 h-3" />
-                            Rate
-                        </button>
-                    )}
-                </div>
+
+                        {/* Body */}
+                        <div className="px-5 py-4 space-y-2 text-sm text-stone-700">
+                            <p className="flex justify-between">
+                                <span className="text-stone-500">Partner</span>
+                                <span className="font-medium">
+                                    {booking.partner?.name || "—"}
+                                </span>
+                            </p>
+
+                            <p className="flex justify-between">
+                                <span className="text-stone-500">Date</span>
+                                <span className="font-medium">
+                                    {new Date(booking.bookedDate).toLocaleDateString()}
+                                </span>
+                            </p>
+
+                            <p className="flex justify-between">
+                                <span className="text-stone-500">Time</span>
+                                <span className="font-medium">
+                                    {booking.scheduledTime}
+                                </span>
+                            </p>
+
+                            <p className="flex justify-between">
+                                <span className="text-stone-500">Payment</span>
+                                <span
+                                    className={`text-xs px-2 py-0.5 rounded-full font-semibold
+                                    ${booking.paymentStatus === "paid"
+                                            ? "bg-green-100 text-green-700"
+                                            : "bg-orange-100 text-orange-700"
+                                        }`}
+                                >
+                                    {booking.paymentStatus}
+                                </span>
+                            </p>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+                            <p className="text-lg font-bold text-stone-900">
+                                ₹{booking.amount}
+                            </p>
+
+                            {booking.status === "completed" && !booking.rating && (
+                                <button
+                                    onClick={() => onRate?.(booking)}
+                                    className="text-xs font-semibold px-4 py-2 rounded-full 
+                                               bg-yellow-500/10 text-yellow-700 
+                                               hover:bg-yellow-500/20 transition"
+                                >
+                                    Rate Service
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                ))}
             </div>
-        </motion.div>
+        </div>
     );
 };

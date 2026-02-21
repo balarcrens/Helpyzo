@@ -19,24 +19,27 @@ const countries = ["India", "United States", "United Kingdom", "Canada", "Austra
 const partnerSteps = [
     { id: 1, title: "Personal", description: "Identity details" },
     { id: 2, title: "Business", description: "Service info" },
+    { id: 3, title: "Documents", description: "Verification" },
 ];
 
-const BACKEND_URL = import.meta.env.BACKEND_URL || "http://localhost:3000";
+const BACKEND_URL = import.meta.env.BACKEND_URL || "http://localhost:5000/api";
 
 const Register = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
     const [openCountry, setOpenCountry] = useState(false);
     const [selectedCountry, setSelectedCountry] = useState("India");
+    const [documents, setDocuments] = useState({});
+    const [isReadingFile, setIsReadingFile] = useState(false);
     const [categories, setCategories] = useState([]);
     const [error, setError] = useState("");
     const navigate = useNavigate();
     const { login } = useContext(AuthContext);
-    
+
     const roleParam = (searchParams.get("role") || "customer").toLowerCase();
     const stepParam = Number(searchParams.get("step") || 1);
     const normalizedRole = roleParam === "partner" ? "partner" : "customer";
-    const normalizedStep = normalizedRole === "partner" ? Math.min(Math.max(stepParam, 1), 2) : 1;
+    const normalizedStep = normalizedRole === "partner" ? Math.min(Math.max(stepParam, 1), 3) : 1;
     const isPartner = normalizedRole === "partner";
     const { register, handleSubmit, trigger, setValue, formState: { errors }, reset } = useForm({
         mode: "onTouched",
@@ -47,26 +50,52 @@ const Register = () => {
         setSearchParams({ role: normalizedRole, step: String(normalizedStep) }, { replace: true });
         // Fetch categories for partners
         if (isPartner) {
-            fetchCategories();
+            // fetchCategories();
         }
     }, [normalizedRole, normalizedStep, setSearchParams, isPartner]);
 
-    const fetchCategories = async () => {
-        try {
-            const res = await categoryAPI.getAllCategories();
-            setCategories(res.data.categories);
-        } catch (err) {
-            console.error("Failed to fetch categories", err);
-        }
-    };
+    // const fetchCategories = async () => {
+    //     try {
+    //         const res = await categoryAPI.getAllCategories();
+    //         setCategories(res.data.categories);
+    //     } catch (err) {
+    //         console.error("Failed to fetch categories", err);
+    //     }
+    // };
 
     const handleRoleChange = (role) => {
         reset();
         setSearchParams({ role, step: "1" });
     };
 
+    const handleDocumentChange = (e, type) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setIsReadingFile(true);
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setDocuments(prev => ({
+                ...prev,
+                [type]: {
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    dataUrl: reader.result
+                }
+            }));
+            setIsReadingFile(false);
+        };
+
+        reader.readAsDataURL(file);
+    };
 
     const onFinalSubmit = async (data) => {
+        if (isReadingFile) {
+            setError("Please wait, documents are still loading");
+            return;
+        }
         setIsLoading(true);
         setError("");
 
@@ -104,8 +133,17 @@ const Register = () => {
                         toTime: data.toTime || "18:00",
                     },
                     paymentMethods: data.paymentMethods || ["cash"],
+                    documents: Object.entries(documents).map(([key, doc]) => ({
+                        type: key,
+                        name: doc.name,
+                        mimeType: doc.type,
+                        size: doc.size,
+                        dataUrl: doc.dataUrl
+                    }))
                 };
 
+                console.log(documents);
+                
                 const res = await partnerAPI.register(partnerData);
                 login(res.data.token, res.data.partner);
             } else {
@@ -129,7 +167,10 @@ const Register = () => {
 
             navigate("/");
         } catch (err) {
-            setError(err.response?.data?.message || "Registration failed. Please try again.");
+            setError(
+                err.response?.data?.message ||
+                "Registration failed. Please try again."
+            );
         } finally {
             setIsLoading(false);
         }
@@ -378,6 +419,63 @@ const Register = () => {
                                         </div>
                                     )}
 
+                                    {/* Step 3: Document Upload (Partner Only) */}
+                                    {normalizedRole === "partner" && normalizedStep === 3 && (
+                                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+
+                                            <div className="bg-white/2 border border-white/5 rounded-3xl p-6 space-y-5">
+                                                <h3 className="text-sm font-bold text-white tracking-wide">
+                                                    Verification Documents
+                                                </h3>
+                                                <p className="text-xs text-stone-400">
+                                                    Upload clear images for faster verification.
+                                                </p>
+
+                                                {/* Aadhaar */}
+                                                <div className="flex flex-col gap-2">
+                                                    <label className="text-xs text-white/50">Aadhaar Card</label>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => handleDocumentChange(e, "aadhaar")}
+                                                        className="text-xs text-white/70 border border-dashed border-white/40 rounded-lg px-3 py-4"
+                                                    />
+                                                </div>
+
+                                                {/* PAN */}
+                                                <div className="flex flex-col gap-2">
+                                                    <label className="text-xs text-white/50">PAN Card</label>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => handleDocumentChange(e, "pan")}
+                                                        className="text-xs text-white/70 border border-dashed border-white/40 rounded-lg px-3 py-4"
+                                                    />
+                                                </div>
+
+                                                {/* GST (Optional) */}
+                                                <div className="flex flex-col gap-2">
+                                                    <label className="text-xs text-white/50">GST Certificate (Optional)</label>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => handleDocumentChange(e, "gst")}
+                                                        className="text-xs text-white/70 border border-dashed border-white/40 rounded-lg px-3 py-4"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {Object.keys(documents).length > 0 && (
+                                                <div className="bg-green-500/5 border border-green-500/20 rounded-2xl p-4">
+                                                    <p className="text-xs text-green-400 font-semibold">
+                                                        {Object.keys(documents).length} document(s) uploaded successfully
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                        </div>
+                                    )}
+
                                     {/* Action Buttons */}
                                     <div className="flex items-center justify-between pt-8 border-t border-white/5">
                                         {normalizedRole === "partner" && normalizedStep > 1 ? (
@@ -386,11 +484,11 @@ const Register = () => {
                                             </button>
                                         ) : <div />}
 
-                                        {normalizedRole === "partner" && normalizedStep < 2 ? (
+                                        {normalizedRole === "partner" && normalizedStep < 3 ? (
                                             <button
                                                 type="button"
                                                 onClick={async () => {
-                                                    const fields = normalizedStep === 1 ? ["fullName", "email", "phone", "addressLine", "city", "pincode"] : ["businessName", "category", "experience"];
+                                                    const fields = normalizedStep === 1 ? ["fullName", "email", "phone", "addressLine", "city", "pincode"] : normalizedStep === 2 ? ["businessName", "category", "experience"] : ["documents"];
                                                     const ok = await trigger(fields);
                                                     if (ok) setSearchParams({ role: "partner", step: String(normalizedStep + 1) });
                                                 }}

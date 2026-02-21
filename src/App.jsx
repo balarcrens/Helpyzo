@@ -21,6 +21,7 @@ import Category from './components/pages/Category.jsx'
 import ServicePage from './components/pages/Services.jsx'
 import Profile from './components/pages/Profile.jsx'
 import PartnerDetail from './components/pages/superadmin/PartnerDetail.jsx'
+import BookingDetails from './components/pages/admin/BookingDetail.jsx'
 
 const CURRENT_ROLE = "superadmin";
 
@@ -67,6 +68,7 @@ const App = () => {
                         <Route index element={<AdminDashboard />} />
                         <Route path="services" element={<AdminServices />} />
                         <Route path="bookings" element={<Bookings />} />
+                        <Route path="bookings/:id" element={<BookingDetails />} />
                     </Route>
                 </Routes>
             </div>

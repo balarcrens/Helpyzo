@@ -5,8 +5,10 @@ import { motion } from "framer-motion";
 import { FiBriefcase, FiUsers, FiTrendingUp, FiCalendar } from "react-icons/fi";
 import { useBookings } from "../../../hooks/useData";
 import { usePartner } from "../../../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
+    const navigate = useNavigate();
     const { bookings, fetchPartnerBookings } = useBookings();
     const { user } = usePartner();
     const [stats, setStats] = useState({
@@ -21,18 +23,42 @@ export default function Dashboard() {
     }, [user?._id]);
 
     useEffect(() => {
-        if (bookings.length > 0) {
-            const totalEarnings = bookings
-                .filter(b => b.status === "completed")
-                .reduce((sum, b) => sum + (b.amount || 0), 0);
+        if (!bookings || bookings.length === 0) return;
 
-            setStats({
-                totalBookings: bookings.length,
-                completedBookings: bookings.filter(b => b.status === "completed").length,
-                totalEarnings,
-                pendingBookings: bookings.filter(b => b.status === "pending").length,
-            });
-        }
+        const today = new Date().toDateString();
+
+        const completed = bookings.filter(b => b.status === "completed");
+        const pending = bookings.filter(b => b.status === "pending");
+        const cancelled = bookings.filter(b => b.status === "cancelled");
+
+        const todayBookings = bookings.filter(
+            b => new Date(b.bookedDate).toDateString() === today
+        );
+
+        const upcoming = bookings.filter(
+            b => new Date(b.bookedDate) > new Date() && b.status === "pending"
+        );
+
+        const totalEarnings = completed.reduce(
+            (sum, b) => sum + (b.amount || 0),
+            0
+        );
+
+        setStats({
+            totalBookings: bookings.length,
+            completedBookings: completed.length,
+            pendingBookings: pending.length,
+            cancelledBookings: cancelled.length,
+            todayBookings: todayBookings.length,
+            upcomingBookings: upcoming.length,
+            totalEarnings,
+            avgOrderValue: completed.length
+                ? Math.round(totalEarnings / completed.length)
+                : 0,
+            completionRate: bookings.length
+                ? Math.round((completed.length / bookings.length) * 100)
+                : 0,
+        });
     }, [bookings]);
 
     const StatCard = ({ icon: Icon, label, value, color }) => (
@@ -83,6 +109,34 @@ export default function Dashboard() {
                     value={stats.pendingBookings}
                     color="from-yellow-500 to-yellow-600"
                 />
+
+                <StatCard
+                    icon={FiCalendar}
+                    label="Today’s Bookings"
+                    value={stats.todayBookings}
+                    color="from-cyan-500 to-cyan-600"
+                />
+
+                <StatCard
+                    icon={FiBriefcase}
+                    label="Upcoming"
+                    value={stats.upcomingBookings}
+                    color="from-indigo-500 to-indigo-600"
+                />
+
+                <StatCard
+                    icon={FiTrendingUp}
+                    label="Avg Order Value"
+                    value={`₹${stats.avgOrderValue}`}
+                    color="from-pink-500 to-pink-600"
+                />
+
+                <StatCard
+                    icon={FiUsers}
+                    label="Completion Rate"
+                    value={`${stats.completionRate}%`}
+                    color="from-emerald-500 to-emerald-600"
+                />
             </div>
 
             <div className="bg-white p-6 rounded-xl border border-gray-200">
@@ -91,20 +145,50 @@ export default function Dashboard() {
                     {bookings.slice(0, 5).map((booking) => (
                         <motion.div
                             key={booking._id}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="flex justify-between items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition"
                         >
-                            <div>
-                                <p className="font-semibold">{booking.user?.name}</p>
-                                <p className="text-sm text-gray-600">{new Date(booking.bookedDate).toLocaleDateString()}</p>
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="font-semibold text-stone-900">
+                                        {booking.user?.name}
+                                    </p>
+                                    <p className="text-sm text-gray-600">
+                                        {booking.serviceName}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {new Date(booking.bookedDate).toLocaleDateString()} •{" "}
+                                        {booking.scheduledTime}
+                                    </p>
+                                </div>
+
+                                <span
+                                    className={`px-3 py-1 rounded-full text-xs font-semibold ${booking.status === "completed"
+                                        ? "bg-green-100 text-green-700"
+                                        : booking.status === "pending"
+                                            ? "bg-yellow-100 text-yellow-700"
+                                            : "bg-red-100 text-red-700"
+                                        }`}
+                                >
+                                    {booking.status}
+                                </span>
                             </div>
-                            <div className="text-right">
-                                <p className="font-semibold">₹{booking.amount}</p>
-                                <p className={`text-sm font-semibold ${booking.status === "completed" ? "text-green-600" :
-                                        booking.status === "pending" ? "text-yellow-600" :
-                                            "text-blue-600"
-                                    }`}>{booking.status}</p>
+
+                            <div className="flex justify-between items-center mt-4">
+                                <p className="font-semibold text-stone-800">
+                                    ₹{booking.amount}
+                                    <span className="text-xs text-gray-500 ml-1">
+                                        ({booking.paymentMethod})
+                                    </span>
+                                </p>
+
+                                <button
+                                    className="text-sm font-semibold text-indigo-600 hover:underline"
+                                    onClick={() => navigate(`bookings/${booking._id}`)}
+                                >
+                                    View Details →
+                                </button>
                             </div>
                         </motion.div>
                     ))}

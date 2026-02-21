@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -13,7 +12,6 @@ import {
 import Layout from "../Layout/Layout";
 import Header from "../Layout/Header";
 import ServiceCard from "../Cards/ServiceCard";
-import StarRating from "../StarRating";
 import { partnerAPI } from "../../services/api";
 
 export default function ServicePage() {
@@ -35,16 +33,13 @@ export default function ServicePage() {
     const fetchPartners = async () => {
         try {
             setLoading(true);
-            
+
             // Fetch all partners with services populated with category details
-            const res = await partnerAPI.getAllPartners({
-                minRating: minRating,
-                isActive: true
-            });
+            const res = await partnerAPI.getApprovedServices();
 
             console.log(res?.data?.partners?.services);
-            
-            
+
+
             setPartners(res.data.partners || []);
         } catch (err) {
             console.error("Failed to fetch partners:", err);
@@ -55,36 +50,34 @@ export default function ServicePage() {
     };
 
     const filteredServices = useMemo(() => {
-        if (!partners || !Array.isArray(partners)) return [];
+        return partners.flatMap(partner =>
+            partner.services
+                .filter(service => {
+                    const categoryMatch =
+                        service.category?.name?.toLowerCase() === category?.toLowerCase();
 
-        return partners.flatMap(partner => {
-            if (!partner || !partner.services || !Array.isArray(partner.services)) return [];
-            
-            return partner.services
-                .filter(s => {
-                    if (!s || !s.name) return false;
-                    
-                    // Match service to the selected category by category.name
-                    const categoryMatch = s.category && s.category.name 
-                        && s.category.name.toLowerCase() === category?.toLowerCase();
-                    
-                    const matchSearch = s.name
-                        .toLowerCase()
-                        .includes(search.toLowerCase());
-                    const matchRating = (partner.rating || 0) >= minRating;
-                    
-                    return categoryMatch && matchSearch && matchRating;
+                    const searchMatch =
+                        service.name.toLowerCase().includes(search.toLowerCase());
+
+                    const ratingMatch =
+                        (partner.rating || 0) >= minRating;
+
+                    return categoryMatch && searchMatch && ratingMatch;
                 })
                 .map(service => ({
                     ...service,
-                    partnerId: partner._id,
-                    partnerName: partner.name,
-                    partnerPhone: partner.phone,
-                    partnerRating: partner.rating || 0,
-                    partnerRatings: partner.totalRatings || 0,
+                    partner: {
+                        _id: partner._id,
+                        name: partner.name,
+                        phone: partner.phone,
+                        rating: partner.rating || 0,
+                        totalRatings: partner.totalRatings || 0,
+                        address: partner.address,
+                        business: partner.business,
+                    }
                 }))
-        });
-    }, [partners, search, minRating, category]);
+        );
+    }, [partners, category, search, minRating]);
 
     if (!category) {
         return (
@@ -96,9 +89,6 @@ export default function ServicePage() {
         );
     }
 
-    /* ==================================================
-       SECTION FILTERS - Simplified for actual data structure
-    ================================================== */
     const sections = [
         {
             title: `${category ? category.charAt(0).toUpperCase() + category.slice(1) : 'Available'} Services`,
@@ -234,6 +224,7 @@ export default function ServicePage() {
                                     {items.map((item) => (
                                         <div key={item._id} className="w-full">
                                             <ServiceCard
+                                                partner={item.partner}
                                                 item={item}
                                                 onClick={() =>
                                                     navigate(

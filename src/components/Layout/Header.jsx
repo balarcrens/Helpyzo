@@ -154,21 +154,23 @@ const Header = () => {
                                                     <span>Profile</span>
                                                 </button>
 
-                                                {/* Dashboard Option - Conditional */}
-                                                <button
-                                                    onClick={() => {
-                                                        if (isSuperAdmin) {
-                                                            navigate("/superadmin");
-                                                        } else {
-                                                            navigate("/admin");
-                                                        }
-                                                        setIsProfileMenuOpen(false);
-                                                    }}
-                                                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-[#9fe870] hover:bg-white/5 rounded-lg cursor-pointer transition-all"
-                                                >
-                                                    <FiLayout size={16} />
-                                                    <span>Dashboard</span>
-                                                </button>
+                                                {user?.role === "partner" || user?.role === "superadmin" ?
+                                                    <button
+                                                        onClick={() => {
+                                                            if (isSuperAdmin) {
+                                                                navigate("/superadmin");
+                                                            } else {
+                                                                navigate("/admin");
+                                                            }
+                                                            setIsProfileMenuOpen(false);
+                                                        }}
+                                                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-[#9fe870] hover:bg-white/5 rounded-lg cursor-pointer transition-all"
+                                                    >
+                                                        <FiLayout size={16} />
+                                                        <span>Dashboard</span>
+                                                    </button>
+                                                    : null
+                                                }
 
                                                 {/* Divider */}
                                                 <div className="h-px bg-white/10 my-2" />
@@ -292,7 +294,7 @@ const Header = () => {
                                                 navigate("/admin");
                                             }
                                             setIsMobileMenuOpen(false);
-                                        }} className="mt-2 bg-blue-500/20 text-blue-300 w-full py-3 rounded-2xl font-bold flex items-center justify-center gap-2" >
+                                        }} className="bg-blue-500/20 text-blue-300 w-full py-3 rounded-2xl font-bold flex items-center justify-center gap-2" >
                                             <FiLayout size={16} />
                                             Dashboard
                                         </button>
@@ -301,7 +303,7 @@ const Header = () => {
                                             logout();
                                             navigate("/");
                                             setIsMobileMenuOpen(false);
-                                        }} className="mt-2 bg-red-500/20 text-red-300 w-full py-3 rounded-2xl font-bold flex items-center justify-center gap-2" >
+                                        }} className="bg-red-500/20 text-red-300 w-full py-3 rounded-2xl font-bold flex items-center justify-center gap-2" >
                                             <FiLogOut size={16} />
                                             Logout
                                         </button>

@@ -19,7 +19,7 @@ export default function AdminServices() {
         description: "",
         image: "",
         basePrice: "",
-        visitingFees: "0",
+        visitingFees: 0,
         discount: "0",
         durationInMinutes: "",
         isActive: true,
@@ -70,6 +70,7 @@ export default function AdminServices() {
                 basePrice: parseFloat(formData.basePrice),
                 visitingFees: parseFloat(formData.visitingFees) || 0,
                 discount: parseFloat(formData.discount) || 0,
+                finalPrice,
                 durationInMinutes: parseInt(formData.durationInMinutes),
                 maxBookingsPerDay: parseInt(formData.maxBookingsPerDay),
                 cancellationWindowHours: parseInt(formData.cancellationWindowHours),
@@ -151,23 +152,48 @@ export default function AdminServices() {
         setActiveTab("basic");
     };
 
-    const finalPrice = formData.basePrice 
-        ? (parseFloat(formData.basePrice) - (parseFloat(formData.basePrice) * (parseFloat(formData.discount) || 0) / 100)).toFixed(2)
-        : 0;
+    const basePrice = Number(formData.basePrice) || 0;
+    const discountPercent = Number(formData.discount) || 0;
+    const visitingFees = Number(formData.visitingFees) || 0;
+
+    const discountAmount = basePrice * (discountPercent / 100);
+    const finalPrice = Math.max(
+        Math.round(basePrice - discountAmount + visitingFees),
+        0
+    );
 
     return (
         <div className="space-y-6 pb-10">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                {/* LEFT: TITLE */}
                 <div>
                     <h2 className="text-3xl font-bold text-stone-900">Services</h2>
-                    <p className="text-gray-600 mt-1">Manage and create service offerings</p>
+                    <p className="text-gray-600 mt-1">
+                        Manage and create service offerings
+                    </p>
                 </div>
-                <button
-                    onClick={() => setShowForm(true)}
-                    className="flex items-center gap-2 bg-gradient-to-r from-[#9fe870] to-[#8ed65f] text-stone-900 px-6 py-3 rounded-xl font-semibold hover:scale-105 transition shadow-lg"
-                >
-                    <FiPlus size={20} /> Add Service
-                </button>
+
+                {/* RIGHT: ACTION */}
+                <div className="flex flex-col items-end gap-2 max-w-md">
+                    <button
+                        onClick={() => setShowForm(true)}
+                        disabled={user?.verification?.status !== "approved"}
+                        className="flex items-center gap-2 bg-gradient-to-r from-[#9fe870] to-[#8ed65f]
+                       text-stone-900 px-6 py-3 rounded-xl font-semibold
+                       hover:scale-105 transition shadow-lg
+                       disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <FiPlus size={20} /> Add Service
+                    </button>
+
+                    {user?.verification?.status !== "approved" && (
+                        <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-right">
+                            🔒 <span className="font-medium">Service upload locked.</span>
+                            <br />
+                            Complete document verification to unlock this feature.
+                        </div>
+                    )}
+                </div>
             </div>
 
             <AnimatePresence>
@@ -177,7 +203,7 @@ export default function AdminServices() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                        onClick={handleCancel}
+                    // onClick={handleCancel}
                     >
                         <motion.div
                             initial={{ scale: 0.95, y: 20 }}
@@ -206,11 +232,10 @@ export default function AdminServices() {
                                             key={tab}
                                             type="button"
                                             onClick={() => setActiveTab(tab)}
-                                            className={`px-4 py-2 font-semibold capitalize transition ${
-                                                activeTab === tab
-                                                    ? "text-[#9fe870] border-b-2 border-[#9fe870]"
-                                                    : "text-gray-600 hover:text-gray-900"
-                                            }`}
+                                            className={`px-4 py-2 font-semibold capitalize transition ${activeTab === tab
+                                                ? "text-[#9fe870] border-b-2 border-[#9fe870]"
+                                                : "text-gray-600 hover:text-gray-900"
+                                                }`}
                                         >
                                             {tab}
                                         </button>
@@ -322,11 +347,10 @@ export default function AdminServices() {
                                                 </label>
                                                 <input
                                                     type="number"
-                                                    placeholder="0.00"
+                                                    placeholder="0"
                                                     value={formData.basePrice}
                                                     onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
                                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870]"
-                                                    step="0.01"
                                                     min="0"
                                                     required
                                                 />
@@ -338,11 +362,10 @@ export default function AdminServices() {
                                                 </label>
                                                 <input
                                                     type="number"
-                                                    placeholder="0.00"
+                                                    placeholder="0"
                                                     value={formData.visitingFees}
                                                     onChange={(e) => setFormData({ ...formData, visitingFees: e.target.value })}
                                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870]"
-                                                    step="0.01"
                                                     min="0"
                                                 />
                                             </div>
@@ -369,7 +392,7 @@ export default function AdminServices() {
                                             </div>
                                             {formData.discount > 0 && (
                                                 <p className="text-sm text-gray-600 mt-2">
-                                                    Save ₹{(parseFloat(formData.basePrice) * parseFloat(formData.discount) / 100).toFixed(2)}
+                                                    Save ₹{Math.round(discountAmount)}
                                                 </p>
                                             )}
                                         </div>
@@ -389,11 +412,10 @@ export default function AdminServices() {
                                                         key={day}
                                                         type="button"
                                                         onClick={() => handleDayToggle(day)}
-                                                        className={`p-3 rounded-lg font-semibold transition ${
-                                                            formData.availableDays.includes(day)
-                                                                ? 'bg-[#9fe870] text-stone-900 shadow-md'
-                                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                        }`}
+                                                        className={`p-3 rounded-lg font-semibold transition ${formData.availableDays.includes(day)
+                                                            ? 'bg-[#9fe870] text-stone-900 shadow-md'
+                                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                            }`}
                                                     >
                                                         {day.slice(0, 3)}
                                                     </button>
@@ -561,7 +583,7 @@ export default function AdminServices() {
                             <div className="p-4">
                                 <h3 className="font-bold text-lg text-stone-900 line-clamp-2">{service.name}</h3>
                                 <p className="text-gray-600 text-sm mt-1">{service.description?.substring(0, 50)}...</p>
-                                
+
                                 <div className="mt-4 space-y-2">
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-600">Price:</span>

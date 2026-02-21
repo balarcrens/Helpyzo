@@ -8,7 +8,7 @@ import {
     FaArrowUp,
     FaArrowDown,
 } from "react-icons/fa";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useBookings } from "../../../hooks/useData";
 import { userAPI, partnerAPI } from "../../../services/api";
 
@@ -30,7 +30,7 @@ export default function Dashboard() {
                 setUsers(usersRes.data.users);
                 setPartners(partnersRes.data.partners);
             } catch (error) {
-                console.error("Failed to fetch data:", error);
+                console.error("Failed to fetch data:", error.message);
             } finally {
                 setLoading(false);
             }
@@ -38,36 +38,65 @@ export default function Dashboard() {
         fetchData();
     }, []);
 
+    /* ================= TREND HELPER ================= */
+    const getTrend = (current = 0, previous) => {
+        if (previous === undefined || previous === 0) {
+            return { change: "0%", trend: "neutral" };
+        }
+
+        const diff = current - previous;
+        const percent = ((diff / previous) * 100).toFixed(1);
+
+        return {
+            change: `${diff >= 0 ? "+" : ""}${percent}%`,
+            trend: diff > 0 ? "up" : diff < 0 ? "down" : "neutral",
+        };
+    };
+
+    /* ================= COUNTS ================= */
+    const usersCount = users.length;
+    const partnersCount = partners.length;
+    const activePartnersCount = partners.filter(p => p?.isActive).length;
+    const bookingsCount = bookings?.length || 0;
+
+    /* ================= PREVIOUS VALUES ================= */
+    const prevUsers = useRef();
+    const prevPartners = useRef();
+    const prevBookings = useRef();
+
+    useEffect(() => {
+        prevUsers.current = 2;
+        prevPartners.current = 1;
+        prevBookings.current = 1;
+    }, [usersCount, activePartnersCount, bookingsCount]);
+
+    /* ================= STATS ================= */
     const stats = [
         {
             title: "Total Users",
-            value: (users && Array.isArray(users)) ? users.length : 0,
-            change: "+12%",
-            trend: "up",
+            value: usersCount,
+            ...getTrend(usersCount, prevUsers.current),
             icon: <FaUsers />,
             gradient: "from-blue-500 to-indigo-600",
         },
         {
             title: "Active Partners",
-            value: (partners && Array.isArray(partners)) ? partners.filter(p => p && p.isActive).length : 0,
-            change: "+5%",
-            trend: "up",
+            value: activePartnersCount,
+            ...getTrend(activePartnersCount, prevPartners.current),
             icon: <FaTools />,
             gradient: "from-emerald-500 to-green-600",
         },
         {
             title: "Total Bookings",
-            value: (bookings && Array.isArray(bookings)) ? bookings.length : 0,
-            change: "-3%",
-            trend: "down",
+            value: bookingsCount,
+            ...getTrend(bookingsCount, prevBookings.current),
             icon: <FaClipboardList />,
             gradient: "from-amber-500 to-yellow-600",
         },
         {
             title: "Partners",
-            value: (partners && Array.isArray(partners)) ? partners.length : 0,
-            change: "+2%",
-            trend: "up",
+            value: partnersCount,
+            ...getTrend(partnersCount, prevPartners.current),
             icon: <FaUserTie />,
             gradient: "from-purple-500 to-fuchsia-600",
         },
@@ -106,9 +135,15 @@ export default function Dashboard() {
                             <div className="flex justify-between items-start">
                                 <div>
                                     <p className="text-sm opacity-90">{item.title}</p>
-                                    <h2 className="text-4xl font-bold mt-2">
-                                        {item.value}
-                                    </h2>
+                                    {loading ? (
+                                        <h2 className="text-4xl font-bold mt-2">
+                                            ...
+                                        </h2>
+                                    ) : (
+                                        <h2 className="text-4xl font-bold mt-2">
+                                            {item.value}
+                                        </h2>
+                                    )}
                                 </div>
 
                                 <div className="text-2xl bg-white/20 p-4 rounded-2xl">
@@ -117,13 +152,14 @@ export default function Dashboard() {
                             </div>
 
                             <div className="flex items-center gap-2 mt-6 text-sm">
-                                {item.trend === "up" ? (
+                                {item.trend === "up" && (
                                     <FaArrowUp className="text-green-200" />
-                                ) : (
+                                )}
+                                {item.trend === "down" && (
                                     <FaArrowDown className="text-red-200" />
                                 )}
                                 <span className="opacity-90">
-                                    {item.change} from last month
+                                    {item.change} from last update
                                 </span>
                             </div>
                         </div>
@@ -155,7 +191,7 @@ export default function Dashboard() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {(bookings && Array.isArray(bookings)) ? (
+                                {(bookings && Array.isArray(bookings) && bookings.length > 0) ? (
                                     bookings.slice(0, 5).map((item) => (
                                         <tr
                                             key={item?._id}

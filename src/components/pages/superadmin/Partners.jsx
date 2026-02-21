@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import {
     FaUserTie,
     FaCheckCircle,
@@ -8,30 +9,40 @@ import {
     FaTools,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePartners } from "../../../hooks/useData";
 import { partnerAPI } from "../../../services/api";
 
 export default function Partners() {
     const navigate = useNavigate();
     const { partners, loading } = usePartners();
+    const [partnerList, setPartnerList] = useState([]);
     const [error, setError] = useState(null);
 
+    useEffect(() => {
+        if (Array.isArray(partners)) {
+            setPartnerList(partners);
+        }
+    }, [partners]);
+
     const stats = [
-        { label: "Total Partners", value: (partners && Array.isArray(partners)) ? partners.length : 0, icon: <FaUserTie />, color: "text-indigo-600" },
-        { label: "Active", value: (partners && Array.isArray(partners)) ? partners.filter(p => p && p.isActive).length : 0, icon: <FaCheckCircle />, color: "text-green-600" },
-        { label: "Inactive", value: (partners && Array.isArray(partners)) ? partners.filter(p => p && !p.isActive).length : 0, icon: <FaClock />, color: "text-yellow-600" },
-        { label: "Total Services", value: (partners && Array.isArray(partners)) ? partners.reduce((sum, p) => sum + (p && p.services && Array.isArray(p.services) ? p.services.length : 0), 0) : 0, icon: <FaTools />, color: "text-red-600" },
+        { label: "Total Partners", value: (partnerList && Array.isArray(partnerList)) ? partnerList.length : 0, icon: <FaUserTie />, color: "text-indigo-600" },
+        { label: "Active", value: (partnerList && Array.isArray(partnerList)) ? partnerList.filter(p => p && p.isActive).length : 0, icon: <FaCheckCircle />, color: "text-green-600" },
+        { label: "Inactive", value: (partnerList && Array.isArray(partnerList)) ? partnerList.filter(p => p && !p.isActive).length : 0, icon: <FaClock />, color: "text-yellow-600" },
+        { label: "Total Services", value: (partnerList && Array.isArray(partnerList)) ? partnerList.reduce((sum, p) => sum + (p && p.services && Array.isArray(p.services) ? p.services.length : 0), 0) : 0, icon: <FaTools />, color: "text-red-600" },
     ];
 
     const handleDelete = async (partnerId) => {
-        if (confirm("Are you sure you want to delete this partner?")) {
-            try {
-                await partnerAPI.deletePartner(partnerId);
-                window.location.reload();
-            } catch (err) {
-                setError(err.response?.data?.message || "Failed to delete partner");
-            }
+        if (!window.confirm("Are you sure you want to delete this partner?")) return;
+
+        try {
+            await partnerAPI.deletePartner(partnerId);
+
+            setPartnerList(prev =>
+                prev.filter(p => p._id !== partnerId)
+            );
+        } catch (err) {
+            setError(err.response?.data?.message || "Failed to delete partner");
         }
     };
 
@@ -78,10 +89,10 @@ export default function Partners() {
                     <div className="col-span-full text-center py-8">Loading partners...</div>
                 ) : error ? (
                     <div className="col-span-full text-center py-8 text-red-600">{error}</div>
-                ) : !partners || partners.length === 0 ? (
+                ) : !partnerList || partnerList.length === 0 ? (
                     <div className="col-span-full text-center py-8 text-gray-500">No partners found</div>
                 ) : (
-                    partners.map((partner) => (
+                    partnerList.map((partner) => (
                         <div
                             key={partner._id}
                             className="bg-white rounded-3xl shadow-sm p-6 hover:shadow-md transition"
@@ -101,9 +112,9 @@ export default function Partners() {
                                 </div>
 
                                 <span
-                                    className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyle[partner?.isActive] || ''}`}
+                                    className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyle[partner?.verification?.status === 'approved'] || ''}`}
                                 >
-                                    {partner?.isActive ? "Active" : "Inactive"}
+                                    {partner?.verification?.status === 'approved' ? "Verified" : "Pending"}
                                 </span>
                             </div>
 
@@ -131,7 +142,11 @@ export default function Partners() {
                                 </button>
 
                                 <button
-                                    onClick={() => partner?._id && handleDelete(partner._id)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        partner?._id && handleDelete(partner._id);
+                                    }}
                                     className="flex-1 flex items-center justify-center gap-2 bg-red-100 text-red-700 py-2 rounded-xl text-sm font-semibold hover:bg-red-200 transition"
                                 >
                                     <FaUserSlash /> Delete
