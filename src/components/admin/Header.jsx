@@ -6,7 +6,6 @@ import AuthContext from "../../context/Auth/AuthContext";
 import { useContext, useEffect, useRef, useState } from "react";
 import { notificationAPI } from "../../services/api";
 import { X } from "lucide-react";
-import { markAllAsRead } from "../../../../Home-service-backend/controllers/notificationController";
 
 export default function Header({ onMenuClick }) {
     const location = useLocation().pathname;
