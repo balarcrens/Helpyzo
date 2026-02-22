@@ -142,7 +142,7 @@ const Register = () => {
                     }))
                 };
 
-                console.log(documents);
+                // console.log(documents);
                 
                 const res = await partnerAPI.register(partnerData);
                 login(res.data.token, res.data.partner);
@@ -348,13 +348,10 @@ const Register = () => {
                                     {normalizedRole === "partner" && normalizedStep === 2 && (
                                         <div className="grid grid-cols-1 gap-6">
 
-                                            <InputGroup label="Business / Shop Name" name="businessName" validation={{ required: "Required" }}
+                                            <InputGroup label="Business / Shop Name" name="businessName" validation={{ required: "Business Name is Required" }}
                                             />
 
-                                            <InputGroup label="Service Name" name="serviceName" placeholder="e.g. Bathroom Plumbing" validation={{ required: "Required" }}
-                                            />
-
-                                            <InputGroup label="Years of Experience" name="yearsOfExperience" type="number" placeholder="e.g. 5"
+                                            <InputGroup label="Years of Experience" name="yearsOfExperience" type="number" placeholder="e.g. 5" validation={{ required: "Years of Experience is Required" }}
                                             />
 
                                             <div className="flex flex-col gap-1.5">
@@ -363,7 +360,7 @@ const Register = () => {
                                                 </label>
                                                 <select
                                                     {...register("category", { required: "Select category" })}
-                                                    className="w-full rounded-xl border border-white/5 bg-stone-800 px-4 py-3 text-sm text-white"
+                                                    className="w-full rounded-xl border border-white/5 bg-stone-800 px-4 py-3 text-sm text-white" 
                                                 >
                                                     <option value="">Select</option>
                                                     <option value="plumbing">Plumbing</option>
@@ -371,20 +368,6 @@ const Register = () => {
                                                     <option value="cleaning">Cleaning</option>
                                                 </select>
                                             </div>
-
-                                            <InputGroup label="Service Description" name="serviceDescription" placeholder="Describe your service"
-                                            />
-
-                                            <InputGroup label="Service Price (₹)" name="price" type="number"
-                                            />
-
-                                            <InputGroup label="Service Duration (minutes)" name="duration"
-                                                type="number"
-                                                validation={{ min: { value: 15, message: "Minimum 15 minutes" } }}
-                                            />
-
-                                            <InputGroup label="Visiting Fee (₹)" name="visitingFee" type="number"
-                                            />
 
                                             <label className="flex items-center gap-3">
                                                 <input

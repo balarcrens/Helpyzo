@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import AuthContext from "../../context/Auth/AuthContext";
-import { FiHome, FiChevronDown, FiMenu, FiX, FiLogOut, FiUser, FiLayout } from "react-icons/fi";
+import { FiHome, FiChevronDown, FiMenu, FiX, FiLogOut, FiUser, FiLayout, FiBookOpen } from "react-icons/fi";
+
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import Login from "../pages/Login";
@@ -154,6 +155,20 @@ const Header = () => {
                                                     <span>Profile</span>
                                                 </button>
 
+                                                {/* My Bookings */}
+                                                {user?.role && (
+                                                    <button
+                                                        onClick={() => {
+                                                            navigate("/my-bookings");
+                                                            setIsProfileMenuOpen(false);
+                                                        }}
+                                                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-[#9fe870] hover:bg-white/5 rounded-lg cursor-pointer transition-all"
+                                                    >
+                                                        <FiBookOpen size={16} />
+                                                        <span>My Bookings</span>
+                                                    </button>
+                                                )}
+
                                                 {user?.role === "partner" || user?.role === "superadmin" ?
                                                     <button
                                                         onClick={() => {
@@ -286,6 +301,17 @@ const Header = () => {
                                             <FiUser size={16} />
                                             Profile
                                         </button>
+
+                                        {/* My Bookings — mobile */}
+                                        {user?.role && (
+                                            <button onClick={() => {
+                                                navigate("/my-bookings");
+                                                setIsMobileMenuOpen(false);
+                                            }} className="bg-[#9fe870]/15 text-[#9fe870] w-full py-3 rounded-2xl font-bold flex items-center justify-center gap-2" >
+                                                <FiBookOpen size={16} />
+                                                My Bookings
+                                            </button>
+                                        )}
 
                                         <button onClick={() => {
                                             if (isSuperAdmin) {

@@ -204,7 +204,7 @@ export default function Categories() {
                     <p className="text-gray-600">Loading categories...</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {(categories && Array.isArray(categories) && categories.length > 0) ? (
                         categories.map((category) => (
                             <motion.div

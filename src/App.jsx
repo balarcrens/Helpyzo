@@ -22,6 +22,7 @@ import ServicePage from './components/pages/Services.jsx'
 import Profile from './components/pages/Profile.jsx'
 import PartnerDetail from './components/pages/superadmin/PartnerDetail.jsx'
 import BookingDetails from './components/pages/admin/BookingDetail.jsx'
+import UserBookings from './components/pages/UserBookings.jsx'
 
 const CURRENT_ROLE = "superadmin";
 
@@ -42,6 +43,7 @@ const App = () => {
                     <Route path="*" element={<NotFound />} />
                     <Route path="/category" element={<Category />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/my-bookings" element={<UserBookings />} />
                     <Route
                         path="/"
                         element={<Navigate to={`/${CURRENT_ROLE}`} />}
