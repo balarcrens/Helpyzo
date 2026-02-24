@@ -1,9 +1,22 @@
 /* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
-import { FiEdit, FiTrash2, FiPlus, FiX, FiCheck } from "react-icons/fi";
+import {
+    FiEdit, FiTrash2, FiPlus, FiX, FiCheck,
+    FiClock, FiDollarSign, FiCalendar, FiSettings,
+    FiTag, FiPackage, FiImage, FiToggleLeft, FiToggleRight,
+    FiLock, FiAlertCircle,
+} from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePartner } from "../../../hooks/useAuth";
 import { useCategories } from "../../../hooks/useData";
+
+const TABS = ["basic", "pricing", "availability", "settings"];
+const TAB_ICONS = { basic: FiPackage, pricing: FiDollarSign, availability: FiCalendar, settings: FiSettings };
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+const inputCls =
+    "w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition bg-gray-50 placeholder:text-gray-400";
+const labelCls = "block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5";
 
 export default function AdminServices() {
     const { user, addService, updateService, deleteService, loading } = usePartner();
@@ -44,25 +57,19 @@ export default function AdminServices() {
     };
 
     const handleDayToggle = (day) => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
             availableDays: prev.availableDays.includes(day)
-                ? prev.availableDays.filter(d => d !== day)
-                : [...prev.availableDays, day]
+                ? prev.availableDays.filter((d) => d !== day)
+                : [...prev.availableDays, day],
         }));
     };
 
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.image) {
-            alert("Please select an image");
-            return;
-        }
+        if (!formData.image) { alert("Please select an image"); return; }
         if (!formData.name || !formData.category || !formData.basePrice || !formData.durationInMinutes) {
-            alert("Please fill in all required fields (marked with *)");
-            return;
+            alert("Please fill in all required fields (marked with *)"); return;
         }
         try {
             const submitData = {
@@ -74,12 +81,8 @@ export default function AdminServices() {
                 durationInMinutes: parseInt(formData.durationInMinutes),
                 maxBookingsPerDay: parseInt(formData.maxBookingsPerDay),
                 cancellationWindowHours: parseInt(formData.cancellationWindowHours),
-                serviceArea: {
-                    ...formData.serviceArea,
-                    radiusKm: parseInt(formData.serviceArea.radiusKm),
-                }
+                serviceArea: { ...formData.serviceArea, radiusKm: parseInt(formData.serviceArea.radiusKm) },
             };
-
             if (editingId) {
                 const updated = await updateService(editingId, submitData);
                 setServices(updated.services);
@@ -132,21 +135,13 @@ export default function AdminServices() {
         setShowForm(false);
         setEditingId(null);
         setFormData({
-            name: "",
-            category: "",
-            description: "",
-            image: "",
-            basePrice: "",
-            visitingFees: "0",
-            discount: "0",
-            durationInMinutes: "",
-            isActive: true,
-            availableDays: [],
+            name: "", category: "", description: "", image: "",
+            basePrice: "", visitingFees: "0", discount: "0",
+            durationInMinutes: "", isActive: true, availableDays: [],
             availableTime: { from: "09:00", to: "18:00" },
             maxBookingsPerDay: "10",
             serviceArea: { cities: [], radiusKm: "10" },
-            cancellationAllowed: true,
-            cancellationWindowHours: "2",
+            cancellationAllowed: true, cancellationWindowHours: "2",
         });
         setImagePreview("");
         setActiveTab("basic");
@@ -155,42 +150,34 @@ export default function AdminServices() {
     const basePrice = Number(formData.basePrice) || 0;
     const discountPercent = Number(formData.discount) || 0;
     const visitingFees = Number(formData.visitingFees) || 0;
-
     const discountAmount = basePrice * (discountPercent / 100);
-    const finalPrice = Math.max(
-        Math.round(basePrice - discountAmount + visitingFees),
-        0
-    );
+    const finalPrice = Math.max(Math.round(basePrice - discountAmount + visitingFees), 0);
+
+    const isVerified = user?.verification?.status === "approved";
 
     return (
         <div className="space-y-6 pb-10">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                {/* LEFT: TITLE */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold text-stone-900">Services</h2>
-                    <p className="text-gray-600 mt-1">
-                        Manage and create service offerings
+                    <h2 className="text-2xl font-extrabold text-gray-900">My Services</h2>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                        {services.length > 0 ? `${services.length} service${services.length > 1 ? "s" : ""} listed` : "No services yet — create your first!"}
                     </p>
                 </div>
 
-                {/* RIGHT: ACTION */}
-                <div className="flex flex-col items-end gap-2 max-w-md">
+                <div className="flex flex-col items-start sm:items-end gap-2">
                     <button
                         onClick={() => setShowForm(true)}
-                        disabled={user?.verification?.status !== "approved"}
-                        className="flex items-center gap-2 bg-gradient-to-r from-[#9fe870] to-[#8ed65f]
-                       text-stone-900 px-6 py-3 rounded-xl font-semibold
-                       hover:scale-105 transition shadow-lg
-                       disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={!isVerified}
+                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-2xl text-sm font-bold transition active:scale-95 shadow-sm"
                     >
-                        <FiPlus size={20} /> Add Service
+                        <FiPlus size={16} /> Add Service
                     </button>
 
-                    {user?.verification?.status !== "approved" && (
-                        <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-right">
-                            🔒 <span className="font-medium">Service upload locked.</span>
-                            <br />
-                            Complete document verification to unlock this feature.
+                    {!isVerified && (
+                        <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 max-w-xs">
+                            <FiLock size={13} className="mt-0.5 flex-shrink-0" />
+                            <span><span className="font-bold">Locked.</span> Complete document verification to add services.</span>
                         </div>
                     )}
                 </div>
@@ -202,115 +189,126 @@ export default function AdminServices() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                    // onClick={handleCancel}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
                     >
                         <motion.div
-                            initial={{ scale: 0.95, y: 20 }}
+                            initial={{ scale: 0.95, y: 24 }}
                             animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.95, y: 20 }}
+                            exit={{ scale: 0.95, y: 24 }}
+                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                            className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto"
                         >
-                            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center rounded-t-2xl">
-                                <h3 className="text-2xl font-bold text-stone-900">
-                                    {editingId ? "Edit Service" : "Add New Service"}
-                                </h3>
+                            <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-3xl">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-9 w-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                        <FiPackage size={16} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base font-extrabold text-gray-900">
+                                            {editingId ? "Edit Service" : "Add New Service"}
+                                        </h3>
+                                        <p className="text-[11px] text-gray-400">Fill in all required fields (*)</p>
+                                    </div>
+                                </div>
                                 <button
                                     onClick={handleCancel}
-                                    className="p-2 hover:bg-gray-100 rounded-lg transition"
+                                    className="h-8 w-8 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition active:scale-90"
                                 >
-                                    <FiX size={24} />
+                                    <FiX size={16} />
                                 </button>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                                {/* Tabs */}
-                                <div className="flex gap-2 mb-6 border-b border-gray-200">
-                                    {["basic", "pricing", "availability", "settings"].map((tab) => (
-                                        <button
-                                            key={tab}
-                                            type="button"
-                                            onClick={() => setActiveTab(tab)}
-                                            className={`px-4 py-2 font-semibold capitalize transition ${activeTab === tab
-                                                ? "text-[#9fe870] border-b-2 border-[#9fe870]"
-                                                : "text-gray-600 hover:text-gray-900"
-                                                }`}
-                                        >
-                                            {tab}
-                                        </button>
-                                    ))}
+                            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                                <div className="flex gap-1 bg-gray-100 rounded-2xl p-1">
+                                    {TABS.map((tab) => {
+                                        const Icon = TAB_ICONS[tab];
+                                        return (
+                                            <button
+                                                key={tab}
+                                                type="button"
+                                                onClick={() => setActiveTab(tab)}
+                                                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold capitalize transition-all ${activeTab === tab
+                                                    ? "bg-white text-indigo-600 shadow-sm"
+                                                    : "text-gray-500 hover:text-gray-700"
+                                                    }`}
+                                            >
+                                                <Icon size={13} />
+                                                <span className="hidden sm:inline">{tab}</span>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
 
-                                {/* BASIC TAB */}
+                                {/* ── BASIC TAB ── */}
                                 {activeTab === "basic" && (
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                                Service Name *
-                                            </label>
+                                            <label className={labelCls}>Service Name *</label>
                                             <input
                                                 type="text"
-                                                placeholder="e.g., Home Cleaning, Plumbing, etc."
+                                                placeholder="e.g., Home Cleaning, Plumbing..."
                                                 value={formData.name}
                                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870]"
+                                                className={inputCls}
                                                 required
                                             />
                                         </div>
 
-                                        <div>
-                                            <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                                Category *
-                                            </label>
-                                            <select
-                                                value={formData.category}
-                                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870]"
-                                                required
-                                            >
-                                                <option value="">Select a category</option>
-                                                {categories?.map((cat) => (
-                                                    <option key={cat._id} value={cat._id}>{cat.name}</option>
-                                                ))}
-                                            </select>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className={labelCls}>Category *</label>
+                                                <select
+                                                    value={formData.category}
+                                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                                    className={inputCls}
+                                                    required
+                                                >
+                                                    <option value="">Select a category</option>
+                                                    {categories?.map((cat) => (
+                                                        <option key={cat._id} value={cat._id}>{cat.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className={labelCls}>Duration (minutes) *</label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="Min 15 minutes"
+                                                    value={formData.durationInMinutes}
+                                                    onChange={(e) => setFormData({ ...formData, durationInMinutes: e.target.value })}
+                                                    className={inputCls}
+                                                    min="15"
+                                                    required
+                                                />
+                                            </div>
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                                Duration (minutes) *
-                                            </label>
-                                            <input
-                                                type="number"
-                                                placeholder="Minimum 15 minutes"
-                                                value={formData.durationInMinutes}
-                                                onChange={(e) => setFormData({ ...formData, durationInMinutes: e.target.value })}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870]"
-                                                min="15"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                                Description
-                                            </label>
+                                            <label className={labelCls}>Description</label>
                                             <textarea
                                                 placeholder="Describe your service in detail..."
                                                 value={formData.description}
                                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] resize-none"
+                                                className={`${inputCls} resize-none`}
                                                 rows="3"
                                                 maxLength="500"
                                             />
-                                            <p className="text-xs text-gray-500 mt-1">{formData.description.length}/500</p>
+                                            <p className="text-[11px] text-gray-400 mt-1 text-right">{formData.description.length}/500</p>
                                         </div>
 
+                                        {/* Image Upload */}
                                         <div>
-                                            <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                                Service Image *
-                                            </label>
-                                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#9fe870] transition">
+                                            <label className={labelCls}>Service Image *</label>
+                                            <label
+                                                htmlFor="image-input"
+                                                className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-200 hover:border-indigo-400 rounded-2xl py-6 cursor-pointer transition bg-gray-50 hover:bg-indigo-50/30"
+                                            >
+                                                <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-400">
+                                                    <FiImage size={18} />
+                                                </div>
+                                                <p className="text-sm font-semibold text-gray-600">Click to upload image</p>
+                                                <p className="text-xs text-gray-400">PNG, JPG, JPEG — up to 5MB</p>
                                                 <input
                                                     type="file"
                                                     accept="image/*"
@@ -318,229 +316,217 @@ export default function AdminServices() {
                                                     className="hidden"
                                                     id="image-input"
                                                 />
-                                                <label htmlFor="image-input" className="cursor-pointer">
-                                                    <p className="text-gray-600 font-semibold">Click to upload image</p>
-                                                    <p className="text-xs text-gray-500">PNG, JPG, JPEG up to 5MB</p>
-                                                </label>
-                                            </div>
+                                            </label>
                                             {imagePreview && (
-                                                <div className="mt-3 relative">
-                                                    <img
-                                                        src={imagePreview}
-                                                        alt="Preview"
-                                                        className="w-full h-40 object-cover rounded-lg border border-gray-200"
-                                                    />
-                                                    <p className="text-xs text-gray-500 mt-2">✓ Image Preview</p>
+                                                <div className="mt-3 relative rounded-2xl overflow-hidden border border-gray-100">
+                                                    <img src={imagePreview} alt="Preview" className="w-full h-40 object-cover" />
+                                                    <span className="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg">
+                                                        ✓ Preview
+                                                    </span>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
                                 )}
 
-                                {/* PRICING TAB */}
+                                {/* ── PRICING TAB ── */}
                                 {activeTab === "pricing" && (
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                                    Base Price (₹) *
-                                                </label>
+                                                <label className={labelCls}>Base Price (₹) *</label>
                                                 <input
                                                     type="number"
                                                     placeholder="0"
                                                     value={formData.basePrice}
                                                     onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870]"
+                                                    className={inputCls}
                                                     min="0"
                                                     required
                                                 />
                                             </div>
-
                                             <div>
-                                                <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                                    Visiting Fees (₹)
-                                                </label>
+                                                <label className={labelCls}>Visiting Fees (₹)</label>
                                                 <input
                                                     type="number"
                                                     placeholder="0"
                                                     value={formData.visitingFees}
                                                     onChange={(e) => setFormData({ ...formData, visitingFees: e.target.value })}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870]"
+                                                    className={inputCls}
                                                     min="0"
                                                 />
                                             </div>
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                                Discount (%) - Current: {formData.discount}%
-                                            </label>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <label className={labelCls}>Discount</label>
+                                                <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">{formData.discount}%</span>
+                                            </div>
                                             <input
                                                 type="range"
                                                 min="0"
                                                 max="100"
                                                 value={formData.discount}
                                                 onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
-                                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#9fe870]"
+                                                className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-indigo-500"
                                             />
+                                            <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+                                                <span>0%</span><span>50%</span><span>100%</span>
+                                            </div>
                                         </div>
 
-                                        <div className="bg-gradient-to-r from-[#f0f9ff] to-[#f0fdf4] p-4 rounded-lg border border-[#9fe870]/20">
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-gray-700 font-semibold">Final Price:</span>
-                                                <span className="text-2xl font-bold text-[#9fe870]">₹{finalPrice}</span>
+                                        {/* Price summary */}
+                                        <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 space-y-2">
+                                            <div className="flex justify-between text-sm text-gray-500">
+                                                <span>Base Price</span><span>₹{basePrice}</span>
                                             </div>
-                                            {formData.discount > 0 && (
-                                                <p className="text-sm text-gray-600 mt-2">
-                                                    Save ₹{Math.round(discountAmount)}
-                                                </p>
+                                            {discountAmount > 0 && (
+                                                <div className="flex justify-between text-sm text-emerald-600">
+                                                    <span>Discount ({discountPercent}%)</span><span>-₹{Math.round(discountAmount)}</span>
+                                                </div>
                                             )}
+                                            {visitingFees > 0 && (
+                                                <div className="flex justify-between text-sm text-gray-500">
+                                                    <span>Visiting Fees</span><span>+₹{visitingFees}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                                                <span className="text-sm font-bold text-gray-700">Final Price</span>
+                                                <span className="text-2xl font-extrabold text-indigo-600">₹{finalPrice}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
 
-                                {/* AVAILABILITY TAB */}
+                                {/* ── AVAILABILITY TAB ── */}
                                 {activeTab === "availability" && (
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-semibold text-stone-900 mb-3">
-                                                Available Days
-                                            </label>
+                                            <label className={labelCls}>Available Days</label>
                                             <div className="grid grid-cols-4 gap-2">
-                                                {days.map(day => (
-                                                    <button
-                                                        key={day}
-                                                        type="button"
-                                                        onClick={() => handleDayToggle(day)}
-                                                        className={`p-3 rounded-lg font-semibold transition ${formData.availableDays.includes(day)
-                                                            ? 'bg-[#9fe870] text-stone-900 shadow-md'
-                                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                            }`}
-                                                    >
-                                                        {day.slice(0, 3)}
-                                                    </button>
-                                                ))}
+                                                {DAYS.map((day) => {
+                                                    const on = formData.availableDays.includes(day);
+                                                    return (
+                                                        <button
+                                                            key={day}
+                                                            type="button"
+                                                            onClick={() => handleDayToggle(day)}
+                                                            className={`py-2 rounded-xl text-xs font-bold transition-all ${on
+                                                                ? "bg-indigo-600 text-white shadow-sm"
+                                                                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                                                }`}
+                                                        >
+                                                            {day.slice(0, 3)}
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                                    From Time
-                                                </label>
+                                                <label className={labelCls}>From Time</label>
                                                 <input
                                                     type="time"
                                                     value={formData.availableTime.from}
-                                                    onChange={(e) => setFormData({
-                                                        ...formData,
-                                                        availableTime: { ...formData.availableTime, from: e.target.value }
-                                                    })}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870]"
+                                                    onChange={(e) => setFormData({ ...formData, availableTime: { ...formData.availableTime, from: e.target.value } })}
+                                                    className={inputCls}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                                    To Time
-                                                </label>
+                                                <label className={labelCls}>To Time</label>
                                                 <input
                                                     type="time"
                                                     value={formData.availableTime.to}
-                                                    onChange={(e) => setFormData({
-                                                        ...formData,
-                                                        availableTime: { ...formData.availableTime, to: e.target.value }
-                                                    })}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870]"
+                                                    onChange={(e) => setFormData({ ...formData, availableTime: { ...formData.availableTime, to: e.target.value } })}
+                                                    className={inputCls}
                                                 />
                                             </div>
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                                Service Radius (km)
-                                            </label>
+                                            <label className={labelCls}>Service Radius (km)</label>
                                             <input
                                                 type="number"
                                                 value={formData.serviceArea.radiusKm}
-                                                onChange={(e) => setFormData({
-                                                    ...formData,
-                                                    serviceArea: { ...formData.serviceArea, radiusKm: e.target.value }
-                                                })}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870]"
+                                                onChange={(e) => setFormData({ ...formData, serviceArea: { ...formData.serviceArea, radiusKm: e.target.value } })}
+                                                className={inputCls}
                                                 min="1"
                                             />
                                         </div>
                                     </div>
                                 )}
 
-                                {/* SETTINGS TAB */}
+                                {/* ── SETTINGS TAB ── */}
                                 {activeTab === "settings" && (
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                                Max Bookings Per Day
-                                            </label>
+                                            <label className={labelCls}>Max Bookings Per Day</label>
                                             <input
                                                 type="number"
                                                 value={formData.maxBookingsPerDay}
                                                 onChange={(e) => setFormData({ ...formData, maxBookingsPerDay: e.target.value })}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870]"
+                                                className={inputCls}
                                                 min="1"
                                             />
                                         </div>
 
-                                        <div className="space-y-3">
-                                            <label className="flex items-center gap-3 cursor-pointer p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.isActive}
-                                                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                                                    className="w-5 h-5 rounded accent-[#9fe870]"
-                                                />
-                                                <span className="font-semibold text-stone-900">Service Active</span>
-                                            </label>
-
-                                            <label className="flex items-center gap-3 cursor-pointer p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.cancellationAllowed}
-                                                    onChange={(e) => setFormData({ ...formData, cancellationAllowed: e.target.checked })}
-                                                    className="w-5 h-5 rounded accent-[#9fe870]"
-                                                />
-                                                <span className="font-semibold text-stone-900">Allow Cancellations</span>
-                                            </label>
+                                        <div className="space-y-2">
+                                            {[
+                                                { key: "isActive", label: "Service Active", desc: "Visible and bookable by customers" },
+                                                { key: "cancellationAllowed", label: "Allow Cancellations", desc: "Customers can cancel before window" },
+                                            ].map(({ key, label, desc }) => (
+                                                <label
+                                                    key={key}
+                                                    className="flex items-center justify-between gap-3 cursor-pointer bg-gray-50 border border-gray-100 hover:bg-gray-100 p-4 rounded-2xl transition"
+                                                >
+                                                    <div>
+                                                        <p className="text-sm font-bold text-gray-900">{label}</p>
+                                                        <p className="text-xs text-gray-400">{desc}</p>
+                                                    </div>
+                                                    <div className={`relative w-10 h-5 rounded-full transition-colors ${formData[key] ? "bg-indigo-500" : "bg-gray-300"}`}>
+                                                        <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${formData[key] ? "translate-x-5" : "translate-x-0.5"}`} />
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={formData[key]}
+                                                            onChange={(e) => setFormData({ ...formData, [key]: e.target.checked })}
+                                                            className="sr-only"
+                                                        />
+                                                    </div>
+                                                </label>
+                                            ))}
                                         </div>
 
                                         {formData.cancellationAllowed && (
                                             <div>
-                                                <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                                    Cancellation Window (hours)
-                                                </label>
+                                                <label className={labelCls}>Cancellation Window (hours)</label>
                                                 <input
                                                     type="number"
                                                     value={formData.cancellationWindowHours}
                                                     onChange={(e) => setFormData({ ...formData, cancellationWindowHours: e.target.value })}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870]"
+                                                    className={inputCls}
                                                     min="0"
                                                 />
-                                                <p className="text-xs text-gray-500 mt-1">Hours before booking to allow cancellation</p>
+                                                <p className="text-xs text-gray-400 mt-1">Hours before booking start to allow cancellation</p>
                                             </div>
                                         )}
                                     </div>
                                 )}
 
-                                {/* Form Actions */}
-                                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                                <div className="flex gap-3 pt-4 border-t border-gray-100">
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="flex-1 bg-gradient-to-r from-[#9fe870] to-[#8ed65f] text-stone-900 py-3 rounded-lg font-semibold hover:scale-105 disabled:opacity-50 transition flex items-center justify-center gap-2"
+                                        className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white py-2.5 rounded-2xl text-sm font-bold transition active:scale-95"
                                     >
-                                        <FiCheck /> {editingId ? "Update Service" : "Add Service"}
+                                        <FiCheck size={15} />
+                                        {loading ? "Saving..." : editingId ? "Update Service" : "Add Service"}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={handleCancel}
-                                        className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
+                                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-2xl text-sm font-bold transition active:scale-95"
                                     >
                                         Cancel
                                     </button>
@@ -551,87 +537,129 @@ export default function AdminServices() {
                 )}
             </AnimatePresence>
 
-            {/* Services Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {services && services.length > 0 ? (
-                    services.map((service) => (
+            {services && services.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {services.map((service, idx) => (
                         <motion.div
                             key={service._id}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition group"
+                            initial={{ opacity: 0, y: 14 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden group"
                         >
-                            {service.image && (
-                                <div className="relative h-40 overflow-hidden bg-gray-100">
+                            {/* Image */}
+                            <div className="relative h-44 overflow-hidden bg-gray-100">
+                                {service.image ? (
                                     <img
                                         src={service.image}
                                         alt={service.name}
-                                        className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                                     />
-                                    {!service.isActive && (
-                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">Inactive</span>
-                                        </div>
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
+                                        <FiImage size={32} className="text-gray-300" />
+                                    </div>
+                                )}
+
+                                {!service.isActive && (
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                        <span className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">Inactive</span>
+                                    </div>
+                                )}
+
+                                <div className="absolute top-3 left-3 flex gap-1.5">
+                                    {service.approvalStatus === "pending" && (
+                                        <span className="bg-amber-500 text-white px-2.5 py-0.5 rounded-full text-[10px] font-bold">Pending Review</span>
                                     )}
-                                    {service.approvalStatus === 'pending' && (
-                                        <div className="absolute top-3 right-3 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                                            Pending
-                                        </div>
+                                    {service.approvalStatus === "approved" && (
+                                        <span className="bg-emerald-500 text-white px-2.5 py-0.5 rounded-full text-[10px] font-bold">Approved</span>
                                     )}
                                 </div>
-                            )}
+
+                                {service.discount > 0 && (
+                                    <span className="absolute top-3 right-3 bg-rose-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                                        -{service.discount}%
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Content */}
                             <div className="p-4">
-                                <h3 className="font-bold text-lg text-stone-900 line-clamp-2">{service.name}</h3>
-                                <p className="text-gray-600 text-sm mt-1">{service.description?.substring(0, 50)}...</p>
-
-                                <div className="mt-4 space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-600">Price:</span>
-                                        <div className="flex items-center gap-2">
-                                            {service.discount > 0 && (
-                                                <span className="text-xs line-through text-gray-500">₹{service.basePrice}</span>
-                                            )}
-                                            <span className="text-lg font-bold text-[#9fe870]">₹{service.finalPrice || service.basePrice}</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="text-gray-600">Duration:</span>
-                                        <span className="font-semibold">{service.durationInMinutes} mins</span>
-                                    </div>
-                                    {service.availableDays && service.availableDays.length > 0 && (
-                                        <div className="flex flex-wrap gap-1 mt-2">
-                                            {service.availableDays.map(day => (
-                                                <span key={day} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                                                    {day.slice(0, 3)}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
+                                <div className="flex items-start justify-between gap-2">
+                                    <h3 className="text-sm font-extrabold text-gray-900 line-clamp-1 flex-1">{service.name}</h3>
+                                    {service.isActive
+                                        ? <span className="h-2 w-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" title="Active" />
+                                        : <span className="h-2 w-2 rounded-full bg-red-400 mt-1.5 flex-shrink-0" title="Inactive" />
+                                    }
                                 </div>
 
-                                <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
+                                {service.description && (
+                                    <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">
+                                        {service.description}
+                                    </p>
+                                )}
+
+                                <div className="flex items-center gap-3 mt-3">
+                                    <div className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-center">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Price</p>
+                                        <div className="flex items-center justify-center gap-1 mt-0.5">
+                                            {service.discount > 0 && (
+                                                <span className="text-[10px] line-through text-gray-400">₹{service.basePrice}</span>
+                                            )}
+                                            <span className="text-sm font-extrabold text-indigo-600">₹{service.finalPrice || service.basePrice}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-center">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Duration</p>
+                                        <p className="text-sm font-extrabold text-gray-800 mt-0.5">{service.durationInMinutes}m</p>
+                                    </div>
+                                </div>
+
+                                {service.availableDays?.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mt-3">
+                                        {service.availableDays.map((day) => (
+                                            <span key={day} className="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg">
+                                                {day.slice(0, 3)}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
                                     <button
                                         onClick={() => handleEdit(service)}
-                                        className="flex-1 p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition font-semibold flex items-center justify-center gap-2"
+                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition active:scale-95"
                                     >
-                                        <FiEdit size={16} /> Edit
+                                        <FiEdit size={13} /> Edit
                                     </button>
                                     <button
                                         onClick={() => handleDelete(service._id)}
-                                        className="flex-1 p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition font-semibold flex items-center justify-center gap-2"
+                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition active:scale-95"
                                     >
-                                        <FiTrash2 size={16} /> Delete
+                                        <FiTrash2 size={13} /> Delete
                                     </button>
                                 </div>
                             </div>
                         </motion.div>
-                    ))
-                ) : (
-                    <div className="col-span-full text-center py-12">
-                        <p className="text-gray-600 text-lg">No services yet. Create your first service!</p>
+                    ))}
+                </div>
+            ) : (
+                <div className="bg-white rounded-3xl border border-gray-100 shadow-sm py-16 text-center">
+                    <div className="h-16 w-16 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto mb-4">
+                        <FiPackage size={26} className="text-indigo-400" />
                     </div>
-                )}
-            </div>
+                    <p className="text-sm font-bold text-gray-800">No services yet</p>
+                    <p className="text-xs text-gray-400 mt-1">Create your first service offering to start getting bookings</p>
+                    {isVerified && (
+                        <button
+                            onClick={() => setShowForm(true)}
+                            className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition"
+                        >
+                            <FiPlus size={13} /> Add your first service
+                        </button>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

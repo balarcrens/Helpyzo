@@ -2,11 +2,12 @@
 import React, { useContext, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiEye, FiEyeOff, FiLock, FiMail, FiX, FiAlertCircle } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthContext from "../../context/Auth/AuthContext";
 import { partnerAPI, userAPI } from "../../services/api";
 
 const Login = ({ onClose }) => {
+    const navigate = useNavigate();
     const { login } = useContext(AuthContext);
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
@@ -52,6 +53,7 @@ const Login = ({ onClose }) => {
             );
         } finally {
             setLoading(false);
+            navigate('/')
         }
     };
 
@@ -161,7 +163,7 @@ const Login = ({ onClose }) => {
                                 <div className="flex flex-col">
                                     <span className="text-sm font-medium text-white">
                                         Business Partner <span className="text-xs text-white/50">
-                                            ( Login as service provider )
+                                            (Login as service provider)
                                         </span>
                                     </span>
 

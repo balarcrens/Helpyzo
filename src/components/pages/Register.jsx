@@ -548,7 +548,6 @@ const Register = () => {
                                             </button>
                                         )}
                                     </div>
-
                                 </form>
                             </div>
                         </div>
