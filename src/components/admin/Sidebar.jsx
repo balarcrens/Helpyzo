@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import {
     LayoutDashboard,
     Users,
+    User,
     Grid,
     Briefcase,
     CalendarCheck,
@@ -14,8 +15,10 @@ import { useContext } from "react";
 const menus = {
     superadmin: [
         { name: "Dashboard", path: "/superadmin", icon: LayoutDashboard },
-        { name: "Partners", path: "/superadmin/partners", icon: Users },
+        { name: "Partners", path: "/superadmin/partners", icon: User },
         { name: "Categories", path: "/superadmin/categories", icon: Grid },
+        { name: "Users", path: "/superadmin/users", icon: Users },
+        { name: "All Bookings", path: "/superadmin/bookings", icon: CalendarCheck },
         { name: "Home", path: "/", icon: LogOut },
     ],
     admin: [

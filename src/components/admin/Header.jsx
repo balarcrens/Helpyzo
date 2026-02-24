@@ -221,7 +221,7 @@ export default function Header({ onMenuClick }) {
                             className="flex items-center gap-3 px-2 py-1.5 rounded-xl hover:bg-gray-100 transition"
                         >
                             <img
-                                src="https://i.pravatar.cc/40"
+                                src={user?.profileImage || `https://www.citypng.com/public/uploads/preview/hd-man-user-illustration-icon-transparent-png-701751694974843ybexneueic.png`}
                                 className="w-8 h-8 rounded-full"
                             />
                             <div className="hidden sm:block text-left">

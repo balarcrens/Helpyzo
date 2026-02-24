@@ -15,18 +15,19 @@ import {
     FiX,
     FiStar,
 } from "react-icons/fi";
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useRef } from "react";
 import Layout from "../Layout/Layout";
 import Header from "../Layout/Header";
 import AuthContext from "../../context/Auth/AuthContext.jsx";
-import { useUser } from "../../hooks/useAuth";
+import { useUser, usePartner } from "../../hooks/useAuth";
 import { useBookings } from "../../hooks/useData";
 import RatingModal from "../RatingModal";
+import { partnerAPI } from "../../services/api.js";
 
 
 const ProfilePage = () => {
     const { user } = useContext(AuthContext);
-    const { updateProfile, changePassword } = useUser();
+    const { updateProfile, changePassword } = user?.role === "client" ? useUser() : usePartner();
 
     return (
         <Layout>
@@ -51,7 +52,7 @@ const Profile = ({ user, updateProfile, changePassword }) => {
     const { fetchUserBookings } = useBookings();
 
     useEffect(() => {
-        if (user?.role === "client") {
+        if (user?.role) {
             getBookings();
         }
     }, [user]);
@@ -79,12 +80,13 @@ const Profile = ({ user, updateProfile, changePassword }) => {
                 <div className="max-w-7xl mx-auto px-4 flex justify-center sm:justify-start items-center gap-6">
                     <img
                         src={
-                            user.avatar?.url ||
+                            user?.profileImage ||
+                            user?.avatar?.url ||
                             `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                user.name
+                                user?.name
                             )}&background=111827&color=fff`
                         }
-                        className="w-24 h-24 rounded-full ring-4 ring-white/20"
+                        className="w-24 h-24 rounded-full ring-4 ring-white/20 object-cover"
                     />
 
                     <div>
@@ -93,14 +95,16 @@ const Profile = ({ user, updateProfile, changePassword }) => {
                             {user.role}
                         </p>
 
-                        <span
-                            className={`inline-block mt-2 px-4 py-1 rounded-full text-xs font-semibold ${user.isActive
-                                ? "bg-emerald-500/20 text-emerald-300"
-                                : "bg-red-500/20 text-red-300"
-                                }`}
-                        >
-                            {user.isActive ? "Active Account" : "Inactive"}
-                        </span>
+                        <div className="flex justify-center">
+                            <span
+                                className={`inline-block mt-2 px-4 py-1 rounded-full text-xs font-semibold ${user.isActive
+                                    ? "bg-emerald-500/20 text-emerald-300"
+                                    : "bg-red-500/20 text-red-300"
+                                    }`}
+                            >
+                                {user.isActive ? "Active Account" : "Inactive"}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -244,6 +248,8 @@ const Profile = ({ user, updateProfile, changePassword }) => {
 const EditProfileModal = ({ open, setOpen, user, updateProfile }) => {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [profileImage, setProfileImage] = useState(user.profileImage || null);
+    const profileInputRef = useRef(null);
 
     const [form, setForm] = useState({
         name: user.name || "",
@@ -255,13 +261,19 @@ const EditProfileModal = ({ open, setOpen, user, updateProfile }) => {
         pincode: user.address?.pincode || "",
     });
 
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onloadend = () => setProfileImage(reader.result);
+        reader.readAsDataURL(file);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
-
         try {
             setLoading(true);
-
             const payload = {
                 name: form.name,
                 phone: form.phone,
@@ -272,16 +284,18 @@ const EditProfileModal = ({ open, setOpen, user, updateProfile }) => {
                     country: form.country || "India",
                     pincode: form.pincode,
                 },
+                profileImage: profileImage || undefined,
             };
-
-            await updateProfile(payload);
-
+            // console.log(payload);    
+            if (user?.role === 'client') {
+                await updateProfile(payload);
+            }
+            else if (user?.role === 'partner') {
+                await partnerAPI.updateProfile(payload);
+            }
             setOpen(false);
         } catch (err) {
-            setError(
-                err?.response?.data?.message ||
-                "Failed to update profile"
-            );
+            setError(err?.response?.data?.message || "Failed to update profile");
         } finally {
             setLoading(false);
         }
@@ -289,67 +303,163 @@ const EditProfileModal = ({ open, setOpen, user, updateProfile }) => {
 
     return (
         <Modal open={open} onClose={() => setOpen(false)} title="Edit Profile">
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Profile Picture Changer */}
+                <div className="flex flex-col items-center gap-3">
+                    <div
+                        onClick={() => profileInputRef.current?.click()}
+                        className="relative group cursor-pointer h-24 w-24 rounded-full overflow-hidden border-2 border-dashed border-white/20 hover:border-[#9fe870]/70 transition-all"
+                    >
+                        <img
+                            src={
+                                profileImage ||
+                                `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=1c1c1c&color=fff`
+                            }
+                            alt="Profile"
+                            className="h-full w-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <FiCamera size={18} className="text-[#9fe870]" />
+                            <span className="text-[9px] font-bold text-[#9fe870] uppercase tracking-wide">Change</span>
+                        </div>
+                    </div>
+                    <input ref={profileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Profile Photo</p>
+                </div>
+
+                {/* Error Banner */}
                 {error && (
-                    <p className="text-sm text-red-600 bg-red-50 p-2 rounded-lg">
+                    <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-xl">
                         {error}
                     </p>
                 )}
 
-                <GlassInput
-                    label="Name"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                />
+                {/* Personal Info */}
+                <div className="space-y-1">
+                    <div className="grid grid-cols-2 gap-3">
+                        <DarkInput
+                            label="Full Name"
+                            value={form.name}
+                            onChange={(e) => setForm({ ...form, name: e.target.value })}
+                            className="col-span-2"
+                        />
+                        <DarkInput
+                            label="Phone"
+                            value={form.phone}
+                            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                            className="col-span-2"
+                        />
+                    </div>
+                </div>
 
-                <GlassInput
-                    label="Phone"
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                />
+                {/* Address */}
+                <div className="space-y-1">
+                    <div className="grid grid-cols-2 gap-3">
+                        <DarkInput
+                            label="Street"
+                            value={form.street}
+                            onChange={(e) => setForm({ ...form, street: e.target.value })}
+                            className="col-span-2"
+                        />
+                        <DarkInput
+                            label="City"
+                            value={form.city}
+                            onChange={(e) => setForm({ ...form, city: e.target.value })}
+                        />
+                        <DarkInput
+                            label="State"
+                            value={form.state}
+                            onChange={(e) => setForm({ ...form, state: e.target.value })}
+                        />
+                        <DarkInput
+                            label="Country"
+                            value={form.country}
+                            onChange={(e) => setForm({ ...form, country: e.target.value })}
+                        />
+                        <DarkInput
+                            label="Pincode"
+                            value={form.pincode}
+                            onChange={(e) => setForm({ ...form, pincode: e.target.value })}
+                        />
+                    </div>
+                </div>
 
-                <GlassInput
-                    label="Street"
-                    value={form.street}
-                    onChange={(e) => setForm({ ...form, street: e.target.value })}
-                />
-
-                <GlassInput
-                    label="City"
-                    value={form.city}
-                    onChange={(e) => setForm({ ...form, city: e.target.value })}
-                />
-
-                <GlassInput
-                    label="State"
-                    value={form.state}
-                    onChange={(e) => setForm({ ...form, state: e.target.value })}
-                />
-
-                <GlassInput
-                    label="Country"
-                    value={form.country}
-                    onChange={(e) => setForm({ ...form, country: e.target.value })}
-                />
-                <GlassInput
-                    label="Pin Code"
-                    value={form.pincode}
-                    onChange={(e) => setForm({ ...form, pincode: e.target.value })}
-                />
-
-                <PrimaryBtn label={loading ? "Saving..." : "Save Changes"} />
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full cursor-pointer bg-[#9fe870] hover:brightness-110 disabled:opacity-50 text-black py-3.5 rounded-2xl text-sm font-black tracking-wide transition-all shadow-[0_10px_30px_-10px_rgba(159,232,112,0.5)] active:scale-95"
+                >
+                    {loading ? "Saving..." : "Save Changes"}
+                </button>
             </form>
         </Modal>
     );
 };
 
-const ChangePasswordModal = ({ open, setOpen }) => (
-    <Modal open={open} onClose={() => setOpen(false)} title="Change Password">
-        <GlassInput type="password" label="Current Password" />
-        <GlassInput type="password" label="New Password" />
-        <PrimaryBtn label="Update Password" />
-    </Modal>
-);
+const ChangePasswordModal = ({ open, setOpen, changePassword }) => {
+    const [form, setForm] = useState({ oldPassword: "", newPassword: "", confirm: "" });
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        setSuccess("");
+        if (form.newPassword !== form.confirm) {
+            setError("New passwords do not match");
+            return;
+        }
+        if (form.newPassword.length < 6) {
+            setError("Password must be at least 6 characters");
+            return;
+        }
+        try {
+            setLoading(true);
+            await changePassword(form.oldPassword, form.newPassword);
+            setSuccess("Password updated successfully!");
+            setForm({ oldPassword: "", newPassword: "", confirm: "" });
+        } catch (err) {
+            setError(err?.response?.data?.message || "Failed to update password");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <Modal open={open} onClose={() => { setOpen(false); setError(""); setSuccess(""); }} title="Change Password">
+            <form onSubmit={handleSubmit} className="space-y-4">
+                {error && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-xl">{error}</p>}
+                {success && <p className="text-xs text-[#9fe870] bg-[#9fe870]/10 border border-[#9fe870]/20 px-4 py-2 rounded-xl">{success}</p>}
+                <DarkInput
+                    type="password"
+                    label="Current Password"
+                    value={form.oldPassword}
+                    onChange={(e) => setForm({ ...form, oldPassword: e.target.value })}
+                />
+                <DarkInput
+                    type="password"
+                    label="New Password"
+                    value={form.newPassword}
+                    onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
+                />
+                <DarkInput
+                    type="password"
+                    label="Confirm New Password"
+                    value={form.confirm}
+                    onChange={(e) => setForm({ ...form, confirm: e.target.value })}
+                />
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full cursor-pointer bg-[#9fe870] hover:brightness-110 disabled:opacity-50 text-black py-3.5 rounded-2xl text-sm font-black tracking-wide transition-all shadow-[0_10px_30px_-10px_rgba(159,232,112,0.5)] active:scale-95"
+                >
+                    {loading ? "Updating..." : "Update Password"}
+                </button>
+            </form>
+        </Modal>
+    );
+};
 
 const Modal = ({ open, onClose, title, children }) => (
     <AnimatePresence>
@@ -358,16 +468,32 @@ const Modal = ({ open, onClose, title, children }) => (
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/40 backdrop-blur flex items-center justify-center z-50"
+                className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4"
+                onClick={(e) => e.target === e.currentTarget && onClose()}
             >
-                <motion.div initial={{ scale: 0.9, y: 40 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 40 }}
-                    className="bg-white/80 backdrop-blur-xl rounded-3xl p-4 sm:p-8 w-full max-w-md shadow-2xl border border-white/40"
+                <motion.div
+                    initial={{ scale: 0.92, y: 32, opacity: 0 }}
+                    animate={{ scale: 1, y: 0, opacity: 1 }}
+                    exit={{ scale: 0.92, y: 32, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="bg-[#0e0e0e] border border-white/10 rounded-[2rem] w-full max-w-lg shadow-[0_32px_80px_-12px_rgba(0,0,0,0.8)] overflow-hidden"
                 >
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-xl font-semibold">{title}</h3>
-                        <FiX className="cursor-pointer text-xl" onClick={onClose} />
+                    {/* Modal Header */}
+                    <div className="flex justify-between items-center px-7 pt-6 pb-4 border-b border-white/5">
+                        <div>
+                            <h3 className="text-lg font-bold text-white">{title}</h3>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="h-8 w-8 cursor-pointer rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-all"
+                        >
+                            <FiX size={15} />
+                        </button>
                     </div>
-                    <div className="space-y-5">{children}</div>
+                    {/* Scrollable Body */}
+                    <div className="px-7 py-6 max-h-[80vh] overflow-y-auto custom-scrollbar-minimal">
+                        {children}
+                    </div>
                 </motion.div>
             </motion.div>
         )}
@@ -397,21 +523,15 @@ const AddressLine = ({ value }) => (
     <p className="bg-slate-50 rounded-xl px-4 py-2 text-sm">{value || "—"}</p>
 );
 
-const GlassInput = ({ label, type = "text", ...props }) => (
-    <div className="relative">
-        <input type={type} placeholder=" " {...props}
-            className="peer w-full bg-white/60 backdrop-blur rounded-2xl px-4 pt-6 pb-2 outline-none border border-white/40 focus:ring-2 focus:ring-emerald-400 transition"
+const DarkInput = ({ label, type = "text", className = "", ...props }) => (
+    <div className={`flex flex-col gap-1.5 ${className}`}>
+        <label className="text-[10px] font-bold uppercase tracking-widest text-white/30 pl-1">{label}</label>
+        <input
+            type={type}
+            {...props}
+            className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder-white/20 focus:border-[#9fe870]/40 focus:bg-white/[0.08] outline-none transition-all"
         />
-        <label className="absolute left-4 top-2 text-xs text-stone-500 peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs transition-all">
-            {label}
-        </label>
     </div>
-);
-
-const PrimaryBtn = ({ label }) => (
-    <button className="w-full bg-stone-900 text-white rounded-xl py-3 font-semibold hover:bg-stone-800 transition">
-        {label}
-    </button>
 );
 
 const ProfileMap = ({ address }) => {

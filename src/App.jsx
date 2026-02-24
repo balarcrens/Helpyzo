@@ -23,6 +23,8 @@ import Profile from './components/pages/Profile.jsx'
 import PartnerDetail from './components/pages/superadmin/PartnerDetail.jsx'
 import BookingDetails from './components/pages/admin/BookingDetail.jsx'
 import UserBookings from './components/pages/UserBookings.jsx'
+import Users from './components/pages/superadmin/Users.jsx'
+import AllBookings from './components/pages/superadmin/AllBookings.jsx'
 
 const CURRENT_ROLE = "superadmin";
 
@@ -59,6 +61,8 @@ const App = () => {
                         <Route path="partners" element={<Partners />} />
                         <Route path="partners/:id" element={<PartnerDetail />} />
                         <Route path="categories" element={<Categories />} />
+                        <Route path="users" element={<Users />} />
+                        <Route path="bookings" element={<AllBookings />} />
                     </Route>
 
                     <Route

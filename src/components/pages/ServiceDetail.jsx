@@ -270,7 +270,7 @@ export default function ServiceDetail() {
                                     className="bg-white rounded-[28px] p-5 sm:p-8 flex flex-wrap gap-6 border border-stone-100"
                                 >
                                     <img
-                                        src={partnerData?.image || "https://randomuser.me/api/portraits/men/32.jpg"}
+                                        src={partnerData?.profileImage || "https://randomuser.me/api/portraits/men/32.jpg"}
                                         className="w-28 h-28 rounded-2xl object-cover ring-4 ring-white shadow"
                                         alt={partnerData?.name}
                                     />

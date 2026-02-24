@@ -129,9 +129,9 @@ const Header = () => {
                                 <div className="relative">
                                     <button
                                         onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                                        className="w-10 h-10 rounded-full bg-gradient-to-br from-[#9FE870] to-[#7ec850] flex items-center justify-center text-black font-bold text-sm hover:scale-110 transition-transform"
+                                        className={`w-10 h-10 rounded-full ${user?.profileImage ? '' : 'bg-gradient-to-br from-[#9FE870] to-[#7ec850]'} flex items-center justify-center text-black font-bold text-sm hover:scale-110 transition-transform`}
                                     >
-                                        {getInitials(user?.name)}
+                                        {user?.profileImage ? <img src={user?.profileImage} alt="profile" className="w-full h-full rounded-full" /> : getInitials(user?.name)}
                                     </button>
 
                                     {/* Profile Dropdown Menu */}
@@ -211,14 +211,14 @@ const Header = () => {
                             <div className="flex items-center gap-3">
                                 {/* Sign Up – Secondary */}
                                 <button onClick={() => navigate("/register")}
-                                    className="rounded-full border border-white/25 bg-white/5 px-7 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/10 hover:border-white/40 active:scale-95"
+                                    className="rounded-full cursor-pointer border border-white/25 bg-white/5 px-7 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/10 hover:border-white/40 active:scale-95"
                                 >
                                     Sign Up
                                 </button>
 
                                 {/* Login – Primary */}
                                 <button onClick={() => setIsLoginModal(true)}
-                                    className="relative overflow-hidden rounded-full bg-[#9FE870] px-8 py-2.5 text-sm font-bold text-black shadow-lg shadow-[#9FE870]/30 transition-all hover:shadow-xl hover:shadow-[#9FE870]/40 hover:scale-[1.03] active:scale-95"
+                                    className="relative cursor-pointer overflow-hidden rounded-full bg-[#9FE870] px-8 py-2.5 text-sm font-bold text-black shadow-lg shadow-[#9FE870]/30 transition-all hover:shadow-xl hover:shadow-[#9FE870]/40 hover:scale-[1.03] active:scale-95"
                                 >
                                     <span className="relative z-10">Login</span>
 

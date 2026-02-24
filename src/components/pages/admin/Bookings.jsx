@@ -5,21 +5,28 @@ import { motion } from "framer-motion";
 import { useBookings } from "../../../hooks/useData";
 import { usePartner } from "../../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { bookingAPI } from "../../../services/api";
 
 export default function Bookings() {
     const navigate = useNavigate();
     const { user } = usePartner();
-    const { bookings, fetchPartnerBookings, updateBookingStatus, loading } = useBookings();
+    const [bookings, setBookings] = useState([]);
+    const { updateBookingStatus } = useBookings();
+    const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState("all");
 
-    useEffect(() => {
-        if (user?._id) {
-            fetchPartnerBookings(user._id);
+    const fetchPartnerBookings = async () => {
+        try {
+            const res = await bookingAPI.getPartnerBookings(user._id);
+            setBookings(res.data.bookings);
+        } catch (error) {
+            console.error("Failed to load bookings", error.message);
+        } finally {
+            setLoading(false);
         }
-    }, [user?._id]);
-
+    }
     useEffect(() => {
-        fetchPartnerBookings();
+        fetchPartnerBookings()
     }, []);
 
     const filteredBookings = statusFilter === "all"
@@ -29,6 +36,7 @@ export default function Bookings() {
     const handleStatusChange = async (bookingId, newStatus) => {
         try {
             await updateBookingStatus(bookingId, newStatus);
+            fetchPartnerBookings();
         } catch (error) {
             alert(error.message);
         }

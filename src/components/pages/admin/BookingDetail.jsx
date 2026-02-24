@@ -30,6 +30,24 @@ export default function BookingDetails() {
         }
     };
 
+    const handleStatusChange = async (e) => {
+        try {
+            await bookingAPI.updateBookingStatus(id, e.target.value);
+            fetchBooking();
+        } catch (err) {
+            console.error("Failed to update booking status", err.message);
+        }
+    };
+
+    const handlePaymentStatusChange = async (e) => {
+        try {
+            await bookingAPI.updateBookingPaymentStatus(id, e.target.value);
+            fetchBooking();
+        } catch (error) {
+            console.error("Failed to update payment status", error.message);
+        }
+    }
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64 text-gray-500">
@@ -60,6 +78,9 @@ export default function BookingDetails() {
         cancelled: "bg-red-100 text-red-700"
     }[booking.status] || "bg-gray-100 text-gray-700";
 
+    const bookingstatus = ["pending", "confirmed", "in-progress", "completed", "cancelled"]
+    const paymentstatus = ['pending', 'paid', 'failed', 'refunded']
+
     return (
         <div className="max-w-6xl mx-auto space-y-8">
 
@@ -76,11 +97,15 @@ export default function BookingDetails() {
                         </p>
                     </div>
 
-                    <span
+                    <select
                         className={`px-5 py-2 rounded-full text-sm font-semibold capitalize ${statusColor}`}
+                        value={booking.status}
+                        onChange={(e) => handleStatusChange(e)}
                     >
-                        {booking.status}
-                    </span>
+                        {bookingstatus.map((status, index) => (
+                            <option key={index} value={status}>{status}</option>
+                        ))}
+                    </select>
                 </div>
             </div>
 
@@ -161,9 +186,14 @@ export default function BookingDetails() {
 
                         <div>
                             <p className="text-gray-500">Payment Status</p>
-                            <span className="inline-block mt-1 px-4 py-1 rounded-full bg-green-100 text-green-700 font-semibold">
+                            {/* <span className="inline-block mt-1 px-4 py-1 rounded-full bg-green-100 text-green-700 font-semibold">
                                 {booking.paymentStatus || "Pending"}
-                            </span>
+                            </span> */}
+                            <select name="paymentStatus" id="paymentStatus" value={booking.paymentStatus || "pending"} onChange={(e) => handlePaymentStatusChange(e)} className="mt-1 px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-700">
+                                {paymentstatus.map((status, index) => (
+                                    <option key={index} value={status}>{status}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                 </div>

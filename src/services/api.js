@@ -5,11 +5,12 @@ export const userAPI = {
     register: (userData) => apiClient.post('/users/register', userData),
     login: (email, password) => apiClient.post('/users/login', { email, password }),
     getProfile: () => apiClient.get('/users/profile'),
-    updateProfile: (userData) => apiClient.put('/users/profile', userData),
+    updateProfile: (userData) => apiClient.put('/users/profile', { userData }),
     changePassword: (oldPassword, newPassword) =>
         apiClient.put('/users/change-password', { oldPassword, newPassword }),
     getAllUsers: () => apiClient.get('/users/all'),
     deleteUser: (userId) => apiClient.delete(`/users/${userId}`),
+    updateRole: (userId, userRole) => apiClient.put(`/users/change-role/${userId}/${userRole}`),
     updateServiceApprovalStatus: (partnerId, serviceId, status, rejectionReason = '') =>
         apiClient.put(`/users/service-approval/${partnerId}/${serviceId}`, { approvalStatus: status, rejectionReason }),
 };
@@ -60,6 +61,7 @@ export const bookingAPI = {
     getPartnerBookings: (partnerId) => apiClient.get(`/bookings/partner/${partnerId}/bookings`),
     updateBooking: (bookingId, bookingData) => apiClient.put(`/bookings/${bookingId}`, bookingData),
     updateBookingStatus: (bookingId, status) => apiClient.put(`/bookings/${bookingId}/status`, { status }),
+    updateBookingPaymentStatus: (bookingId, paymentStatus) => apiClient.put(`/bookings/payment-status/${bookingId}`, { paymentStatus }),
     rateBooking: (bookingId, rating, review) => apiClient.put(`/bookings/${bookingId}/rate`, { rating, review }),
     deleteBooking: (bookingId) => apiClient.delete(`/bookings/${bookingId}`),
 };

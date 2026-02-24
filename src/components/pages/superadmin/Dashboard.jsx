@@ -11,12 +11,14 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useBookings } from "../../../hooks/useData";
 import { userAPI, partnerAPI } from "../../../services/api";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
     const { bookings, fetchBookings } = useBookings();
     const [users, setUsers] = useState([]);
     const [partners, setPartners] = useState([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -36,6 +38,7 @@ export default function Dashboard() {
             }
         };
         fetchData();
+        console.log(bookings);
     }, []);
 
     /* ================= TREND HELPER ================= */
@@ -78,6 +81,15 @@ export default function Dashboard() {
             ...getTrend(usersCount, prevUsers.current),
             icon: <FaUsers />,
             gradient: "from-blue-500 to-indigo-600",
+            link: "/superadmin/users",
+        },
+        {
+            title: "Partners",
+            value: partnersCount,
+            ...getTrend(partnersCount, prevPartners.current),
+            icon: <FaUserTie />,
+            gradient: "from-purple-500 to-fuchsia-600",
+            link: "/superadmin/partners",
         },
         {
             title: "Active Partners",
@@ -92,13 +104,6 @@ export default function Dashboard() {
             ...getTrend(bookingsCount, prevBookings.current),
             icon: <FaClipboardList />,
             gradient: "from-amber-500 to-yellow-600",
-        },
-        {
-            title: "Partners",
-            value: partnersCount,
-            ...getTrend(partnersCount, prevPartners.current),
-            icon: <FaUserTie />,
-            gradient: "from-purple-500 to-fuchsia-600",
         },
     ];
 
@@ -126,8 +131,8 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                 {stats.map((item, index) => (
                     <div
-                        key={index}
-                        className="group relative overflow-hidden rounded-3xl shadow-lg hover:shadow-2xl transition-all"
+                        key={index} onClick={() => item?.link && navigate(item?.link)}
+                        className={`group relative overflow-hidden rounded-3xl shadow-lg hover:shadow-2xl transition-all ${item?.link ? "cursor-pointer" : ""}`}
                     >
                         <div
                             className={`bg-gradient-to-br ${item.gradient} p-6 text-white`}
@@ -175,7 +180,7 @@ export default function Dashboard() {
                         <h2 className="text-xl font-semibold text-gray-900">
                             Recent Bookings
                         </h2>
-                        <button className="text-sm font-semibold text-indigo-600 hover:underline">
+                        <button onClick={() => navigate('bookings')} className="text-sm font-semibold text-indigo-600 hover:underline">
                             View all
                         </button>
                     </div>
@@ -186,6 +191,7 @@ export default function Dashboard() {
                                 <tr className="text-left text-gray-400">
                                     <th className="pb-4">Booking ID</th>
                                     <th className="pb-4">User</th>
+                                    <th className="pb-4">Partner</th>
                                     <th className="pb-4">Service</th>
                                     <th className="pb-4">Status</th>
                                 </tr>
@@ -200,8 +206,9 @@ export default function Dashboard() {
                                             <td className="py-4 font-medium text-gray-900">
                                                 {item?._id?.slice(-6).toUpperCase() || 'N/A'}
                                             </td>
-                                            <td>{item?.user?.name || 'Unknown'}</td>
-                                            <td>{item?.serviceId || 'N/A'}</td>
+                                            <td>{item?.user?.name || 'N/A'}</td>
+                                            <td>{item?.partner?.name || 'N/A'}</td>
+                                            <td>{item?.serviceName || 'N/A'}</td>
                                             <td>
                                                 <span
                                                     className={`px-4 py-1.5 rounded-full text-xs font-semibold capitalize ${statusColor[item?.status] || ''}`}

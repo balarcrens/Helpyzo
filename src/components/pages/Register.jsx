@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import {
     FiCheckCircle, FiChevronLeft, FiChevronRight, FiMapPin,
     FiBriefcase, FiUser, FiSmartphone, FiShield, FiAlertCircle,
-    FiLock
+    FiLock, FiCamera
 } from "react-icons/fi";
 import Layout from "../Layout/Layout";
 import Header from "../Layout/Header";
@@ -22,8 +22,6 @@ const partnerSteps = [
     { id: 3, title: "Documents", description: "Verification" },
 ];
 
-const BACKEND_URL = import.meta.env.BACKEND_URL || "http://localhost:5000/api";
-
 const Register = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
@@ -33,6 +31,8 @@ const Register = () => {
     const [isReadingFile, setIsReadingFile] = useState(false);
     const [categories, setCategories] = useState([]);
     const [error, setError] = useState("");
+    const [profileImage, setProfileImage] = useState(null);
+    const profileInputRef = React.useRef(null);
     const navigate = useNavigate();
     const { login } = useContext(AuthContext);
 
@@ -50,22 +50,33 @@ const Register = () => {
         setSearchParams({ role: normalizedRole, step: String(normalizedStep) }, { replace: true });
         // Fetch categories for partners
         if (isPartner) {
-            // fetchCategories();
+            fetchCategories();
         }
     }, [normalizedRole, normalizedStep, setSearchParams, isPartner]);
 
-    // const fetchCategories = async () => {
-    //     try {
-    //         const res = await categoryAPI.getAllCategories();
-    //         setCategories(res.data.categories);
-    //     } catch (err) {
-    //         console.error("Failed to fetch categories", err);
-    //     }
-    // };
+    const fetchCategories = async () => {
+        try {
+            const res = await categoryAPI.getAllCategories();
+            // console.log(res.data.categories);
+            setCategories(res.data.categories);
+        } catch (err) {
+            console.error("Failed to fetch categories", err);
+        }
+    };
 
     const handleRoleChange = (role) => {
         reset();
         setSearchParams({ role, step: "1" });
+    };
+
+    const handleProfileImageChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setProfileImage(reader.result);
+        };
+        reader.readAsDataURL(file);
     };
 
     const handleDocumentChange = (e, type) => {
@@ -133,6 +144,7 @@ const Register = () => {
                         toTime: data.toTime || "18:00",
                     },
                     paymentMethods: data.paymentMethods || ["cash"],
+                    profileImage: profileImage || undefined,
                     documents: Object.entries(documents).map(([key, doc]) => ({
                         type: key,
                         name: doc.name,
@@ -143,7 +155,7 @@ const Register = () => {
                 };
 
                 // console.log(documents);
-                
+
                 const res = await partnerAPI.register(partnerData);
                 login(res.data.token, res.data.partner);
             } else {
@@ -159,13 +171,12 @@ const Register = () => {
                         pincode: data.pincode || "",
                         country: selectedCountry,
                     },
+                    profileImage: profileImage || undefined,
                 };
 
                 const res = await userAPI.register(userData);
                 login(res.data.token, res.data.user);
             }
-
-            navigate("/");
         } catch (err) {
             setError(
                 err.response?.data?.message ||
@@ -173,6 +184,7 @@ const Register = () => {
             );
         } finally {
             setIsLoading(false);
+            navigate("/");
         }
     };
 
@@ -284,6 +296,49 @@ const Register = () => {
                                     {/* Step 1: Basic & Address (Shared for Customer or Partner Step 1) */}
                                     {(normalizedRole === "customer" || (normalizedRole === "partner" && normalizedStep === 1)) && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4">
+
+                                            {/* Profile Picture Upload */}
+                                            <div className="md:col-span-2 flex flex-col items-center gap-3 mb-2">
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Profile Picture</p>
+                                                <div
+                                                    onClick={() => profileInputRef.current?.click()}
+                                                    className="relative group cursor-pointer h-24 w-24 rounded-full border-2 border-dashed border-white/20 hover:border-[#9fe870]/60 transition-all flex items-center justify-center overflow-hidden bg-white/5"
+                                                >
+                                                    {profileImage ? (
+                                                        <img
+                                                            src={profileImage}
+                                                            alt="Profile Preview"
+                                                            className="h-full w-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="flex flex-col items-center gap-1 text-white/30 group-hover:text-[#9fe870] transition-colors">
+                                                            <FiUser size={28} />
+                                                        </div>
+                                                    )}
+                                                    {/* Camera overlay on hover */}
+                                                    <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                                                        <FiCamera size={18} className="text-[#9fe870]" />
+                                                        <span className="text-[9px] font-bold text-[#9fe870] uppercase tracking-wide">{profileImage ? "Change" : "Upload"}</span>
+                                                    </div>
+                                                </div>
+                                                <input
+                                                    ref={profileInputRef}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={handleProfileImageChange}
+                                                />
+                                                {profileImage && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setProfileImage(null)}
+                                                        className="text-[10px] cursor-pointer text-red-400/70 hover:text-red-400 transition-colors"
+                                                    >
+                                                        Remove photo
+                                                    </button>
+                                                )}
+                                            </div>
+
                                             <InputGroup label="Full Name" name="fullName" icon={FiUser} placeholder="Enter your full name" validation={{ required: "Name is required" }} />
                                             <InputGroup label="Email Address" name="email" type="email" icon={FiShield} placeholder="name@domain.com" validation={{ required: "Valid email required", pattern: /^\S+@\S+$/i }} />
                                             <InputGroup label="Phone Number" name="phone" icon={FiSmartphone} placeholder="Enter your contact No" validation={{ required: "Phone required" }} />
@@ -360,12 +415,16 @@ const Register = () => {
                                                 </label>
                                                 <select
                                                     {...register("category", { required: "Select category" })}
-                                                    className="w-full rounded-xl border border-white/5 bg-stone-800 px-4 py-3 text-sm text-white" 
+                                                    className="w-full rounded-xl border border-white/5 bg-stone-800 px-4 py-3 text-sm text-white"
                                                 >
                                                     <option value="">Select</option>
-                                                    <option value="plumbing">Plumbing</option>
-                                                    <option value="electrical">Electrical</option>
-                                                    <option value="cleaning">Cleaning</option>
+                                                    {categories?.map((category) => {
+                                                        return (
+                                                            <option key={category._id} value={category._id}>
+                                                                {category.name}
+                                                            </option>
+                                                        )
+                                                    })}
                                                 </select>
                                             </div>
 
