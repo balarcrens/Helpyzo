@@ -58,12 +58,12 @@ const Profile = ({ user, setUser, updateProfile, changePassword }) => {
 
     const completedCount = bookings.filter((b) => b.status === "completed").length;
     const pendingCount = bookings.filter((b) => b.status === "pending" || b.status === "confirmed").length;
-    const totalSpent = bookings.reduce((s, b) => s + (b.amount || 0), 0);
+    const totalSpent = bookings.reduce((sum, b) => sum + (b.status === "completed" ? b.amount : 0), 0);
 
     const handleChangeStatus = async (e) => {
         e.preventDefault();
         try {
-            const res = await userAPI.changeStatus(user._id, !user.isActive);
+            await userAPI.changeStatus(user._id, !user.isActive);
             const userResponse = await userAPI.getProfile();
             setUser(userResponse.data.user);
         } catch (error) {

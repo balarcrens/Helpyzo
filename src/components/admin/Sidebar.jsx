@@ -1,5 +1,4 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { X } from "lucide-react";
 import {
     LayoutDashboard,
     Users,
@@ -8,6 +7,7 @@ import {
     Briefcase,
     CalendarCheck,
     LogOut,
+    Contact, X
 } from "lucide-react";
 import AuthContext from "../../context/Auth/AuthContext";
 import { useContext } from "react";
@@ -19,6 +19,7 @@ const menus = {
         { name: "Categories", path: "/superadmin/categories", icon: Grid },
         { name: "Users", path: "/superadmin/users", icon: Users },
         { name: "All Bookings", path: "/superadmin/bookings", icon: CalendarCheck },
+        { name: "Contact", path: "/superadmin/contact", icon: Contact },
         { name: "Home", path: "/", icon: LogOut },
     ],
     admin: [
