@@ -1,19 +1,33 @@
 /* eslint-disable no-unused-vars */
-import { useState } from "react";
-import { FiEdit, FiTrash2, FiPlus, FiX, FiCheck } from "react-icons/fi";
+import { useContext, useState } from "react";
+import {
+    FiEdit, FiTrash2, FiPlus, FiX, FiCheck,
+    FiTag, FiImage, FiFileText, FiGrid,
+} from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCategories } from "../../../hooks/useData";
+import ToastContext from "../../../context/Toast/ToastContext"
+
+const inputCls =
+    "w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition bg-gray-50 placeholder:text-gray-400";
+const labelCls = "block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5";
+
+const cardPalette = [
+    "from-violet-400 to-indigo-500",
+    "from-emerald-400 to-teal-500",
+    "from-amber-400 to-orange-400",
+    "from-pink-400 to-rose-500",
+    "from-cyan-400 to-sky-500",
+    "from-lime-400 to-green-500",
+];
 
 export default function Categories() {
+    const { showToast, showConfirm } = useContext(ToastContext);
     const { categories, createCategory, updateCategory, deleteCategory, loading } = useCategories();
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [imagePreview, setImagePreview] = useState("");
-    const [formData, setFormData] = useState({
-        name: "",
-        description: "",
-        image: "",
-    });
+    const [formData, setFormData] = useState({ name: "", description: "", image: "" });
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -29,14 +43,8 @@ export default function Categories() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.image) {
-            alert("Please select an image");
-            return;
-        }
-        if (!formData.name) {
-            alert("Please fill in category name");
-            return;
-        }
+        if (!formData.image) { showToast("Please select an image", "info"); return; }
+        if (!formData.name) { showToast("Please fill in category name", "info"); return; }
         try {
             if (editingId) {
                 await updateCategory(editingId, formData);
@@ -45,17 +53,23 @@ export default function Categories() {
             }
             handleCancel();
         } catch (error) {
-            alert(error.message);
+            showToast(error.message || "Failed to create / update category", "error");
         }
     };
 
     const handleDelete = async (categoryId) => {
-        if (confirm("Are you sure you want to delete this category?")) {
-            try {
-                await deleteCategory(categoryId);
-            } catch (error) {
-                alert(error.message);
-            }
+        const confirmed = await showConfirm({
+            message: "Are you sure want to delete this category?",
+            subMessage: "This action cannot be undone.",
+            type: "danger",
+            confirmLabel: "Delete",
+        })
+
+        if (!confirmed) return
+        try {
+            await deleteCategory(categoryId);
+        } catch (error) {
+            showToast(error.message || "Failed to delete category", "error");
         }
     };
 
@@ -75,16 +89,21 @@ export default function Categories() {
 
     return (
         <div className="space-y-6 pb-10">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold text-stone-900">Categories</h2>
-                    <p className="text-gray-600 mt-1">Manage service categories</p>
+                    <h2 className="text-2xl font-extrabold text-gray-900">Categories</h2>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                        {categories?.length
+                            ? `${categories.length} categor${categories.length > 1 ? "ies" : "y"} configured`
+                            : "No categories yet — add your first"}
+                    </p>
                 </div>
+
                 <button
                     onClick={() => setShowForm(true)}
-                    className="flex items-center gap-2 bg-gradient-to-r from-[#9fe870] to-[#8ed65f] text-stone-900 px-6 py-3 rounded-xl font-semibold hover:scale-105 transition shadow-lg"
+                    className="self-start sm:self-auto flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-2xl text-sm font-bold transition cursor-pointer active:scale-95 shadow-sm"
                 >
-                    <FiPlus size={20} /> Add Category
+                    <FiPlus size={16} /> Add Category
                 </button>
             </div>
 
@@ -94,63 +113,78 @@ export default function Categories() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
                         onClick={handleCancel}
                     >
                         <motion.div
-                            initial={{ scale: 0.95, y: 20 }}
+                            initial={{ scale: 0.95, y: 24 }}
                             animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.95, y: 20 }}
+                            exit={{ scale: 0.95, y: 24 }}
+                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                            className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
                         >
-                            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center rounded-t-2xl">
-                                <h3 className="text-2xl font-bold text-stone-900">
-                                    {editingId ? "Edit Category" : "Add New Category"}
-                                </h3>
+                            {/* Modal header */}
+                            <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-3xl">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-9 w-9 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600">
+                                        <FiTag size={16} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base font-extrabold text-gray-900">
+                                            {editingId ? "Edit Category" : "Add New Category"}
+                                        </h3>
+                                        <p className="text-[11px] text-gray-400">Fields marked * are required</p>
+                                    </div>
+                                </div>
                                 <button
                                     onClick={handleCancel}
-                                    className="p-2 hover:bg-gray-100 rounded-lg transition"
+                                    className="h-8 w-8 cursor-pointer rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition active:scale-90"
                                 >
-                                    <FiX size={24} />
+                                    <FiX size={15} />
                                 </button>
                             </div>
 
                             <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                                {/* Name */}
                                 <div>
-                                    <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                        Category Name *
-                                    </label>
+                                    <label className={labelCls}>Category Name *</label>
                                     <input
                                         type="text"
-                                        placeholder="e.g., Home Cleaning, Plumbing, etc."
+                                        placeholder="e.g., Home Cleaning, Plumbing…"
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870]"
+                                        className={inputCls}
                                         required
                                     />
                                 </div>
 
+                                {/* Description */}
                                 <div>
-                                    <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                        Description
-                                    </label>
+                                    <label className={labelCls}>Description</label>
                                     <textarea
-                                        placeholder="Describe this category..."
+                                        placeholder="Describe this category…"
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] resize-none"
+                                        className={`${inputCls} resize-none`}
                                         rows="3"
                                         maxLength="300"
                                     />
-                                    <p className="text-xs text-gray-500 mt-1">{formData.description.length}/300</p>
+                                    <p className="text-[11px] text-gray-400 mt-1 text-right">{formData.description?.length || 0}/300</p>
                                 </div>
 
+                                {/* Image upload */}
                                 <div>
-                                    <label className="block text-sm font-semibold text-stone-900 mb-2">
-                                        Category Image *
-                                    </label>
-                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#9fe870] transition">
+                                    <label className={labelCls}>Category Image *</label>
+                                    <label
+                                        htmlFor="category-image-input"
+                                        className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-200 hover:border-violet-400 rounded-2xl py-7 cursor-pointer transition bg-gray-50 hover:bg-violet-50/20"
+                                    >
+                                        <div className="h-10 w-10 rounded-xl bg-violet-50 flex items-center justify-center text-violet-400">
+                                            <FiImage size={18} />
+                                        </div>
+                                        <p className="text-sm font-semibold text-gray-600">Click to upload image</p>
+                                        <p className="text-xs text-gray-400">PNG, JPG, JPEG — up to 5MB</p>
                                         <input
                                             type="file"
                                             accept="image/*"
@@ -158,37 +192,32 @@ export default function Categories() {
                                             className="hidden"
                                             id="category-image-input"
                                         />
-                                        <label htmlFor="category-image-input" className="cursor-pointer">
-                                            <div className="text-center">
-                                                <p className="text-gray-600 font-semibold">Click to upload image</p>
-                                                <p className="text-xs text-gray-500 mt-1">PNG, JPG, JPEG up to 5MB</p>
-                                            </div>
-                                        </label>
-                                    </div>
+                                    </label>
+
                                     {imagePreview && (
-                                        <div className="mt-4 relative">
-                                            <img
-                                                src={imagePreview}
-                                                alt="Preview"
-                                                className="w-full h-48 object-cover rounded-lg border border-gray-200"
-                                            />
-                                            <p className="text-xs text-gray-500 mt-2">✓ Image Preview</p>
+                                        <div className="mt-3 relative rounded-2xl overflow-hidden border border-gray-100">
+                                            <img src={imagePreview} alt="Preview" className="w-full h-44 object-cover" />
+                                            <span className="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg">
+                                                ✓ Preview
+                                            </span>
                                         </div>
                                     )}
                                 </div>
 
-                                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                                {/* Actions */}
+                                <div className="flex gap-3 pt-4 border-t border-gray-100">
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="flex-1 bg-gradient-to-r from-[#9fe870] to-[#8ed65f] text-stone-900 py-3 rounded-lg font-semibold hover:scale-105 disabled:opacity-50 transition flex items-center justify-center gap-2"
+                                        className="flex-1 flex cursor-pointer items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white py-2.5 rounded-2xl text-sm font-bold transition active:scale-95"
                                     >
-                                        <FiCheck /> {editingId ? "Update Category" : "Add Category"}
+                                        <FiCheck size={15} />
+                                        {loading ? "Saving…" : editingId ? "Update Category" : "Add Category"}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={handleCancel}
-                                        className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
+                                        className="flex-1 bg-gray-100 cursor-pointer hover:bg-gray-200 text-gray-700 py-2.5 rounded-2xl text-sm font-bold transition active:scale-95"
                                     >
                                         Cancel
                                     </button>
@@ -199,55 +228,90 @@ export default function Categories() {
                 )}
             </AnimatePresence>
 
+            {/* ── Content ── */}
             {loading ? (
-                <div className="text-center py-12">
-                    <p className="text-gray-600">Loading categories...</p>
+                /* Skeleton */
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                    {[...Array(8)].map((_, i) => (
+                        <div key={i} className="bg-white rounded-3xl border border-gray-100 overflow-hidden animate-pulse">
+                            <div className="h-40 bg-gray-100" />
+                            <div className="p-4 space-y-2">
+                                <div className="h-3.5 w-2/3 bg-gray-100 rounded-full" />
+                                <div className="h-2.5 w-full bg-gray-100 rounded-full" />
+                                <div className="h-2.5 w-4/5 bg-gray-100 rounded-full" />
+                            </div>
+                        </div>
+                    ))}
                 </div>
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {(categories && Array.isArray(categories) && categories.length > 0) ? (
-                        categories.map((category) => (
-                            <motion.div
-                                key={category?._id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition group"
-                            >
-                                {category?.image && (
-                                    <div className="relative h-40 overflow-hidden bg-gray-100">
-                                        <img
-                                            src={category.image}
-                                            alt={category?.name}
-                                            className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
-                                        />
+            ) : categories && Array.isArray(categories) && categories.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                    {categories.map((category, idx) => (
+                        <motion.div
+                            key={category?._id}
+                            initial={{ opacity: 0, y: 14 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.04 }}
+                            className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden group"
+                        >
+                            {/* Image or gradient fallback */}
+                            <div className="relative h-40 overflow-hidden bg-gray-100">
+                                {category?.image ? (
+                                    <img
+                                        src={category.image}
+                                        alt={category?.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                                    />
+                                ) : (
+                                    <div className={`w-full h-full bg-gradient-to-br ${cardPalette[idx % cardPalette.length]} flex items-center justify-center`}>
+                                        <FiTag size={32} className="text-white/70" />
                                     </div>
                                 )}
-                                <div className="p-4">
-                                    <h3 className="font-bold text-lg text-stone-900 line-clamp-2">{category?.name || 'Unnamed'}</h3>
-                                    <p className="text-gray-600 text-sm mt-2 line-clamp-2">{category?.description || 'No description'}</p>
-
-                                    <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
-                                        <button
-                                            onClick={() => handleEdit(category)}
-                                            className="flex-1 p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition font-semibold flex items-center justify-center gap-2"
-                                        >
-                                            <FiEdit size={16} /> Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(category?._id)}
-                                            className="flex-1 p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition font-semibold flex items-center justify-center gap-2"
-                                        >
-                                            <FiTrash2 size={16} /> Delete
-                                        </button>
-                                    </div>
+                                {/* Category index badge */}
+                                <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                    #{idx + 1}
                                 </div>
-                            </motion.div>
-                        ))
-                    ) : (
-                        <div className="col-span-full text-center py-12">
-                            <p className="text-gray-600 text-lg">No categories yet. Create your first category!</p>
-                        </div>
-                    )}
+                            </div>
+
+                            {/* Body */}
+                            <div className="p-4">
+                                <h3 className="text-sm font-extrabold text-gray-900 line-clamp-1">{category?.name || "Unnamed"}</h3>
+                                <p className="text-xs text-gray-500 mt-1.5 line-clamp-2 leading-relaxed">
+                                    {category?.description || "No description provided"}
+                                </p>
+
+                                {/* Actions */}
+                                <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
+                                    <button
+                                        onClick={() => handleEdit(category)}
+                                        className="flex-1 cursor-pointer flex items-center justify-center gap-1.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition active:scale-95"
+                                    >
+                                        <FiEdit size={13} /> Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(category?._id)}
+                                        className="flex-1 cursor-pointer flex items-center justify-center gap-1.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition active:scale-95"
+                                    >
+                                        <FiTrash2 size={13} /> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+            ) : (
+                /* Empty state */
+                <div className="bg-white rounded-3xl border border-gray-100 shadow-sm py-20 text-center">
+                    <div className="h-16 w-16 rounded-2xl bg-violet-50 flex items-center justify-center mx-auto mb-4">
+                        <FiGrid size={26} className="text-violet-400" />
+                    </div>
+                    <p className="text-sm font-bold text-gray-800">No categories yet</p>
+                    <p className="text-xs text-gray-400 mt-1">Create your first category to organise services</p>
+                    <button
+                        onClick={() => setShowForm(true)}
+                        className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-violet-600 bg-violet-50 hover:bg-violet-100 px-4 py-2 rounded-xl transition"
+                    >
+                        <FiPlus size={13} /> Add your first category
+                    </button>
                 </div>
             )}
         </div>

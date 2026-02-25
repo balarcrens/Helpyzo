@@ -21,6 +21,7 @@ import AuthContext from "../../context/Auth/AuthContext";
 import { bookingAPI } from "../../services/api";
 import RatingModal from "../RatingModal";
 import { useNavigate } from "react-router-dom";
+import ToastContext from "../../context/Toast/ToastContext";
 
 const STATUS_TABS = ["all", "pending", "confirmed", "in-progress", "completed", "cancelled"];
 
@@ -33,6 +34,7 @@ const STATUS_STYLES = {
 };
 
 export default function UserBookings() {
+    const { showToast } = useContext(ToastContext);
     const { isLoggedIn, user } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -73,12 +75,13 @@ export default function UserBookings() {
         try {
             setCancelLoading(true);
             await bookingAPI.updateBookingStatus(bookingId, "cancelled");
+            showToast("Booking cancelled", "success")
             setBookings(prev =>
                 prev.map(b => b._id === bookingId ? { ...b, status: "cancelled" } : b)
             );
             setCancelId(null);
         } catch (err) {
-            alert(err.response?.data?.message || "Failed to cancel booking.");
+            showToast("Failed to cancel booking", "error")
         } finally {
             setCancelLoading(false);
         }
@@ -156,9 +159,9 @@ export default function UserBookings() {
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
                                     whileTap={{ scale: 0.95 }}
-                                    className={`relative px-5 py-2 rounded-full text-sm font-semibold capitalize transition-all ${active
-                                            ? "text-stone-900 shadow"
-                                            : "text-stone-500 hover:text-stone-800 bg-white"
+                                    className={`relative px-5 py-2 cursor-pointer rounded-full text-sm font-semibold capitalize transition-all ${active
+                                        ? "text-stone-900 shadow"
+                                        : "text-stone-500 hover:text-stone-800 bg-white"
                                         }`}
                                 >
                                     {active && (
@@ -176,7 +179,7 @@ export default function UserBookings() {
                         {/* Refresh */}
                         <button
                             onClick={fetchBookings}
-                            className="ml-auto flex items-center gap-1.5 px-4 py-2 rounded-full bg-white text-stone-500 hover:text-stone-800 text-sm font-semibold transition"
+                            className="ml-auto flex items-center gap-1.5 px-4 py-2 rounded-full bg-white text-stone-500 hover:text-stone-800 text-sm font-semibold transition cursor-pointer"
                         >
                             <FiRefreshCw size={14} />
                             Refresh
@@ -333,8 +336,8 @@ function BookingCard({ booking, index, cancelId, setCancelId, cancelLoading, han
                     </span>
                     <span
                         className={`text-xs px-2.5 py-1 rounded-full font-semibold ${booking.paymentStatus === "paid"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-orange-100 text-orange-700"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-orange-100 text-orange-700"
                             }`}
                     >
                         {booking.paymentStatus || "pending"}

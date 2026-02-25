@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { categoryAPI, partnerAPI, bookingAPI, notificationAPI } from "../services/api";
+import ToastContext from "../context/Toast/ToastContext";
 
 // Custom hook for categories
 export const useCategories = () => {
+    const { showToast } = useContext(ToastContext);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -29,9 +31,10 @@ export const useCategories = () => {
             setLoading(true);
             const res = await categoryAPI.createCategory(categoryData);
             setCategories([...categories, res.data.category]);
+            showToast("Category created successfully", "success");
             return res.data.category;
         } catch (err) {
-            setError(err.response?.data?.message || "Failed to create category");
+            showToast(err.response?.data?.message || "Failed to create category", "error");
             throw err;
         } finally {
             setLoading(false);
@@ -42,12 +45,13 @@ export const useCategories = () => {
         try {
             setLoading(true);
             const res = await categoryAPI.updateCategory(categoryId, categoryData);
+            showToast("Category Updated successfully", "success");
             setCategories(
                 categories.map((c) => (c._id === categoryId ? res.data.category : c))
             );
             return res.data.category;
         } catch (err) {
-            setError(err.response?.data?.message || "Failed to update category");
+            showToast(err.response?.data?.message || "Failed to update category", "error");
             throw err;
         } finally {
             setLoading(false);

@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useContext, useEffect, useState } from "react";
 import { userAPI } from "../../../services/api";
 import {
     FiUsers, FiUserCheck, FiUserX, FiSearch, FiTrash2,
     FiMail, FiPhone, FiMapPin, FiCalendar, FiShield
 } from "react-icons/fi";
+import ToastContext from "../../../context/Toast/ToastContext";
 
 export default function Users() {
+    const { showToast, showConfirm } = useContext(ToastContext)
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [deletingId, setDeletingId] = useState(null);
@@ -24,31 +26,48 @@ export default function Users() {
             const res = await userAPI.getAllUsers();
             setUsers(res.data.users);
         } catch (err) {
-            setError(err?.response?.data?.message || "Failed to load users");
+            showToast(err?.response?.data?.message || "Failed to load users", "error");
         } finally {
             setLoading(false);
         }
     };
 
     const handleDelete = async (userId) => {
-        if (!window.confirm("Are you sure you want to delete this user?")) return;
+        const confirmed = await showConfirm({
+            message: "Are you sure want to delete this user?",
+            subMessage: "This action cannot be undone.",
+            type: "danger",
+            confirmLabel: "Delete",
+        });
+
+        if (!confirmed) return;
         try {
             setDeletingId(userId);
             await userAPI.deleteUser(userId);
+            showToast("User deleted successfully", "success");
             setUsers(prev => prev.filter(u => u._id !== userId));
         } catch (err) {
-            alert(err?.response?.data?.message || "Failed to delete user");
+            showToast(err?.response?.data?.message || "Failed to delete user", "error");
         } finally {
             setDeletingId(null);
         }
     };
 
     const handleRoleChange = async (userId, userRole) => {
+        const confirmed = await showConfirm({
+            message: "Are you sure want to change this user's role?",
+            subMessage: "The user will have new permissions based on the selected role.",
+            type: "warning",
+            confirmLabel: "Change Role",
+        });
+
+        if (!confirmed) return;
         try {
             await userAPI.updateRole(userId, userRole);
+            showToast("User role changed successfully", "success");
             setUsers(prev => prev.map(u => u._id === userId ? { ...u, role: userRole } : u));
         } catch (error) {
-            console.log(error?.message);
+            showToast(error?.message || "Failed to update user role", "error");
         }
     }
 
@@ -110,8 +129,6 @@ export default function Users() {
 
     return (
         <div className="space-y-8">
-
-            {/* ── Page Header ── */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                     <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Registered Users</h1>
@@ -123,7 +140,6 @@ export default function Users() {
                 </div>
             </div>
 
-            {/* ── Stats Cards ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {stats.map((s, i) => (
                     <div key={i} className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
@@ -138,10 +154,7 @@ export default function Users() {
                 ))}
             </div>
 
-            {/* ── Table Card ── */}
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-
-                {/* Table Toolbar */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-6 py-5 border-b border-gray-100">
                     {/* Search */}
                     <div className="relative w-full sm:w-72">
@@ -179,8 +192,6 @@ export default function Users() {
                             <div className="h-6 w-6 rounded-full border-2 border-indigo-300 border-t-indigo-600 animate-spin" />
                             <span className="text-sm">Loading users…</span>
                         </div>
-                    ) : error ? (
-                        <div className="text-center py-16 text-red-500 text-sm">{error}</div>
                     ) : filtered.length === 0 ? (
                         <div className="text-center py-16 text-gray-400 text-sm">
                             <FiUsers size={36} className="mx-auto mb-3 opacity-30" />
@@ -260,7 +271,7 @@ export default function Users() {
                                         <td className="px-1 md:px-2 xl:px-6 py-4 text-center whitespace-nowrap">
                                             <div className="inline-flex flex-wrap justify-center items-center gap-1">
                                                 <select value={user.role} onChange={(e) => handleRoleChange(user._id, e.target.value)}
-                                                    className="ml-2 px-2 py-1 border border-gray-300 rounded-md text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled={currentUser === user._id}
+                                                    className="ml-2 px-2 py-1 cursor-pointer border border-gray-300 rounded-md text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled={currentUser === user._id}
                                                 >
                                                     <option value="client">Client</option>
                                                     <option value="superadmin">Super Admin</option>
@@ -288,7 +299,7 @@ export default function Users() {
                 </div>
 
                 {/* Footer row count */}
-                {!loading && !error && filtered.length > 0 && (
+                {!loading && filtered.length > 0 && (
                     <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
                         <span>Showing <span className="font-semibold text-gray-600">{filtered.length}</span> of <span className="font-semibold text-gray-600">{users.length}</span> users</span>
                         {search && (

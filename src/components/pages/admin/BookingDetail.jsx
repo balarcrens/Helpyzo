@@ -1,5 +1,6 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { bookingAPI } from "../../../services/api";
@@ -16,6 +17,7 @@ import {
     FiCheckCircle,
     FiDollarSign,
 } from "react-icons/fi";
+import ToastContext from "../../../context/Toast/ToastContext";
 
 const getInitials = (name = "") =>
     name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
@@ -70,6 +72,7 @@ const SectionCard = ({ icon: Icon, iconBg, title, subtitle, children, className 
 );
 
 export default function BookingDetails() {
+    const { showToast } = useContext(ToastContext);
     const { id } = useParams();
     const navigate = useNavigate();
     const [booking, setBooking] = useState(null);
@@ -83,6 +86,7 @@ export default function BookingDetails() {
             setBooking(res.data.booking);
         } catch (err) {
             console.error("Failed to load booking", err.message);
+            showToast("Failed to load booking", "error");
         } finally {
             setLoading(false);
         }
@@ -91,17 +95,21 @@ export default function BookingDetails() {
     const handleStatusChange = async (e) => {
         try {
             await bookingAPI.updateBookingStatus(id, e.target.value);
+            showToast("Status changed successfully", "success");
             fetchBooking();
         } catch (err) {
             console.error("Failed to update booking status", err.message);
+            showToast("Failed to update status", "error");
         }
     };
 
     const handlePaymentStatusChange = async (e) => {
         try {
             await bookingAPI.updateBookingPaymentStatus(id, e.target.value);
+            showToast("Payment status changed successfully", "success");
             fetchBooking();
         } catch (error) {
+            showToast("Failed to update payment status", "error");
             console.error("Failed to update payment status", error.message);
         }
     };
@@ -163,7 +171,7 @@ export default function BookingDetails() {
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => navigate(-1)}
-                            className="h-9 w-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition active:scale-90 flex-shrink-0"
+                            className="h-9 w-9 cursor-pointer rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition active:scale-90 flex-shrink-0"
                         >
                             <FiArrowLeft size={16} />
                         </button>

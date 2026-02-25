@@ -1,14 +1,14 @@
 /* eslint-disable no-unused-vars */
-import { useState, useEffect } from "react";
+import { useContext, useState } from "react";
 import {
     FiEdit, FiTrash2, FiPlus, FiX, FiCheck,
-    FiClock, FiDollarSign, FiCalendar, FiSettings,
-    FiTag, FiPackage, FiImage, FiToggleLeft, FiToggleRight,
-    FiLock, FiAlertCircle,
+    FiDollarSign, FiCalendar, FiSettings,
+    FiPackage, FiImage, FiLock,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePartner } from "../../../hooks/useAuth";
 import { useCategories } from "../../../hooks/useData";
+import ToastContext from "../../../context/Toast/ToastContext";
 
 const TABS = ["basic", "pricing", "availability", "settings"];
 const TAB_ICONS = { basic: FiPackage, pricing: FiDollarSign, availability: FiCalendar, settings: FiSettings };
@@ -19,6 +19,7 @@ const inputCls =
 const labelCls = "block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5";
 
 export default function AdminServices() {
+    const { showToast, showConfirm } = useContext(ToastContext);
     const { user, addService, updateService, deleteService, loading } = usePartner();
     const { categories } = useCategories();
     const [services, setServices] = useState(user?.services || []);
@@ -67,9 +68,9 @@ export default function AdminServices() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.image) { alert("Please select an image"); return; }
+        if (!formData.image) { showToast("Please select an image", "info"); return; }
         if (!formData.name || !formData.category || !formData.basePrice || !formData.durationInMinutes) {
-            alert("Please fill in all required fields (marked with *)"); return;
+            showToast("Please fill in all required fields (marked with *)", "info"); return;
         }
         try {
             const submitData = {
@@ -85,25 +86,33 @@ export default function AdminServices() {
             };
             if (editingId) {
                 const updated = await updateService(editingId, submitData);
+                showToast("Service updated successfully", "success");
                 setServices(updated.services);
             } else {
                 const updated = await addService(submitData);
+                showToast("Service added successfully", "success");
                 setServices(updated.services);
             }
             handleCancel();
         } catch (error) {
-            alert(error.message);
+            showToast(error.message, "error");
         }
     };
 
     const handleDelete = async (serviceId) => {
-        if (confirm("Are you sure you want to delete this service?")) {
-            try {
-                const updated = await deleteService(serviceId);
-                setServices(updated.services);
-            } catch (error) {
-                alert(error.message);
-            }
+        const confirmed = await showConfirm({
+            message: "Are you sure you want to delete this service?",
+            subMessage: "This action cannot be undone.",
+            type: "danger",
+            confirmLabel: "Delete",
+        })
+
+        if(!confirmed) return
+        try {
+            const updated = await deleteService(serviceId);
+            setServices(updated.services);
+        } catch (error) {
+            alert(error.message);
         }
     };
 

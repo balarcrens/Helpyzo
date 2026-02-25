@@ -1,12 +1,15 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FiMapPin, FiMail, FiPhone, FiCheckCircle } from "react-icons/fi";
 import Layout from "../Layout/Layout";
 import Header from "../Layout/Header";
 import { motion, useMotionValue, useSpring } from "framer-motion";
+import { contactAPI } from "../../services/api";
+import ToastContext from "../../context/Toast/ToastContext";
 
 const ContactUs = () => {
+    const { showToast } = useContext(ToastContext);
     const [isHovering, setIsHovering] = useState(false);
 
     const mouseX = useMotionValue(0);
@@ -24,15 +27,19 @@ const ContactUs = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { register, handleSubmit, formState: { errors }, reset } = useForm();
 
-    const onSubmit = (data) => {
-        setIsSubmitting(true);
-        console.log("Form Data:", data);
+    const onSubmit = async (data) => {
+        try {
+            setIsSubmitting(true);
 
-        setTimeout(() => {
+            await contactAPI.createContact(data);
+            showToast("Thank you! We will contact you shortly.", "success");
             setIsSubmitting(false);
-            alert("Thank you! We will contact you shortly.");
+        } catch (error) {
+            console.log(error.message);
+            showToast(error.message || "Failed to send contact", "error");
+        } finally {
             reset();
-        }, 2000);
+        }
     };
 
     return (

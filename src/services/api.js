@@ -13,6 +13,7 @@ export const userAPI = {
     updateRole: (userId, userRole) => apiClient.put(`/users/change-role/${userId}/${userRole}`),
     updateServiceApprovalStatus: (partnerId, serviceId, status, rejectionReason = '') =>
         apiClient.put(`/users/service-approval/${partnerId}/${serviceId}`, { approvalStatus: status, rejectionReason }),
+    changeStatus: (userId, status) => apiClient.put(`/users/change-status/${userId}/${status}`),
 };
 
 // ========== PARTNER APIs ==========
@@ -65,6 +66,13 @@ export const bookingAPI = {
     rateBooking: (bookingId, rating, review) => apiClient.put(`/bookings/${bookingId}/rate`, { rating, review }),
     deleteBooking: (bookingId) => apiClient.delete(`/bookings/${bookingId}`),
 };
+
+export const contactAPI = {
+    createContact: (contactData) => apiClient.post('/contact/', contactData),
+    getAllContact: () => apiClient.get('/contact/all'),
+    getContactById: (contactId) => apiClient.get(`/contact/${contactId}`),
+    deleteContact: (contactId) => apiClient.delete(`/contact/${contactId}`),
+}
 
 export const notificationAPI = {
     getNotifications: () => apiClient.get('/notifications'),

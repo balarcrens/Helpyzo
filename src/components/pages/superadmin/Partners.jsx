@@ -6,9 +6,10 @@ import {
     FiBriefcase, FiShield, FiAward, FiRefreshCw, FiAlertCircle,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { usePartners } from "../../../hooks/useData";
 import { partnerAPI } from "../../../services/api";
+import ToastContext from "../../../context/Toast/ToastContext";
 
 const avatarColors = [
     "from-indigo-400 to-indigo-600",
@@ -35,10 +36,10 @@ function StarRating({ rating = 0 }) {
 const FILTERS = ["all", "verified", "pending"];
 
 export default function Partners() {
+    const { showToast, showConfirm } = useContext(ToastContext)
     const navigate = useNavigate();
     const { partners, loading } = usePartners();
     const [partnerList, setPartnerList] = useState([]);
-    const [error, setError] = useState(null);
     const [deletingId, setDeletingId] = useState(null);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
@@ -82,13 +83,20 @@ export default function Partners() {
     ];
 
     const handleDelete = async (partnerId) => {
-        if (!window.confirm("Are you sure you want to delete this partner?")) return;
+        const confirmed = await showConfirm({
+            message: "Are you sure you want to delete this partner?",
+            subMessage: "This action cannot be undone.",
+            type: "danger",
+            confirmLabel: "Delete",
+        });
+        if (!confirmed) return;
         try {
             setDeletingId(partnerId);
             await partnerAPI.deletePartner(partnerId);
+            showToast("Partner deleted successfully", "success");
             setPartnerList((prev) => prev.filter((p) => p._id !== partnerId));
         } catch (err) {
-            setError(err.response?.data?.message || "Failed to delete partner");
+            showToast(err.response?.data?.message || "Failed to delete partner", "error");
         } finally {
             setDeletingId(null);
         }
@@ -202,11 +210,6 @@ export default function Partners() {
                 <div className="flex items-center justify-center py-20 gap-3 text-gray-400">
                     <div className="h-7 w-7 rounded-full border-2 border-indigo-300 border-t-indigo-600 animate-spin" />
                     <span className="text-sm font-medium">Loading partners…</span>
-                </div>
-            ) : error ? (
-                <div className="flex flex-col items-center justify-center py-16 text-red-500 gap-3">
-                    <FiAlertCircle size={36} className="opacity-60" />
-                    <p className="text-sm font-medium">{error}</p>
                 </div>
             ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-3">
@@ -337,7 +340,7 @@ export default function Partners() {
                                                 onClick={() =>
                                                     navigate(`/superadmin/partners/${partner?._id}`)
                                                 }
-                                                className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 active:scale-95 transition-all shadow-sm shadow-indigo-200"
+                                                className="flex-1 flex cursor-pointer items-center justify-center gap-2 bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 active:scale-95 transition-all shadow-sm shadow-indigo-200"
                                             >
                                                 <FiEye size={14} />
                                                 View Profile
@@ -350,7 +353,7 @@ export default function Partners() {
                                                     partner?._id && handleDelete(partner._id);
                                                 }}
                                                 disabled={deletingId === partner._id}
-                                                className="flex items-center justify-center gap-2 bg-red-50 text-red-600 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-red-100 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="flex items-center cursor-pointer justify-center gap-2 bg-red-50 text-red-600 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-red-100 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 {deletingId === partner._id ? (
                                                     <div className="h-4 w-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />

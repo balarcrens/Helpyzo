@@ -5,8 +5,10 @@ import { FiEye, FiEyeOff, FiLock, FiMail, FiX, FiAlertCircle } from "react-icons
 import { Link, useNavigate } from "react-router-dom";
 import AuthContext from "../../context/Auth/AuthContext";
 import { partnerAPI, userAPI } from "../../services/api";
+import ToastContext from "../../context/Toast/ToastContext";
 
 const Login = ({ onClose }) => {
+    const { showToast } = useContext(ToastContext);
     const navigate = useNavigate();
     const { login } = useContext(AuthContext);
     const [showPassword, setShowPassword] = useState(false);
@@ -35,9 +37,11 @@ const Login = ({ onClose }) => {
                 ? await partnerAPI.login(payloadEmail, password)
                 : await userAPI.login(payloadEmail, password);
 
-            if (!res?.data?.success) {
-                throw new Error("Login failed");
-            }
+            if (res?.data?.success) {
+                showToast("Login Successfully", "success");
+            } else {
+                showToast("Login Failed", "error");
+            } 
 
             login(
                 res.data.token,
@@ -166,7 +170,6 @@ const Login = ({ onClose }) => {
                                             (Login as service provider)
                                         </span>
                                     </span>
-
                                 </div>
                             </label>
 
@@ -182,7 +185,7 @@ const Login = ({ onClose }) => {
                             <div className="text-center text-sm text-white/50">
                                 New here?{" "}
                                 <Link
-                                    to="/register?role=customer&step=1"
+                                    to="/register"
                                     onClick={onClose}
                                     className="text-[#9fe870] hover:underline"
                                 >

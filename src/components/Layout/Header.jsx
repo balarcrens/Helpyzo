@@ -54,10 +54,10 @@ const Header = () => {
         {
             label: "Services",
             dropdown: [
-                { label: "Home & Kitchen Cleaning", path: "/category/home-cleaning" },
-                { label: "Plumbing & Sanitary Services", path: "/category/plumbing-sanitary" },
-                { label: "AC Cleaning & Repair", path: "/category/ac-cleaning" },
-                { label: "Electrical Repair", path: "/category/electrical-repair" }
+                { label: "Home & Kitchen Cleaning", path: "/category/home cleaning" },
+                { label: "Plumbing Services", path: "/category/plumbing" },
+                { label: "Appliance Repair", path: "/category/appliance repair" },
+                { label: "Electrical Services", path: "/category/electrical services" }
             ],
         },
         {
@@ -76,7 +76,7 @@ const Header = () => {
         <>
             {isLoginModal && <Login onClose={() => setIsLoginModal(false)} />}
 
-            <header className="fixed top-0 z-50 w-full px-4 py-2 sm:px-6">
+            <header className="fixed top-0 font-sans z-50 w-full px-4 py-2 sm:px-6">
                 <div className={`mx-auto max-w-7xl transition-all duration-500 rounded-4xl pl-4 pr-6 py-3 flex items-center justify-between 
                         ${isScrolled ? "bg-black/40 backdrop-blur-md border border-white/10 shadow-2xl" : "bg-black/40 backdrop-blur-none border border-white/5"}`}
                 >

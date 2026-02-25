@@ -298,7 +298,7 @@ export default function Dashboard() {
                         </div>
                         <button
                             onClick={() => navigate("bookings")}
-                            className="text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition"
+                            className="text-xs font-bold cursor-pointer text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition"
                         >
                             View all →
                         </button>

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import {
     AiFillStar,
@@ -12,7 +13,13 @@ import {
     FiChevronLeft,
     FiChevronRight,
     FiClock,
-    FiChevronDown
+    FiChevronDown,
+    FiSearch,
+    FiShield,
+    FiTag,
+    FiArrowLeft,
+    FiZap,
+    FiTool
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -28,11 +35,19 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import AuthContext from "../../context/Auth/AuthContext";
 import { partnerAPI, bookingAPI, userAPI } from "../../services/api";
+import ToastContext from "../../context/Toast/ToastContext";
 
 export default function ServiceDetail() {
-    const { slug } = useParams(); // This is the serviceId from URL: /category/{category}/{serviceId}
+    const { slug } = useParams();
     const { isLoggedIn, user } = useContext(AuthContext);
+    const { showToast } = useContext(ToastContext);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!isLoggedIn && !user) {
+            navigate('/register');
+        }
+    }, [isLoggedIn, navigate]);
 
     const [issue, setIssue] = useState("");
     const [issueLabel, setIssueLabel] = useState("");
@@ -41,7 +56,6 @@ export default function ServiceDetail() {
     const [serviceType, setServiceType] = useState("normal");
     const [selectedDate, setSelectedDate] = useState(null);
 
-    // Dynamic data states
     const [serviceData, setServiceData] = useState(null);
     const [partnerData, setPartnerData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -56,18 +70,15 @@ export default function ServiceDetail() {
     const [selectedTime, setSelectedTime] = useState("");
     const [bookingLoading, setBookingLoading] = useState(false);
 
-    // Fetch data on component mount
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
                 setDataError(null);
 
-                // Fetch all partners
                 const partnersRes = await partnerAPI.getAllPartners();
                 const allPartners = partnersRes?.data?.partners || [];
 
-                // Find the service across all partners
                 let foundService = null;
                 let foundPartner = null;
 
@@ -83,7 +94,7 @@ export default function ServiceDetail() {
                 }
 
                 if (!foundService || !foundPartner) {
-                    setDataError("Service not found");
+                    showToast("Service not found", "error");
                     setLoading(false);
                     return;
                 }
@@ -91,8 +102,8 @@ export default function ServiceDetail() {
                 setServiceData(foundService);
                 setPartnerData(foundPartner);
             } catch (err) {
-                console.error("Error fetching data:", err);
-                setDataError("Failed to load service details");
+                console.error("Error fetching data:", err.message);
+                showToast("Failed to load service details", "error");
             } finally {
                 setLoading(false);
             }
@@ -103,7 +114,6 @@ export default function ServiceDetail() {
         }
     }, [slug]);
 
-    // Use user data from context
     const userAddressData = user?.address || {
         street: "",
         city: "",
@@ -135,24 +145,24 @@ export default function ServiceDetail() {
 
     const handleBooking = async () => {
         if (!isLoggedIn) {
-            alert("Please login to book a service");
+            showToast("Please login to book a service", "info");
             navigate("/login");
             return;
         }
 
         if (!issue || !selectedDate || !selectedTime) {
-            alert("Please select issue, date and time");
+            showToast("Please select date and time", "info");
             return;
         }
 
         if (!userAddressData?.street || !userAddressData?.city || !userAddressData?.state || !userAddressData?.pincode) {
-            alert("Please update your address in profile before booking");
+            showToast("Please update your address in profile before booking", "info");
             navigate("/profile");
             return;
         }
 
         if (!serviceData || !partnerData) {
-            alert("Service data not loaded. Please try again.");
+            showToast("Service data not loaded. Please try again.", "error");
             return;
         }
 
@@ -200,12 +210,12 @@ export default function ServiceDetail() {
             const res = await bookingAPI.createBooking(bookingPayload);
 
             if (res.data.success) {
-                alert("Booking created successfully!");
-                navigate("/");
+                showToast("Service Book successfully!", "success");
+                navigate("/my-bookings");
             }
         } catch (err) {
             console.error("Booking error:", err);
-            alert(err.response?.data?.message || "Failed to create booking");
+            showToast(err.response?.data?.message || "Failed to book service", "error");
         } finally {
             setBookingLoading(false);
         }
@@ -216,196 +226,414 @@ export default function ServiceDetail() {
             <Header />
 
             {loading ? (
-                <div className="min-h-screen flex items-center justify-center bg-white">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                        <p className="text-gray-600 font-medium">Loading service details...</p>
+                <div className="min-h-screen flex flex-col items-center justify-center bg-stone-900">
+                    {/* Animated background blobs */}
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#9fe870]/5 rounded-full blur-3xl" />
+                        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#9fe870]/5 rounded-full blur-3xl" />
+                    </div>
+                    <div className="relative mb-8">
+                        <motion.div
+                            animate={{ scale: [1, 1.15, 1] }}
+                            transition={{ repeat: Infinity, duration: 2.4, ease: "easeInOut" }}
+                            className="w-28 h-28 rounded-full bg-[#9fe870]/10 flex items-center justify-center"
+                        >
+                            <motion.div
+                                animate={{ rotate: [0, -10, 10, 0] }}
+                                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                                className="w-16 h-16 rounded-full text-white bg-[#9fe870]/20 flex items-center justify-center text-4xl"
+                            >
+                                <FiSearch />
+                            </motion.div>
+                        </motion.div>
+                        {/* Orbiting dot */}
+                        <motion.span
+                            animate={{ rotate: 360 }}
+                            transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+                            style={{ transformOrigin: "56px 56px" }}
+                            className="absolute top-0 left-0 w-28 h-28 flex items-start justify-center"
+                        >
+                            <span className="w-3 h-3 rounded-full bg-[#9fe870] mt-1 shadow-[0_0_8px_#9fe870]" />
+                        </motion.span>
+                    </div>
+                    <motion.p
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+                        className="text-stone-300 font-medium tracking-widest text-sm uppercase mb-4"
+                    >
+                        Loading <span className="text-[#9fe870]">service details</span>
+                    </motion.p>
+                    <div className="flex gap-2">
+                        {[0, 1, 2].map((i) => (
+                            <motion.span
+                                key={i}
+                                animate={{ y: [0, -6, 0], opacity: [0.3, 1, 0.3] }}
+                                transition={{ repeat: Infinity, duration: 0.9, delay: i * 0.18, ease: "easeInOut" }}
+                                className="w-1.5 h-1.5 rounded-full bg-[#9fe870]"
+                            />
+                        ))}
                     </div>
                 </div>
             ) : dataError ? (
-                <div className="min-h-screen flex items-center justify-center bg-white">
-                    <div className="text-center">
-                        <p className="text-red-600 font-medium mb-4">{dataError}</p>
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="min-h-screen flex items-center justify-center bg-stone-900"
+                >
+                    <div className="max-w-md w-full mx-4 bg-stone-800 border border-stone-700 rounded-3xl p-10 flex flex-col items-center text-center">
+                        <motion.div
+                            animate={{ scale: [1, 1.1, 1] }}
+                            transition={{ repeat: Infinity, duration: 2 }}
+                            className="w-20 h-20 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mb-6"
                         >
-                            Go Back
-                        </button>
+                            <span className="text-4xl">⚠️</span>
+                        </motion.div>
+                        <h3 className="text-2xl font-bold text-white mb-2">Something Went Wrong</h3>
+                        <p className="text-stone-300 text-sm mb-8 leading-relaxed">{dataError}</p>
+                        <motion.button
+                            whileHover={{ scale: 1.04 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => navigate(-1)}
+                            className="flex items-center gap-2 px-7 py-3 rounded-2xl bg-[#9fe870] text-stone-900 font-semibold shadow-lg shadow-[#9fe870]/20"
+                        >
+                            <FiArrowLeft /> Go Back
+                        </motion.button>
                     </div>
-                </div>
+                </motion.div>
             ) : !serviceData || !partnerData ? (
-                <div className="min-h-screen flex items-center justify-center bg-white">
-                    <div className="text-center">
-                        <p className="text-gray-600 font-medium mb-4">Service not found</p>
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                        >
-                            Go Back
-                        </button>
+                <motion.div
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    className="min-h-screen flex items-center justify-center bg-stone-900"
+                >
+                    <div className="max-w-md w-full mx-4 flex flex-col items-center text-center">
+                        <div className="relative mb-10">
+                            <motion.div
+                                animate={{ scale: [1, 1.15, 1] }}
+                                transition={{ repeat: Infinity, duration: 2.4, ease: "easeInOut" }}
+                                className="w-28 h-28 rounded-full bg-[#9fe870]/10 border border-[#9fe870]/20 flex items-center justify-center"
+                            >
+                                <FiSearch className="text-[#9fe870] text-4xl" />
+                            </motion.div>
+                            <motion.span
+                                animate={{ rotate: 360 }}
+                                transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+                                style={{ transformOrigin: "56px 56px" }}
+                                className="absolute top-0 left-0 w-28 h-28 flex items-start justify-center"
+                            >
+                                <span className="w-3 h-3 rounded-full bg-[#9fe870] mt-1 shadow-[0_0_8px_#9fe870]" />
+                            </motion.span>
+                        </div>
+
+                        <h3 className="text-3xl font-bold text-white mb-3">
+                            Service{" "}
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#9fe870] to-emerald-500">
+                                Not Found
+                            </span>
+                        </h3>
+                        <p className="text-stone-300 text-base mb-8 max-w-sm leading-relaxed">
+                            We couldn&apos;t find the service you&apos;re looking for. It may have been removed or is no longer available.
+                        </p>
+
+                        <div className="flex flex-wrap gap-3 justify-center">
+                            <motion.button
+                                whileHover={{ scale: 1.04 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={() => navigate(-1)}
+                                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#9fe870] text-stone-900 font-semibold shadow-lg shadow-[#9fe870]/20"
+                            >
+                                <FiArrowLeft /> Go Back
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.04 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={() => navigate("/category")}
+                                className="flex items-center gap-2 px-6 py-3 rounded-2xl border border-stone-600 text-stone-300 font-semibold hover:border-[#9fe870] hover:text-[#9fe870] transition-colors"
+                            >
+                                Browse Services
+                            </motion.button>
+                        </div>
                     </div>
-                </div>
+                </motion.div>
             ) : (
-                <div className="bg-gradient-to-b from-stone-100 via-stone-50 to-white min-h-screen">
-                    {/* HERO */}
-                    <div className="h-[440px] w-full relative">
+                <div className="min-h-screen bg-stone-900 selection:bg-[#9fe870] selection:text-black">
+                    {/* HERO BANNER */}
+                    <div className="relative h-[500px] w-full overflow-hidden">
                         <img
                             src={serviceData?.image || "https://images.unsplash.com/photo-1581578731548-c64695cc6952"}
-                            className="h-full w-full object-cover"
+                            className="h-full w-full object-cover scale-105"
                             alt={serviceData?.name}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20" />
+                        {/* Multi-layer overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-stone-900/50 to-stone-900/20" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-stone-900/60 to-transparent" />
+
+                        {/* Hero content overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 p-8 max-w-7xl mx-auto">
+                            <motion.div
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.7 }}
+                            >
+                                <div className="flex items-center gap-2 mb-3">
+                                    <span className="text-xs font-semibold tracking-widest text-[#9fe870] uppercase">
+                                        {serviceData?.category?.name || "Service"}
+                                    </span>
+                                    <span className="w-1 h-1 rounded-full bg-stone-500" />
+                                    <span className="text-xs text-stone-300 uppercase tracking-widest">Professional Service</span>
+                                </div>
+                                <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight mb-4 max-w-2xl">
+                                    {serviceData?.name}
+                                </h1>
+                                <div className="flex flex-wrap items-center gap-4">
+                                    <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5">
+                                        {[...Array(5)].map((_, i) => (
+                                            <AiFillStar key={i} className={i < Math.floor(partnerData?.rating || 0) ? "text-yellow-400 text-sm" : "text-stone-600 text-sm"} />
+                                        ))}
+                                        <span className="text-white text-sm font-medium ml-1">{partnerData?.rating || 0}.0</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5">
+                                        <FiClock className="text-[#9fe870] text-sm" />
+                                        <span className="text-stone-300 text-sm">{serviceData?.durationInMinutes} min</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-[#9fe870]/10 backdrop-blur-sm border border-[#9fe870]/30 rounded-full px-4 py-1.5">
+                                        <FiTag className="text-[#9fe870] text-sm" />
+                                        <span className="text-[#9fe870] text-sm font-semibold">₹{serviceData?.finalPrice}</span>
+                                    </div>
+                                    {partnerData?.verified && (
+                                        <div className="flex items-center gap-2 bg-blue-500/10 backdrop-blur-sm border border-blue-500/30 rounded-full px-4 py-1.5">
+                                            <FiShield className="text-blue-400 text-sm" />
+                                            <span className="text-blue-300 text-sm">Verified Provider</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        </div>
                     </div>
 
-                    <div className="max-w-7xl mx-auto px-4 -mt-36 pb-16">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {/* MAIN CONTENT */}
+                    <div className="max-w-7xl mx-auto px-4 py-10 pb-16">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
                             {/* LEFT CONTENT */}
-                            <div className="lg:col-span-2 space-y-10 z-30">
+                            <div className="lg:col-span-2 space-y-6">
                                 {/* PROVIDER CARD */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.5 }}
-                                    className="bg-white rounded-[28px] p-5 sm:p-8 flex flex-wrap gap-6 border border-stone-100"
+                                    className="bg-stone-800 border border-stone-700 rounded-3xl p-6 sm:p-8"
                                 >
-                                    <img
-                                        src={partnerData?.profileImage || "https://randomuser.me/api/portraits/men/32.jpg"}
-                                        className="w-28 h-28 rounded-2xl object-cover ring-4 ring-white shadow"
-                                        alt={partnerData?.name}
-                                    />
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2">
-                                            <h2 className="text-2xl font-semibold text-stone-900">{partnerData?.name || "Partner"}</h2>
-                                            {partnerData?.verified && <HiBadgeCheck className="text-blue-600 text-xl" />}
+                                    <div className="flex flex-wrap gap-6 items-start">
+                                        <div className="relative">
+                                            <img
+                                                src={partnerData?.profileImage || "https://randomuser.me/api/portraits/men/32.jpg"}
+                                                className="w-24 h-24 rounded-2xl object-cover ring-4 ring-stone-700"
+                                                alt={partnerData?.name}
+                                            />
+                                            {partnerData?.isActive && (
+                                                <span className="absolute -bottom-2 -right-2 w-5 h-5 rounded-full bg-[#9fe870] border-2 border-stone-800" />
+                                            )}
                                         </div>
-                                        <p className="text-stone-600 mt-2 leading-relaxed max-w-xl">
-                                            {partnerData?.business?.name || "Professional service provider"} - {serviceData?.description || "Quality service guaranteed"}
-                                        </p>
-                                        <div className="flex items-center gap-2 mt-4 text-sm">
-                                            {[...Array(5)].map((_, i) => (
-                                                <AiFillStar key={i} className={i < Math.floor(partnerData?.rating || 0) ? "text-yellow-400" : "text-gray-300"} />
-                                            ))}
-                                            <span className="font-medium text-stone-900">{partnerData?.rating || 0}.0</span>
-                                            <span className="text-stone-400">({partnerData?.totalRatings || 0} verified jobs)</span>
-                                        </div>
-                                        <div className="flex gap-3 mt-4 text-xs">
-                                            {partnerData?.verified && <span className="bg-green-50 text-green-700 px-3 py-1 rounded-full">Verified</span>}
-                                            {partnerData?.isActive && <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full">Active</span>}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                <h2 className="text-2xl font-bold text-white">{partnerData?.name || "Partner"}</h2>
+                                                {partnerData?.verified && <HiBadgeCheck className="text-blue-400 text-xl shrink-0" />}
+                                            </div>
+                                            <p className="text-stone-300 text-sm leading-relaxed max-w-xl mb-4">
+                                                {partnerData?.business?.name || "Professional service provider"} — {serviceData?.description || "Quality service guaranteed"}
+                                            </p>
+                                            <div className="flex items-center gap-2 mb-4">
+                                                {[...Array(5)].map((_, i) => (
+                                                    <AiFillStar key={i} className={i < Math.floor(partnerData?.rating || 0) ? "text-yellow-400" : "text-stone-600"} />
+                                                ))}
+                                                <span className="font-semibold text-white text-sm">{partnerData?.rating || 0}.0</span>
+                                                <span className="text-stone-500 text-sm">({partnerData?.totalRatings || 0} verified reviews)</span>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {partnerData?.verified && (
+                                                    <span className="inline-flex items-center gap-1.5 bg-[#9fe870]/10 border border-[#9fe870]/20 text-[#9fe870] px-3 py-1 rounded-full text-xs font-semibold">
+                                                        <FiShield className="text-xs" /> Verified
+                                                    </span>
+                                                )}
+                                                {partnerData?.isActive && (
+                                                    <span className="inline-flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-xs font-semibold">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" /> Active
+                                                    </span>
+                                                )}
+                                                {partnerData?.completedBookings > 0 && (
+                                                    <span className="inline-flex items-center gap-1.5 bg-stone-700 text-stone-300 px-3 py-1 rounded-full text-xs font-semibold">
+                                                        {partnerData.completedBookings}+ Jobs Done
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </motion.div>
 
-                                {/* SERVICES OFFERED */}
+                                {/* SERVICE DETAILS */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
-                                    className="bg-white rounded-[28px] shadow-sm p-5 sm:p-8 border border-stone-100"
+                                    className="bg-stone-800 border border-stone-700 rounded-3xl p-6 sm:p-8"
                                 >
-                                    <h3 className="text-xl font-semibold mb-6">Service Details</h3>
-                                    <div className="space-y-4">
-                                        <div className="flex justify-between items-center pb-4 border-b">
-                                            <span className="text-stone-600">Service Name</span>
-                                            <span className="font-semibold text-stone-900">{serviceData?.name}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center pb-4 border-b">
-                                            <span className="text-stone-600">Category</span>
-                                            <span className="font-semibold text-stone-900">{serviceData?.category?.name || serviceData?.category}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center pb-4 border-b">
-                                            <span className="text-stone-600">Duration</span>
-                                            <span className="font-semibold text-stone-900">{serviceData?.durationInMinutes} minutes</span>
-                                        </div>
-                                        <div className="flex justify-between items-center pb-4 border-b">
-                                            <span className="text-stone-600">Base Price</span>
-                                            <span className="font-semibold text-stone-900">₹{serviceData?.basePrice}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-stone-600">Final Price</span>
-                                            <span className="font-bold text-green-600 text-lg">₹{serviceData?.finalPrice}</span>
+                                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                                        <FiTool className="text-[#9fe870]" /> Service Details
+                                    </h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {[
+                                            { label: "Service Name", value: serviceData?.name },
+                                            { label: "Category", value: serviceData?.category?.name || serviceData?.category },
+                                            { label: "Duration", value: `${serviceData?.durationInMinutes} minutes` },
+                                            { label: "Base Price", value: `₹${serviceData?.basePrice}` },
+                                        ].map((item, i) => (
+                                            <div key={i} className="bg-stone-700/50 rounded-2xl p-4 border border-stone-600/50">
+                                                <p className="text-stone-300 text-xs uppercase tracking-widest mb-1">{item.label}</p>
+                                                <p className="text-white font-semibold">{item.value}</p>
+                                            </div>
+                                        ))}
+                                        <div className="sm:col-span-2 bg-gradient-to-r from-[#9fe870]/10 to-emerald-500/5 border border-[#9fe870]/20 rounded-2xl p-4 flex items-center justify-between">
+                                            <div>
+                                                <p className="text-stone-300 text-xs uppercase tracking-widest mb-1">Final Price</p>
+                                                <p className="text-[#9fe870] text-3xl font-bold">₹{serviceData?.finalPrice}</p>
+                                            </div>
+                                            <div className="w-14 h-14 rounded-2xl bg-[#9fe870]/10 border border-[#9fe870]/20 flex items-center justify-center">
+                                                <FiTag className="text-[#9fe870] text-2xl" />
+                                            </div>
                                         </div>
                                     </div>
                                 </motion.div>
 
-                                {/* ABOUT */}
+                                {/* ABOUT PROFESSIONAL */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
-                                    className="bg-white rounded-[28px] shadow-sm p-5 sm:p-8 border border-stone-100"
+                                    className="bg-stone-800 border border-stone-700 rounded-3xl p-6 sm:p-8"
                                 >
-                                    <h3 className="text-xl font-semibold mb-3">About the Professional</h3>
-                                    <p className="text-stone-600 leading-relaxed">
-                                        {partnerData?.name} is a verified service provider with {partnerData?.completedBookings || 0} completed bookings and a rating of {partnerData?.rating || 0}/5.
-                                        Specialized in {serviceData?.category?.name || "professional"} services.
+                                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                        <HiBadgeCheck className="text-[#9fe870]" /> About the Professional
+                                    </h3>
+                                    <p className="text-stone-300 leading-relaxed">
+                                        {partnerData?.name} is a verified service provider with{" "}
+                                        <span className="text-[#9fe870] font-semibold">{partnerData?.completedBookings || 0}</span> completed bookings
+                                        and a rating of{" "}
+                                        <span className="text-[#9fe870] font-semibold">{partnerData?.rating || 0}/5</span>.
+                                        Specialized in <span className="text-white font-medium">{serviceData?.category?.name || "professional"}</span> services.
                                     </p>
+
+                                    {/* Contact info inside About */}
+                                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <a href={`tel:${partnerData?.phone}`} className="flex items-center gap-3 bg-stone-700/50 border border-stone-600/50 rounded-2xl px-4 py-3 hover:border-[#9fe870]/30 transition-colors group">
+                                            <div className="w-9 h-9 rounded-xl bg-[#9fe870]/10 flex items-center justify-center group-hover:bg-[#9fe870]/20 transition-colors">
+                                                <AiOutlinePhone className="text-[#9fe870]" />
+                                            </div>
+                                            <span className="text-stone-300 text-sm">{partnerData?.phone || "+91 XXXXX XXXXX"}</span>
+                                        </a>
+                                        <a href={`mailto:${partnerData?.email}`} className="flex items-center gap-3 bg-stone-700/50 border border-stone-600/50 rounded-2xl px-4 py-3 hover:border-[#9fe870]/30 transition-colors group">
+                                            <div className="w-9 h-9 rounded-xl bg-[#9fe870]/10 flex items-center justify-center group-hover:bg-[#9fe870]/20 transition-colors">
+                                                <AiOutlineMail className="text-[#9fe870]" />
+                                            </div>
+                                            <span className="text-stone-300 text-sm truncate">{partnerData?.email || "support@service.com"}</span>
+                                        </a>
+                                    </div>
                                 </motion.div>
 
+                                {/* CLIENT REVIEWS CAROUSEL */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    className="bg-stone-800 border border-stone-700 rounded-3xl p-6 sm:p-8 relative overflow-hidden"
+                                >
+                                    {/* Decorative blob */}
+                                    <div className="absolute top-0 right-0 w-48 h-48 bg-[#9fe870]/5 rounded-full blur-3xl pointer-events-none" />
 
-                                {/* CLIENT EXPERIENCES CAROUSEL */}
-                                <div className="bg-white rounded-3xl shadow-lg p-4 sm:p-7 relative">
-                                    <h3 className="text-xl font-semibold mb-5">
-                                        Client Experiences
+                                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                                        <AiFillStar className="text-yellow-400" /> Client Experiences
                                     </h3>
 
-                                    <Swiper modules={[Autoplay, Navigation]} autoplay={{ delay: 2000 }}
+                                    <Swiper
+                                        modules={[Autoplay, Navigation]}
+                                        autoplay={{ delay: 2500 }}
                                         navigation={{
                                             prevEl: ".prev-review",
                                             nextEl: ".next-review",
                                         }}
                                     >
                                         {[
-                                            "Prompt service and exceptional workmanship. Highly reliable.",
-                                            "Explained the issue clearly and fixed it the same day.",
-                                            "Professional, respectful, and worth every penny.",
+                                            { text: "Prompt service and exceptional workmanship. Highly reliable and professional.", author: "Rahul M.", role: "Homeowner" },
+                                            { text: "Explained the issue clearly and fixed it the same day. Absolutely fantastic experience!", author: "Priya K.", role: "Apartment Resident" },
+                                            { text: "Professional, respectful, and worth every penny. Will definitely book again.", author: "Amit S.", role: "Business Owner" },
                                         ].map((review, i) => (
                                             <SwiperSlide key={i}>
-                                                <div className="bg-stone-50 rounded-2xl p-6 shadow-sm">
-                                                    <div className="flex gap-1 mb-3">
+                                                <div className="bg-stone-700/50 border border-stone-600/50 rounded-2xl p-6">
+                                                    <div className="flex gap-1 mb-4">
                                                         {[...Array(5)].map((_, j) => (
-                                                            <AiFillStar key={j} className="text-yellow-400" />
+                                                            <AiFillStar key={j} className="text-yellow-400 text-sm" />
                                                         ))}
                                                     </div>
-                                                    <p className="text-stone-600 text-sm leading-relaxed">
-                                                        {review}
+                                                    <p className="text-stone-300 text-sm leading-relaxed mb-5 italic">
+                                                        &ldquo;{review.text}&rdquo;
                                                     </p>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-9 h-9 rounded-full bg-[#9fe870]/20 flex items-center justify-center text-[#9fe870] text-sm font-bold">
+                                                            {review.author[0]}
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-white text-sm font-semibold">{review.author}</p>
+                                                            <p className="text-stone-500 text-xs">{review.role}</p>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </SwiperSlide>
                                         ))}
                                     </Swiper>
 
-                                    <button className="prev-review absolute -left-4 top-1/2 bg-white shadow-lg rounded-full p-2">
-                                        <FiChevronLeft />
-                                    </button>
-                                    <button className="next-review absolute -right-4 top-1/2 bg-white shadow-lg rounded-full p-2">
-                                        <FiChevronRight />
-                                    </button>
-                                </div>
+                                    <div className="flex gap-2 mt-4 justify-end">
+                                        <button className="prev-review w-9 h-9 rounded-full bg-stone-700 hover:bg-[#9fe870] hover:text-stone-900 text-stone-300 flex items-center justify-center transition-colors">
+                                            <FiChevronLeft />
+                                        </button>
+                                        <button className="next-review w-9 h-9 rounded-full bg-stone-700 hover:bg-[#9fe870] hover:text-stone-900 text-stone-300 flex items-center justify-center transition-colors">
+                                            <FiChevronRight />
+                                        </button>
+                                    </div>
+                                </motion.div>
 
                                 {/* SERVICE COVERAGE */}
-                                <div className="bg-white rounded-3xl shadow-lg p-4 sm:p-7">
-                                    <h3 className="text-xl font-semibold mb-4">
-                                        Service Coverage
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    className="bg-stone-800 border border-stone-700 rounded-3xl p-6 sm:p-8"
+                                >
+                                    <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
+                                        <FiMapPin className="text-[#9fe870]" /> Service Coverage
                                     </h3>
 
-                                    <div className="rounded-2xl overflow-hidden shadow mb-5">
-                                        <iframe title="map" src="https://maps.google.com/maps?q=Surat&output=embed"
-                                            className="w-full h-60" loading="lazy"
+                                    <div className="rounded-2xl overflow-hidden mb-5 border border-stone-600">
+                                        <iframe
+                                            title="map"
+                                            src="https://maps.google.com/maps?q=Surat&output=embed"
+                                            className="w-full h-52"
+                                            loading="lazy"
                                         />
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3 text-sm text-stone-600">
+                                    <div className="grid grid-cols-2 gap-2">
                                         {["Central Zone", "South City", "West End", "North District"].map(area => (
-                                            <div key={area} className="flex items-center gap-2">
-                                                <FiMapPin className="text-blue-600" />
+                                            <div key={area} className="flex items-center gap-2 bg-stone-700/50 border border-stone-600/50 rounded-xl px-3 py-2 text-sm text-stone-300">
+                                                <FiMapPin className="text-[#9fe870] text-xs shrink-0" />
                                                 {area}
                                             </div>
                                         ))}
                                     </div>
-                                </div>
+                                </motion.div>
 
-                                {/* WRITE REVIEW - DESKTOP ONLY */}
+                                {/* WRITE REVIEW - DESKTOP */}
                                 <div className="hidden lg:block">
                                     <WriteReview />
                                 </div>
@@ -436,7 +664,7 @@ export default function ServiceDetail() {
                         </div>
 
                         {/* REVIEWS ON MOBILE */}
-                        <div className="lg:hidden">
+                        <div className="lg:hidden mt-6">
                             <WriteReview />
                         </div>
                     </div>
@@ -446,6 +674,7 @@ export default function ServiceDetail() {
     );
 }
 
+/* ─── BOOKING SIDEBAR ──── */
 const BookingSidebar = ({
     issue, issueLabel, setIssue, setIssueLabel,
     issueOpen, setIssueOpen,
@@ -459,33 +688,38 @@ const BookingSidebar = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="bg-white rounded-[28px] p-4 sm:p-8 sticky top-24 space-y-6 border-t border-stone-100"
+            className="bg-stone-800 border border-stone-700 rounded-3xl p-5 sm:p-6 sticky top-24 space-y-6 self-start"
         >
-            <motion.button
-                onClick={handleBooking}
-                disabled={bookingLoading}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-semibold tracking-wide hover:opacity-95 transition disabled:opacity-60"
-            >
-                {bookingLoading ? "Scheduling..." : "Schedule Service"}
-            </motion.button>
+            {/* Price header */}
+            <div className="bg-gradient-to-br from-[#9fe870]/15 to-emerald-500/5 border border-[#9fe870]/20 rounded-2xl p-5">
+                <p className="text-stone-300 text-xs uppercase tracking-widest mb-1">Starting from</p>
+                <p className="text-[#9fe870] text-4xl font-bold">
+                    {serviceData?.finalPrice ? `₹${serviceData.finalPrice}` : "—"}
+                </p>
+                <p className="text-stone-300 text-sm mt-1">
+                    {serviceType === "urgent" ? `+ ₹200 urgent surcharge` : serviceType === "emergency" ? `+ ₹500 emergency surcharge` : "Standard priority"}
+                </p>
+            </div>
 
             {/* ISSUE SELECT */}
             <div className="relative">
-                <label className="text-sm font-semibold mb-2 block">What issue are you facing?</label>
+                <label className="text-xs font-semibold uppercase tracking-widest text-stone-300 mb-2 block">
+                    What issue are you facing?
+                </label>
                 <button
                     onClick={() => setIssueOpen(!issueOpen)}
-                    className="w-full flex items-center justify-between bg-stone-100 hover:bg-stone-200 transition rounded-2xl px-4 py-3 text-sm font-medium"
+                    className="w-full flex items-center justify-between bg-stone-700/70 hover:bg-stone-700 border border-stone-600 hover:border-[#9fe870]/30 transition-all rounded-2xl px-4 py-3 text-sm font-medium text-stone-300"
                 >
-                    {issueLabel || "Select a common issue"}
-                    <FiChevronDown className={`transition ${issueOpen ? "rotate-180" : ""}`} />
+                    <span className={issueLabel ? "text-white" : "text-stone-500"}>{issueLabel || "Select a common issue"}</span>
+                    <FiChevronDown className={`transition text-stone-300 ${issueOpen ? "rotate-180" : ""}`} />
                 </button>
                 <AnimatePresence>
                     {issueOpen && (
                         <motion.div
-                            initial={{ opacity: 0, y: 10 }}
+                            initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            className="absolute z-20 mt-2 w-full rounded-2xl bg-stone-900/95 backdrop-blur-xl border border-white/10 shadow-2xl p-2"
+                            exit={{ opacity: 0, y: 8 }}
+                            className="absolute z-20 mt-2 w-full rounded-2xl bg-stone-900 border border-stone-700 shadow-2xl p-2"
                         >
                             {[
                                 { id: "leak", label: "Pipe Leakage" },
@@ -501,7 +735,7 @@ const BookingSidebar = ({
                                         setIssueLabel(opt.label);
                                         setIssueOpen(false);
                                     }}
-                                    className="px-4 py-2 text-sm text-gray-300 hover:text-[#9fe870] hover:bg-white/5 rounded-xl cursor-pointer"
+                                    className="px-4 py-2.5 text-sm text-stone-300 hover:text-[#9fe870] hover:bg-white/5 rounded-xl cursor-pointer transition-colors"
                                 >
                                     {opt.label}
                                 </div>
@@ -515,26 +749,28 @@ const BookingSidebar = ({
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="mt-3 bg-stone-100 rounded-2xl p-4"
+                        className="mt-3 bg-stone-700/50 border border-stone-600 rounded-2xl p-4"
                     >
                         <textarea
                             value={customIssue}
                             onChange={e => setCustomIssue(e.target.value)}
-                            placeholder="Describe your issue briefly"
+                            placeholder="Describe your issue briefly..."
                             rows={3}
-                            className="w-full bg-transparent outline-none resize-none text-sm"
+                            className="w-full bg-transparent outline-none resize-none text-sm text-stone-300 placeholder-stone-500"
                         />
                     </motion.div>
                 )}
             </div>
 
             {/* SERVICE TYPE TABS */}
-            <div className="mt-4">
-                <h4 className="font-semibold mb-3">Service Priority</h4>
-                <div className="relative bg-stone-100 rounded-2xl p-1 grid grid-cols-3">
+            <div>
+                <label className="text-xs font-semibold uppercase tracking-widest text-stone-300 mb-3 block">
+                    Service Priority
+                </label>
+                <div className="relative bg-stone-700/50 border border-stone-600 rounded-2xl p-1 grid grid-cols-3">
                     <motion.div
                         layout
-                        className="absolute top-1 bottom-1 w-1/3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow"
+                        className="absolute top-1 bottom-1 w-1/3 bg-[#9fe870] rounded-xl"
                         style={{
                             left: serviceType === "normal" ? "0%" :
                                 serviceType === "urgent" ? "33.33%" : "66.66%",
@@ -549,7 +785,7 @@ const BookingSidebar = ({
                         <button
                             key={type.id}
                             onClick={() => setServiceType(type.id)}
-                            className={`relative z-10 py-3 text-sm font-semibold rounded-xl transition ${serviceType === type.id ? "text-white" : "text-stone-600"}`}
+                            className={`relative z-10 py-2.5 text-xs font-bold rounded-xl transition ${serviceType === type.id ? "text-stone-900" : "text-stone-300 hover:text-stone-300"}`}
                         >
                             {type.label}
                         </button>
@@ -562,78 +798,86 @@ const BookingSidebar = ({
 
             {/* TIME INPUT */}
             <div>
-                <h4 className="font-semibold mb-2 flex items-center gap-2"><FiClock /> Preferred Time</h4>
-                <motion.div whileFocus={{ scale: 1.02 }} className="bg-gradient-to-br from-stone-100 to-stone-200 rounded-2xl p-4 shadow-inner">
+                <label className="text-xs font-semibold uppercase tracking-widest text-stone-300 mb-3 flex items-center gap-1.5">
+                    <FiClock className="text-[#9fe870]" /> Preferred Time
+                </label>
+                <div className="bg-stone-700/50 border border-stone-600 hover:border-[#9fe870]/30 transition-colors rounded-2xl p-4">
                     <input
                         type="time"
                         value={selectedTime}
                         onChange={(e) => setSelectedTime(e.target.value)}
-                        className="w-full bg-transparent outline-none text-lg font-semibold"
+                        className="w-full bg-transparent outline-none text-lg font-semibold text-white [color-scheme:dark]"
                     />
-                </motion.div>
-                <p className="text-xs text-stone-500 mt-1">Availability confirmed after provider approval</p>
+                </div>
+                <p className="text-xs text-stone-500 mt-1.5">Confirmed after provider approval</p>
             </div>
 
-            {/* PRICE & CONTACT */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-                <div className="bg-blue-50 rounded-2xl p-4 mt-4">
-                    <h4 className="font-semibold mb-1">Base Service Fee</h4>
-                    <p className="text-3xl font-bold text-blue-600">
-                        {serviceData?.finalPrice ? `₹${serviceData.finalPrice}` : "Calculating..."}
-                    </p>
-                    <p className="text-xs text-stone-500 mt-1">
-                        {serviceType === "urgent" ? `+ ₹200 (Urgent Priority)` : serviceType === "emergency" ? `+ ₹500 (Emergency Priority)` : "(Standard Priority)"}
-                    </p>
-                </div>
-                <div className="bg-stone-50 rounded-2xl p-4 space-y-3 mt-4 text-sm">
-                    <div className="flex items-center gap-3">
-                        <AiOutlinePhone className="text-blue-600" /> {partnerData?.phone || "+91 XXXXX XXXXX"}
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <AiOutlineMail className="text-blue-600" /> {partnerData?.email || "support@service.com"}
-                    </div>
-                </div>
-            </motion.div>
+            {/* BOOK BUTTON */}
+            <motion.button
+                onClick={handleBooking}
+                disabled={bookingLoading}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                className="w-full bg-[#9fe870] text-stone-900 py-4 rounded-2xl font-bold tracking-wide hover:bg-[#8fd960] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[#9fe870]/20 text-sm"
+            >
+                {bookingLoading ? (
+                    <>
+                        <motion.span
+                            animate={{ rotate: 360 }}
+                            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                            className="w-4 h-4 border-2 border-stone-900/30 border-t-stone-900 rounded-full"
+                        />
+                        Scheduling...
+                    </>
+                ) : (
+                    <>
+                        <FiZap /> Schedule Service
+                    </>
+                )}
+            </motion.button>
         </motion.div>
     );
 };
 
+/* ─── CALENDAR ──── */
 const Calendar = ({ calendarDays, selectedDate, setSelectedDate }) => {
     return (
-        <div className="mt-4">
-            <h4 className="font-semibold mb-3 flex items-center gap-2"><FiCalendar /> Select Date</h4>
-            <div className="grid grid-cols-7 gap-2 text-center">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
-                    <div key={d} className="text-xs font-semibold text-stone-500">{d}</div>
+        <div>
+            <label className="text-xs font-semibold uppercase tracking-widest text-stone-300 mb-3 flex items-center gap-1.5">
+                <FiCalendar className="text-[#9fe870]" /> Select Date
+            </label>
+            <div className="grid grid-cols-7 gap-1 text-center">
+                {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(d => (
+                    <div key={d} className="text-[10px] font-bold text-stone-500 py-1">{d}</div>
                 ))}
                 {calendarDays.map((d, idx) =>
                     d ? (
                         <motion.button
                             key={idx}
                             onClick={() => !d.isPast && setSelectedDate(d.fullDate)}
-                            whileTap={{ scale: d.isPast ? 1 : 0.95 }}
-                            whileHover={{ y: d.isPast ? 0 : -2 }}
-                            className={`relative py-1.5 rounded-xl transition-all
+                            whileTap={{ scale: d.isPast ? 1 : 0.9 }}
+                            className={`relative py-2.5 rounded-xl transition-all text-xs font-semibold
                             ${d.isPast
-                                    ? "bg-stone-200 text-stone-400 cursor-not-allowed"
+                                    ? "bg-stone-700/30 text-stone-600 cursor-not-allowed"
                                     : selectedDate === d.fullDate
-                                        ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg"
-                                        : "bg-stone-100 text-stone-700 hover:bg-blue-600 hover:text-white"
+                                        ? "bg-[#9fe870] text-stone-900 shadow-md shadow-[#9fe870]/30"
+                                        : "bg-stone-700/50 text-stone-300 hover:bg-stone-600 hover:text-white"
                                 }`}
                         >
-                            <div className="text-xs font-semibold">{d.day}</div>
-                            <div className="text-lg font-bold">{d.dayNum}</div>
+                            <div className="text-[9px] leading-none mb-0.5 opacity-70">{d.day}</div>
+                            <div className="text-sm font-bold leading-none">{d.dayNum}</div>
                             {selectedDate === d.fullDate && (
-                                <motion.div layoutId="dateGlow" className="absolute inset-0 rounded-xl ring-2 ring-blue-400/50" />
+                                <motion.div layoutId="dateGlow" className="absolute inset-0 rounded-xl ring-2 ring-[#9fe870]/60" />
                             )}
                         </motion.button>
                     ) : <div key={idx} />
                 )}
             </div>
         </div>
-    )
+    );
 };
 
+/* ─── WRITE REVIEW ──── */
 const WriteReview = () => {
     const [rating, setRating] = useState(0);
     const [hover, setHover] = useState(null);
@@ -653,63 +897,87 @@ const WriteReview = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-16 bg-white rounded-[32px] p-4 sm:p-8 w-full mx-auto border border-stone-100"
+            className="bg-stone-800 border border-stone-700 rounded-3xl p-6 sm:p-8 w-full relative overflow-hidden"
         >
-            <h3 className="text-2xl font-semibold mb-8 text-center text-stone-900">
-                Share Your Experience
-            </h3>
+            {/* Decorative */}
+            <div className="absolute top-0 left-0 w-64 h-64 bg-[#9fe870]/5 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="flex justify-center gap-2 mb-6">
-                {[...Array(5)].map((_, i) => {
-                    const value = i + 1;
-                    return (
-                        <motion.div
-                            key={i}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setRating(value)}
-                            onMouseEnter={() => setHover(value)}
-                            onMouseLeave={() => setHover(null)}
-                        >
-                            <AiFillStar
-                                className={`text-3xl cursor-pointer ${value <= (hover || rating) ? "text-yellow-400" : "text-stone-300"} transition-colors`}
-                            />
-                        </motion.div>
-                    );
-                })}
+            <div className="relative">
+                <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-semibold tracking-widest text-[#9fe870] uppercase">Your Feedback</span>
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-6">
+                    Share Your Experience
+                </h3>
+
+                {/* Star Rating */}
+                <div className="flex gap-2 mb-6">
+                    {[...Array(5)].map((_, i) => {
+                        const value = i + 1;
+                        return (
+                            <motion.div
+                                key={i}
+                                whileTap={{ scale: 0.85 }}
+                                whileHover={{ scale: 1.2 }}
+                                onClick={() => setRating(value)}
+                                onMouseEnter={() => setHover(value)}
+                                onMouseLeave={() => setHover(null)}
+                                className="cursor-pointer"
+                            >
+                                <AiFillStar
+                                    className={`text-3xl transition-colors ${value <= (hover || rating) ? "text-yellow-400" : "text-stone-600"}`}
+                                />
+                            </motion.div>
+                        );
+                    })}
+                    {(hover || rating) > 0 && (
+                        <span className="text-stone-300 text-sm self-center ml-1">
+                            {["", "Poor", "Fair", "Good", "Very Good", "Excellent"][hover || rating]}
+                        </span>
+                    )}
+                </div>
+
+                <textarea
+                    rows="4"
+                    placeholder="Write an honest review that helps others choose confidently..."
+                    className="w-full bg-stone-700/50 border border-stone-600 focus:border-[#9fe870]/50 rounded-2xl p-4 resize-none outline-none text-sm text-stone-300 placeholder-stone-500 transition-colors mb-5"
+                />
+
+                {/* Before / After Image Upload */}
+                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                    {["before", "after"].map((type) => {
+                        const img = type === "before" ? beforeImage : afterImage;
+                        return (
+                            <label
+                                key={type}
+                                className="flex-1 flex flex-col items-center justify-center p-4 border-2 border-dashed border-stone-600 hover:border-[#9fe870]/50 rounded-2xl cursor-pointer transition-colors relative overflow-hidden h-36 group"
+                            >
+                                {img ? (
+                                    <img src={img} alt={type} className="h-full w-full object-cover rounded-xl" />
+                                ) : (
+                                    <>
+                                        <div className="w-10 h-10 rounded-xl bg-stone-700 group-hover:bg-[#9fe870]/10 flex items-center justify-center mb-2 transition-colors">
+                                            <AiOutlineUpload className="text-xl text-stone-300 group-hover:text-[#9fe870] transition-colors" />
+                                        </div>
+                                        <span className="text-stone-500 text-xs text-center group-hover:text-stone-300 transition-colors">
+                                            Upload {type.charAt(0).toUpperCase() + type.slice(1)} Image
+                                        </span>
+                                    </>
+                                )}
+                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, type)} />
+                            </label>
+                        );
+                    })}
+                </div>
+
+                <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full bg-[#9fe870] text-stone-900 py-3.5 rounded-2xl font-bold shadow-lg shadow-[#9fe870]/20 hover:bg-[#8fd960] transition-colors"
+                >
+                    Submit Review
+                </motion.button>
             </div>
-
-            <textarea
-                rows="4"
-                placeholder="Write an honest review that helps others choose confidently..."
-                className="w-full rounded-2xl border-stone-200 p-4 resize-none focus:ring-2 focus:ring-blue-300 transition mb-6 shadow-sm"
-            />
-
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                {["before", "after"].map((type) => {
-                    const img = type === "before" ? beforeImage : afterImage;
-                    return (
-                        <label
-                            key={type}
-                            className="flex-1 flex flex-col items-center justify-center p-2 border-2 border-dashed border-stone-300 rounded-2xl cursor-pointer hover:border-blue-400 transition relative overflow-hidden h-40"
-                        >
-                            {img ? <img src={img} alt={type} className="h-full w-full object-cover rounded-2xl" /> :
-                                <>
-                                    <AiOutlineUpload className="text-3xl text-stone-400 mb-2" />
-                                    <span className="text-stone-500 text-sm text-center">Upload {type.charAt(0).toUpperCase() + type.slice(1)} Image</span>
-                                </>}
-                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, type)} />
-                        </label>
-                    )
-                })}
-            </div>
-
-            <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-2xl font-semibold shadow-lg hover:opacity-95 transition"
-            >
-                Submit Review
-            </motion.button>
         </motion.div>
     );
 };

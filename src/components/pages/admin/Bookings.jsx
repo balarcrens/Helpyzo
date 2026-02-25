@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBookings } from "../../../hooks/useData";
 import { usePartner } from "../../../hooks/useAuth";
@@ -17,6 +17,7 @@ import {
     FiLoader,
     FiList,
 } from "react-icons/fi";
+import ToastContext from "../../../context/Toast/ToastContext";
 
 /* ── helpers ── */
 const getInitials = (name = "") =>
@@ -42,6 +43,7 @@ const STATUS_CFG = {
 const FILTERS = ["all", "pending", "confirmed", "in-progress", "completed", "cancelled"];
 
 export default function Bookings() {
+    const { showToast } = useContext(ToastContext);
     const navigate = useNavigate();
     const { user } = usePartner();
     const [bookings, setBookings] = useState([]);
@@ -55,6 +57,7 @@ export default function Bookings() {
             setBookings(res.data.bookings);
         } catch (error) {
             console.error("Failed to load bookings", error.message);
+            showToast("Failed to load bookings", "error");
         } finally {
             setLoading(false);
         }
@@ -69,6 +72,7 @@ export default function Bookings() {
     const handleStatusChange = async (bookingId, newStatus) => {
         try {
             await updateBookingStatus(bookingId, newStatus);
+            showToast("Status changed successfully", "success");
             fetchPartnerBookings();
         } catch (error) {
             alert(error.message);
@@ -131,15 +135,15 @@ export default function Bookings() {
                         <button
                             key={status}
                             onClick={() => setStatusFilter(status)}
-                            className={`px-4 py-1.5 rounded-xl text-xs font-bold capitalize transition-all border ${isActive
-                                    ? status === "all"
-                                        ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
-                                        : `${cfg?.bg} ${cfg?.text} border-transparent shadow-sm ring-1 ring-inset ${cfg?.dot.replace("bg-", "ring-")}`
-                                    : "bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-700"
+                            className={`px-4 py-1.5 cursor-pointer rounded-xl text-xs font-bold capitalize transition-all border ${isActive
+                                ? status === "all"
+                                    ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                                    : `${cfg?.bg} ${cfg?.text} border-transparent shadow-sm ring-1 ring-inset ${cfg?.dot.replace("bg-", "ring-")}`
+                                : "bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-700"
                                 }`}
                         >
                             {status === "all" ? "All" : cfg?.label}
-                            <span className={`ml-1.5 text-[10px] font-extrabold ${isActive && status !== "all" ? cfg?.text : "text-gray-400"}`}>
+                            <span className={`ml-1.5 text-[12px] font-extrabold ${isActive && status !== "all" ? cfg?.text : "text-gray-400"}`}>
                                 {counts[status]}
                             </span>
                         </button>
@@ -247,7 +251,7 @@ export default function Bookings() {
                                     <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 border-t border-gray-100 bg-gray-50/40">
                                         <button
                                             onClick={() => navigate(`${booking._id}`)}
-                                            className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3.5 py-1.5 rounded-xl transition active:scale-95"
+                                            className="flex cursor-pointer items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3.5 py-1.5 rounded-xl transition active:scale-95"
                                         >
                                             View Details <FiArrowRight size={12} />
                                         </button>

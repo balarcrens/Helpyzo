@@ -11,6 +11,7 @@ import { AiFillStar } from 'react-icons/ai';
 import { BsArrowRightCircleFill } from 'react-icons/bs';
 import { Link, useNavigate } from 'react-router-dom';
 import ServiceCard from '../Cards/ServiceCard.jsx';
+import { partnerAPI } from '../../services/api.js';
 
 const HomePage = () => {
     return (
@@ -619,56 +620,25 @@ const ServicesList = () => {
 
 const PopularProjects = () => {
     const navigate = useNavigate();
-
+    const [services, setServices] = useState([]);
     const sliderRef = useRef(null);
     const isDown = useRef(false);
     const startX = useRef(0);
     const scrollLeft = useRef(0);
     const dragged = useRef(false);
 
-    const services = [
-        {
-            id: 1,
-            title: "Cleaning & Maid Service",
-            category: "home-cleaning",
-            rating: "5.0",
-            reviews: 84,
-            price: 80,
-            startingFrom: true,
-            distance: 2.3,
-            verified: true,
-            badge: "Popular",
-            img: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=800&auto=format&fit=crop",
-            slug: "cleaning-service",
-        },
-        {
-            id: 2,
-            title: "Pest Control",
-            category: "home-cleaning",
-            rating: "4.9",
-            reviews: 62,
-            price: 65,
-            startingFrom: true,
-            distance: 3.8,
-            verified: true,
-            badge: "Top Rated",
-            img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800&auto=format&fit=crop",
-            slug: "pest-control",
-        },
-        {
-            id: 3,
-            title: "Handyman",
-            category: "home-cleaning",
-            rating: "4.9",
-            reviews: 41,
-            price: 40,
-            startingFrom: true,
-            distance: 1.6,
-            verified: true,
-            img: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=800&auto=format&fit=crop",
-            slug: "handyman",
-        },
-    ];
+    useEffect(() => {
+        const fetchServices = async () => {
+            try {
+                const res = await partnerAPI.getApprovedServices();
+                const allservices = res.data.partners.flatMap(partner => partner.services);
+                setServices(allservices);
+            } catch (error) {
+                console.log(error.message);
+            }
+        }
+        fetchServices();
+    }, []);
 
     const startDrag = (e) => {
         isDown.current = true;
@@ -716,7 +686,7 @@ const PopularProjects = () => {
                     onTouchMove={onDrag}
                     onTouchEnd={stopDrag}
                 >
-                    {services.map((item, i) => (
+                    {services.slice(0, 6).map((item, i) => (
                         <ServiceCard
                             key={i}
                             item={item}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { bookingAPI } from "../../../services/api";
 import {
     FiClipboard, FiCheckCircle, FiXCircle, FiClock,
@@ -8,6 +8,7 @@ import {
 } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
 import { FaIndianRupeeSign } from "react-icons/fa6";
+import ToastContext from "../../../context/Toast/ToastContext";
 
 const STATUS_META = {
     pending: { label: "Pending", bg: "bg-amber-100", text: "text-amber-700", dot: "bg-amber-500" },
@@ -32,6 +33,7 @@ const currency = (n) =>
     n !== undefined && n !== null ? `₹${Number(n).toLocaleString("en-IN")}` : "—";
 
 export default function AllBookings() {
+    const { showToast, showConfirm } = useContext(ToastContext);
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -53,13 +55,21 @@ export default function AllBookings() {
     useEffect(() => { fetchBookings(); }, []);
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Delete this booking? This cannot be undone.")) return;
+        const confirmed = await showConfirm({
+            message: "Are you sure want to delete this booking?",
+            subMessage: "This action cannot be undone.",
+            type: "danger",
+            confirmLabel: "Delete Booking",
+        });
+
+        if (!confirmed) return;
         try {
             setDeletingId(id);
             await bookingAPI.deleteBooking(id);
+            showToast("Booking deleted successfully", "success");
             setBookings(prev => prev.filter(b => b._id !== id));
         } catch (err) {
-            alert(err?.response?.data?.message || "Failed to delete.");
+            showToast(err?.response?.data?.message || "Failed to delete booking.", "error");
         } finally { setDeletingId(null); }
     };
 
@@ -67,9 +77,10 @@ export default function AllBookings() {
         try {
             setUpdatingId(id);
             await bookingAPI.updateBookingStatus(id, newStatus);
+            showToast("Status updated successfully", "success");
             setBookings(prev => prev.map(b => b._id === id ? { ...b, status: newStatus } : b));
         } catch (err) {
-            alert(err?.response?.data?.message || "Failed to update status.");
+            showToast(err?.response?.data?.message || "Failed to update status.", "error");
         } finally { setUpdatingId(null); }
     };
 

@@ -5,8 +5,10 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import AuthContext from "../../context/Auth/AuthContext";
 import { useContext, useEffect, useRef, useState } from "react";
 import { notificationAPI } from "../../services/api";
+import ToastContext from "../../context/Toast/ToastContext";
 
 export default function Header({ onMenuClick }) {
+    const { showToast } = useContext(ToastContext);
     const location = useLocation().pathname;
     const navigate = useNavigate();
     const currentPage = location.split("/")[2] || "";
@@ -33,7 +35,8 @@ export default function Header({ onMenuClick }) {
 
     const handleLogout = () => {
         logout();
-        navigate("/login");
+        showToast("LogOut successfully", "success");
+        navigate("/");
     };
 
     const fetchNotifications = async () => {
@@ -42,7 +45,8 @@ export default function Header({ onMenuClick }) {
             const res = await notificationAPI.getNotifications();
             setNotifications(res.data.notifications || []);
         } catch (err) {
-            console.error("Failed to fetch notifications");
+            console.error("Failed to fetch notifications", err.message);
+            showToast("Failed to fetch notifications", "error");
         } finally {
             setNotifLoading(false);
         }
@@ -150,7 +154,7 @@ export default function Header({ onMenuClick }) {
                         {/* Bell Button */}
                         <button
                             onClick={handleBellClick}
-                            className={`relative p-2.5 rounded-xl transition-all active:scale-95 ${notifOpen
+                            className={`relative p-2.5 cursor-pointer rounded-xl transition-all active:scale-95 ${notifOpen
                                 ? "bg-indigo-50 text-indigo-600"
                                 : "hover:bg-gray-100 text-gray-600"
                                 }`}
@@ -197,7 +201,7 @@ export default function Header({ onMenuClick }) {
 
                                             <button
                                                 onClick={() => setNotifOpen(false)}
-                                                className="h-8 w-8 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center transition active:scale-90"
+                                                className="h-8 w-8 cursor-pointer rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center transition active:scale-90"
                                             >
                                                 <X size={15} />
                                             </button>
@@ -316,7 +320,7 @@ export default function Header({ onMenuClick }) {
                     <div ref={dropdownRef} className="relative">
                         <button
                             onClick={() => setOpen(!open)}
-                            className="flex items-center gap-3 px-2 py-1.5 rounded-xl hover:bg-gray-100 transition"
+                            className="flex items-center gap-3 cursor-pointer px-2 py-1.5 rounded-xl hover:bg-gray-100 transition"
                         >
                             <img
                                 src={user?.profileImage || `https://www.citypng.com/public/uploads/preview/hd-man-user-illustration-icon-transparent-png-701751694974843ybexneueic.png`}
@@ -339,7 +343,7 @@ export default function Header({ onMenuClick }) {
                                 >
                                     <button
                                         onClick={handleLogout}
-                                        className="w-full px-4 py-3 text-left flex items-center gap-3 text-red-600 hover:bg-red-50"
+                                        className="w-full px-4 py-3 text-left cursor-pointer flex items-center gap-3 text-red-600 hover:bg-red-50"
                                     >
                                         <LogOut size={16} />
                                         Logout

@@ -6,13 +6,11 @@ import {
     FiCalendar,
     FiTrendingUp,
     FiBriefcase,
-    FiUsers,
     FiClock,
     FiCheckCircle,
     FiXCircle,
     FiArrowRight,
 } from "react-icons/fi";
-import { FaStar } from "react-icons/fa";
 import { useBookings } from "../../../hooks/useData";
 import { usePartner } from "../../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -101,7 +99,6 @@ export default function Dashboard() {
             icon: FiClock,
             iconBg: "bg-amber-50 text-amber-600",
             border: "border-amber-100",
-            link: "bookings",
         },
     ];
 
@@ -193,7 +190,7 @@ export default function Dashboard() {
                         </div>
                         <button
                             onClick={() => navigate("bookings")}
-                            className="flex items-center gap-1 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition"
+                            className="flex cursor-pointer items-center gap-1 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition"
                         >
                             View all <FiArrowRight size={12} />
                         </button>
@@ -247,7 +244,7 @@ export default function Dashboard() {
                                                 <p className="text-sm font-extrabold text-gray-900">₹{booking.amount || 0}</p>
                                                 <button
                                                     onClick={() => navigate(`bookings/${booking._id}`)}
-                                                    className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition"
+                                                    className="text-[11px] cursor-pointer font-bold text-indigo-600 hover:text-indigo-800 transition"
                                                 >
                                                     Details →
                                                 </button>
@@ -349,7 +346,7 @@ export default function Dashboard() {
                         </p>
                         <button
                             onClick={() => navigate("bookings")}
-                            className="mt-4 w-full flex items-center justify-center gap-2 text-xs font-bold bg-white/15 hover:bg-white/25 border border-white/20 py-2 rounded-xl transition active:scale-95"
+                            className="mt-4 w-full flex cursor-pointer items-center justify-center gap-2 text-xs font-bold bg-white/15 hover:bg-white/25 border border-white/20 py-2 rounded-xl transition active:scale-95"
                         >
                             View all bookings <FiArrowRight size={12} />
                         </button>

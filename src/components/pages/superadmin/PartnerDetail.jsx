@@ -1,28 +1,21 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import {
-    FaUserTie,
-    FaPhoneAlt,
-    FaCheckCircle,
-    FaClock,
-    FaBan,
-    FaStar,
-    FaTools,
-    FaMapMarkerAlt,
-    FaShieldAlt,
-    FaClipboardList,
+    FaPhoneAlt, FaCheckCircle, FaClock, FaBan, FaStar,
+    FaTools, FaMapMarkerAlt, FaShieldAlt, FaClipboardList,
     FaCertificate,
 } from "react-icons/fa";
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { partnerAPI, userAPI } from "../../../services/api";
 import { ChevronDown } from "lucide-react";
 import { useNotifications } from "../../../hooks/useData";
+import ToastContext from "../../../context/Toast/ToastContext";
 
 export default function PartnerDetail() {
+    const { showToast } = useContext(ToastContext);
     const { id } = useParams();
     const [partner, setPartner] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const { fetchNotifications } = useNotifications();
     const STATUS_OPTIONS = [
         { value: "pending", label: "Pending", color: "bg-yellow-100 text-yellow-700" },
@@ -35,10 +28,9 @@ export default function PartnerDetail() {
             setLoading(true);
             const response = await partnerAPI.getPartnerById(id);
             setPartner(response?.data?.partner);
-            setError(null);
         } catch (err) {
-            setError(err.response?.data?.message || "Failed to load partner details");
-            console.error("Error fetching partner:", err);
+            showToast(err.response?.data?.message || "Failed to load partner details", "error");
+            console.error("Error fetching partner:", err.message);
         } finally {
             setLoading(false);
         }
@@ -64,13 +56,15 @@ export default function PartnerDetail() {
                 rejectionReason
             );
 
+            showToast("Document status updated", "success");
+
             await fetchPartnerDetails();
 
             await fetchNotifications();
 
         } catch (error) {
-            console.error(error);
-            alert(error?.response?.data?.message || 'Failed to update document');
+            console.error(error.message);
+            showToast("Failed to update document status", "error");
         }
     };
 
@@ -90,6 +84,8 @@ export default function PartnerDetail() {
                 rejectionReason
             );
 
+            showToast("Service status updated", "success");
+
             setPartner(prev => ({
                 ...prev,
                 services: prev.services.map(service =>
@@ -104,8 +100,8 @@ export default function PartnerDetail() {
             }));
 
         } catch (err) {
-            console.error(err);
-            alert("Failed to update service status");
+            console.error(err.message);
+            showToast("Failed to update service status", "error");
         }
     };
 
@@ -115,18 +111,6 @@ export default function PartnerDetail() {
                 <div className="text-center">
                     <div className="h-14 w-14 rounded-full border-4 border-indigo-100 border-t-indigo-600 animate-spin mx-auto mb-5" />
                     <p className="text-gray-500 text-sm font-medium">Loading partner details…</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="text-center bg-red-50 border border-red-100 p-8 rounded-3xl shadow-sm max-w-sm w-full">
-                    <FaShieldAlt className="text-red-300 text-4xl mx-auto mb-3" />
-                    <p className="text-red-600 font-bold text-base">Something went wrong</p>
-                    <p className="text-red-400 text-sm mt-2">{error}</p>
                 </div>
             </div>
         );
