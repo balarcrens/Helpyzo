@@ -95,7 +95,7 @@ const ContactUs = () => {
 
                 {/* Contact Form & Info */}
                 <section className="py-24">
-                    <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-16">
+                    <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 grid lg:grid-cols-12 gap-16">
 
                         {/* Contact Info */}
                         <div className="lg:col-span-5 space-y-10">
@@ -104,7 +104,7 @@ const ContactUs = () => {
                                 whileInView={{ opacity: 1, x: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.7 }}
-                                className="bg-stone-900/50 p-10 rounded-[2rem] shadow-2xl border border-white/10 backdrop-blur-md"
+                                className="bg-stone-900/50 py-6 px-5 sm:p-10 rounded-[2rem] shadow-2xl border border-white/10 backdrop-blur-md"
                             >
                                 <h2 className="text-3xl font-bold mb-6 text-[#9fe870]">Contact Info</h2>
                                 <div className="space-y-6 text-stone-200">
@@ -132,7 +132,7 @@ const ContactUs = () => {
                                 className="rounded-[2rem] overflow-hidden shadow-2xl border border-white/10"
                             >
                                 <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d119066.41709454796!2d72.73988486791623!3d21.15934029875686!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04e59411d1563%3A0xfe4558290938b042!2sSurat%2C%20Gujarat!5e0!3m2!1sen!2sin!4v1768121016019!5m2!1sen!2sin"
-                                    className="w-full h-64 lg:h-full" allowFullScreen=""
+                                    className="w-full max-h-64 lg:h-full" allowFullScreen=""
                                     loading="lazy" title="Our Location"
                                 ></iframe>
                             </motion.div>
@@ -145,7 +145,7 @@ const ContactUs = () => {
                                 whileInView={{ opacity: 1, x: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.7 }}
-                                className="bg-stone-900/50 p-10 rounded-[2rem] shadow-2xl border border-white/10 backdrop-blur-md"
+                                className="bg-stone-900/50 p-5 sm:p-10 rounded-[2rem] shadow-2xl border border-white/10 backdrop-blur-md"
                             >
                                 <h2 className="text-3xl font-bold text-[#9fe870] mb-8">Send a Message</h2>
 

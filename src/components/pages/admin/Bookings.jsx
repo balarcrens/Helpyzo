@@ -1,11 +1,9 @@
 /* eslint-disable no-unused-vars */
-/* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useEffect, useContext } from "react";
+import { useState, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBookings } from "../../../hooks/useData";
 import { usePartner } from "../../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { bookingAPI } from "../../../services/api";
 import {
     FiCalendar,
     FiUser,
@@ -19,7 +17,6 @@ import {
 } from "react-icons/fi";
 import ToastContext from "../../../context/Toast/ToastContext";
 
-/* ── helpers ── */
 const getInitials = (name = "") =>
     name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
 
@@ -43,41 +40,13 @@ const STATUS_CFG = {
 const FILTERS = ["all", "pending", "confirmed", "in-progress", "completed", "cancelled"];
 
 export default function Bookings() {
-    const { showToast } = useContext(ToastContext);
     const navigate = useNavigate();
-    const { user } = usePartner();
-    const [bookings, setBookings] = useState([]);
-    const { updateBookingStatus } = useBookings();
-    const [loading, setLoading] = useState(true);
+    const { bookings, updateBookingStatus, loading } = useBookings();
     const [statusFilter, setStatusFilter] = useState("all");
-
-    const fetchPartnerBookings = async () => {
-        try {
-            const res = await bookingAPI.getPartnerBookings(user._id);
-            setBookings(res.data.bookings);
-        } catch (error) {
-            console.error("Failed to load bookings", error.message);
-            showToast("Failed to load bookings", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => { fetchPartnerBookings(); }, []);
 
     const filteredBookings = statusFilter === "all"
         ? bookings
         : bookings.filter((b) => b.status === statusFilter);
-
-    const handleStatusChange = async (bookingId, newStatus) => {
-        try {
-            await updateBookingStatus(bookingId, newStatus);
-            showToast("Status changed successfully", "success");
-            fetchPartnerBookings();
-        } catch (error) {
-            alert(error.message);
-        }
-    };
 
     const counts = {
         all: bookings.length,
@@ -260,13 +229,13 @@ export default function Bookings() {
                                             {booking.status === "pending" && (
                                                 <>
                                                     <button
-                                                        onClick={() => handleStatusChange(booking._id, "confirmed")}
+                                                        onClick={() => updateBookingStatus(booking._id, "confirmed")}
                                                         className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition active:scale-95 shadow-sm"
                                                     >
                                                         ✓ Confirm
                                                     </button>
                                                     <button
-                                                        onClick={() => handleStatusChange(booking._id, "cancelled")}
+                                                        onClick={() => updateBookingStatus(booking._id, "cancelled")}
                                                         className="px-4 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition active:scale-95"
                                                     >
                                                         ✕ Cancel
@@ -276,7 +245,7 @@ export default function Bookings() {
 
                                             {booking.status === "confirmed" && (
                                                 <button
-                                                    onClick={() => handleStatusChange(booking._id, "in-progress")}
+                                                    onClick={() => updateBookingStatus(booking._id, "in-progress")}
                                                     className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition active:scale-95 shadow-sm"
                                                 >
                                                     ▶ Start Job
@@ -285,7 +254,7 @@ export default function Bookings() {
 
                                             {booking.status === "in-progress" && (
                                                 <button
-                                                    onClick={() => handleStatusChange(booking._id, "completed")}
+                                                    onClick={() => updateBookingStatus(booking._id, "completed")}
                                                     className="px-4 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition active:scale-95 shadow-sm"
                                                 >
                                                     ✓ Mark Complete

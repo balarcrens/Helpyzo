@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/refs */
 import {
     FaUsers,
     FaTools,
@@ -7,51 +6,22 @@ import {
     FaUserTie,
     FaArrowUp,
     FaArrowDown,
-    FaCheckCircle,
-    FaClock,
-    FaBan,
-    FaStar,
     FaChartLine,
     FaShieldAlt,
-    FaExclamationTriangle,
 } from "react-icons/fa";
-import { useEffect, useRef, useState } from "react";
-import { useBookings } from "../../../hooks/useData";
-import { userAPI, partnerAPI } from "../../../services/api";
+import { useEffect, useRef, useMemo } from "react";
+import { useBookings, usePartners, useUsers } from "../../../hooks/useData";
 import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
-    const { bookings, fetchBookings } = useBookings();
-    const [users, setUsers] = useState([]);
-    const [partners, setPartners] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { bookings } = useBookings();
+    const { users } = useUsers();
+    const { partners, loading } = usePartners();
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const [bookingsRes, usersRes, partnersRes] = await Promise.all([
-                    fetchBookings(),
-                    userAPI.getAllUsers(),
-                    partnerAPI.getAllPartners(),
-                ]);
-                setUsers(usersRes.data.users);
-                setPartners(partnersRes.data.partners);
-            } catch (error) {
-                console.error("Failed to fetch data:", error.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, []);
-
-    /* ================= TREND HELPER ================= */
-    const getTrend = (current = 0, previous) => {
-        if (previous === undefined || previous === 0) {
-            return { change: "0%", trend: "neutral" };
-        }
+    /* trend helpers */
+    const getTrend = (current = 0, previous = 0) => {
+        if (!previous) return { change: "0%", trend: "neutral" };
         const diff = current - previous;
         const percent = ((diff / previous) * 100).toFixed(1);
         return {
@@ -60,26 +30,20 @@ export default function Dashboard() {
         };
     };
 
-    /* ================= COUNTS ================= */
+    /* counts */
     const usersCount = users.length;
     const partnersCount = partners.length;
-    const activePartnersCount = partners.filter((p) => p?.isActive).length;
+    const verifiedPartnersCount = partners.filter((p) => p?.verification?.status === 'approved').length;
     const bookingsCount = bookings?.length || 0;
     const pendingBookings = bookings?.filter((b) => b?.status === "pending").length || 0;
     const completedBookings = bookings?.filter((b) => b?.status === "completed").length || 0;
 
-    /* ================= PREVIOUS VALUES ================= */
-    const prevUsers = useRef();
-    const prevPartners = useRef();
-    const prevBookings = useRef();
+    /* prev value */
+    const prevUsers = useRef(1);
+    const prevPartners = useRef(1);
+    const prevBookings = useRef(1);
 
-    useEffect(() => {
-        prevUsers.current = 2;
-        prevPartners.current = 1;
-        prevBookings.current = 1;
-    }, [usersCount, activePartnersCount, bookingsCount]);
-
-    const stats = [
+    const stats = useMemo(() => [
         {
             title: "Total Users",
             value: usersCount,
@@ -101,9 +65,9 @@ export default function Dashboard() {
             sub: "Service providers",
         },
         {
-            title: "Active Partners",
-            value: activePartnersCount,
-            ...getTrend(activePartnersCount, prevPartners.current),
+            title: "Verified Partners",
+            value: verifiedPartnersCount,
+            ...getTrend(verifiedPartnersCount, prevPartners.current),
             icon: <FaTools />,
             gradient: "from-emerald-400 via-green-500 to-teal-500",
             bgGlow: "from-emerald-400/20 to-teal-400/10",
@@ -119,7 +83,13 @@ export default function Dashboard() {
             link: "bookings",
             sub: "All time bookings",
         },
-    ];
+    ], [usersCount, partnersCount, verifiedPartnersCount, bookingsCount]);
+
+    useEffect(() => {
+        prevUsers.current = usersCount;
+        prevPartners.current = verifiedPartnersCount;
+        prevBookings.current = bookingsCount;
+    }, [usersCount, verifiedPartnersCount, bookingsCount]);
 
     const statusConfig = {
         completed: {

@@ -1,5 +1,4 @@
-import React from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import HomePage from './components/pages/HomePage.jsx'
 import AboutUs from './components/pages/AboutUs.jsx'
 import Register from './components/pages/Register.jsx'
@@ -27,8 +26,6 @@ import Users from './components/pages/superadmin/Users.jsx'
 import AllBookings from './components/pages/superadmin/AllBookings.jsx'
 import Contact from './components/pages/superadmin/Contact.jsx'
 
-const CURRENT_ROLE = "superadmin";
-
 const App = () => {
     return (
         <>
@@ -47,10 +44,6 @@ const App = () => {
                     <Route path="/category" element={<Category />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/my-bookings" element={<UserBookings />} />
-                    <Route
-                        path="/"
-                        element={<Navigate to={`/${CURRENT_ROLE}`} />}
-                    />
 
                     <Route
                         path="/superadmin"

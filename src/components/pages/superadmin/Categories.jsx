@@ -57,22 +57,6 @@ export default function Categories() {
         }
     };
 
-    const handleDelete = async (categoryId) => {
-        const confirmed = await showConfirm({
-            message: "Are you sure want to delete this category?",
-            subMessage: "This action cannot be undone.",
-            type: "danger",
-            confirmLabel: "Delete",
-        })
-
-        if (!confirmed) return
-        try {
-            await deleteCategory(categoryId);
-        } catch (error) {
-            showToast(error.message || "Failed to delete category", "error");
-        }
-    };
-
     const handleEdit = (category) => {
         setEditingId(category._id);
         setFormData(category);
@@ -288,7 +272,7 @@ export default function Categories() {
                                         <FiEdit size={13} /> Edit
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(category?._id)}
+                                        onClick={() => deleteCategory(category?._id)}
                                         className="flex-1 cursor-pointer flex items-center justify-center gap-1.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition active:scale-95"
                                     >
                                         <FiTrash2 size={13} /> Delete

@@ -1,11 +1,9 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Mail,
     Phone,
-    User,
     MessageSquare,
     Trash2,
     Search,
@@ -16,8 +14,9 @@ import {
     ChevronUp,
     ExternalLink,
 } from "lucide-react";
-import { contactAPI, userAPI } from "../../../services/api";
 import ToastContext from "../../../context/Toast/ToastContext";
+import { useContact } from "../../../hooks/useData";
+import { FiCalendar, FiRefreshCw } from "react-icons/fi";
 
 const cardVariants = {
     hidden: { opacity: 0, y: 16 },
@@ -41,63 +40,8 @@ function formatDate(dateStr) {
 }
 
 export default function Contact() {
-    const { showConfirm, showToast } = useContext(ToastContext);
-    const [contacts, setContacts] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const { contacts, users, error, loading, fetchContacts, deleting, expanded, setExpanded, deleteContact } = useContact();
     const [search, setSearch] = useState("");
-    const [expanded, setExpanded] = useState(null); // id of expanded card
-    const [deleting, setDeleting] = useState(null); // id being deleted
-    const [users, setUsers] = useState([]);
-
-    const fetchContacts = async () => {
-        try {
-            setLoading(true);
-            const res = await contactAPI.getAllContact();
-            const data = res?.data?.contacts ?? res?.data ?? [];
-            setContacts(Array.isArray(data) ? data : []);
-        } catch (err) {
-            showToast(err?.response?.data?.message || "Failed to load contact messages.", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchUsers = async () => {
-        try {
-            setLoading(true);
-            const res = await userAPI.getAllUsers();
-            const data = res?.data?.users ?? res?.data ?? [];
-            setUsers(Array.isArray(data) ? data : []);
-        } catch (err) {
-            showToast(err?.response?.data?.message || "Failed to load users.", "error");
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    useEffect(() => { fetchContacts(); fetchUsers(); }, []);
-
-    const handleDelete = async (id) => {
-        const confirmed = await showConfirm({
-            message: "Are you sure want to delete this contact message?",
-            subMessage: "This action cannot be undone.",
-            type: "danger",
-            confirmLabel: "Delete",
-        })
-
-        if (!confirmed) return;
-        try {
-            setDeleting(id);
-            await contactAPI.deleteContact(id);
-            setContacts((prev) => prev.filter((c) => c._id !== id));
-            if (expanded === id) setExpanded(null);
-        } catch (err) {
-            alert(err?.response?.data?.message || "Failed to delete.");
-        } finally {
-            setDeleting(null);
-        }
-    };
 
     const filtered = contacts.filter((c) => {
         const q = search.toLowerCase();
@@ -126,10 +70,30 @@ export default function Contact() {
                     </p>
                 </div>
 
-                {/* Stats pill */}
-                <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm text-sm text-gray-600 w-fit">
-                    <Inbox size={14} className="text-gray-400" />
-                    <span><span className="font-semibold text-gray-900">{contacts.length}</span> total</span>
+                <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm text-sm text-gray-600 w-fit">
+                        <Inbox size={14} className="text-gray-400" />
+                        <span><span className="font-semibold text-gray-900">{contacts.length}</span> total</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500 bg-white border border-gray-200 rounded-2xl px-3 py-2 shadow-sm">
+                        <FiCalendar size={12} />
+                        <span>
+                            Last updated:{" "}
+                            {new Date().toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                            })}
+                        </span>
+                    </div>
+                    <button
+                        onClick={fetchContacts}
+                        disabled={loading}
+                        className="cursor-pointer flex items-center gap-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 rounded-2xl px-3 py-2 shadow-sm transition disabled:opacity-60"
+                    >
+                        <FiRefreshCw size={12} className={loading ? "animate-spin" : ""} />
+                        Refresh
+                    </button>
                 </div>
             </motion.div>
 
@@ -236,7 +200,7 @@ export default function Contact() {
                                                 {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(contact._id)}
+                                                onClick={() => deleteContact(contact._id)}
                                                 disabled={deleting === contact._id}
                                                 className="p-2 rounded-xl hover:bg-red-50 transition text-gray-400 hover:text-red-600 disabled:opacity-40"
                                                 title="Delete"

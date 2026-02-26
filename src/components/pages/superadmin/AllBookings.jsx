@@ -1,14 +1,13 @@
-import React, { useContext, useEffect, useState } from "react";
-import { bookingAPI } from "../../../services/api";
+import React, { useState } from "react";
 import {
     FiClipboard, FiCheckCircle, FiXCircle, FiClock,
     FiSearch, FiTrash2, FiCalendar,
     FiUser, FiTool, FiRefreshCw, FiChevronDown,
     FiAlertCircle, FiTag,
 } from "react-icons/fi";
+import { useBookings } from '../../../hooks/useData';
 import { FaSpinner } from "react-icons/fa";
 import { FaIndianRupeeSign } from "react-icons/fa6";
-import ToastContext from "../../../context/Toast/ToastContext";
 
 const STATUS_META = {
     pending: { label: "Pending", bg: "bg-amber-100", text: "text-amber-700", dot: "bg-amber-500" },
@@ -29,60 +28,11 @@ const fmt = (d) => d
     ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
     : "—";
 
-const currency = (n) =>
-    n !== undefined && n !== null ? `₹${Number(n).toLocaleString("en-IN")}` : "—";
-
 export default function AllBookings() {
-    const { showToast, showConfirm } = useContext(ToastContext);
-    const [bookings, setBookings] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const { bookings, fetchBookings, loading, error, deletingId, deleteBooking, updateBookingStatus, updatingId } = useBookings();
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
-    const [deletingId, setDeletingId] = useState(null);
-    const [updatingId, setUpdatingId] = useState(null);
     const [expandedRow, setExpandedRow] = useState(null);
-
-    const fetchBookings = async () => {
-        try {
-            setLoading(true); setError(null);
-            const res = await bookingAPI.getAllBookings();
-            setBookings(res.data.bookings || []);
-        } catch (err) {
-            setError(err?.response?.data?.message || "Failed to load bookings.");
-        } finally { setLoading(false); }
-    };
-    useEffect(() => { fetchBookings(); }, []);
-
-    const handleDelete = async (id) => {
-        const confirmed = await showConfirm({
-            message: "Are you sure want to delete this booking?",
-            subMessage: "This action cannot be undone.",
-            type: "danger",
-            confirmLabel: "Delete Booking",
-        });
-
-        if (!confirmed) return;
-        try {
-            setDeletingId(id);
-            await bookingAPI.deleteBooking(id);
-            showToast("Booking deleted successfully", "success");
-            setBookings(prev => prev.filter(b => b._id !== id));
-        } catch (err) {
-            showToast(err?.response?.data?.message || "Failed to delete booking.", "error");
-        } finally { setDeletingId(null); }
-    };
-
-    const handleStatusChange = async (id, newStatus) => {
-        try {
-            setUpdatingId(id);
-            await bookingAPI.updateBookingStatus(id, newStatus);
-            showToast("Status updated successfully", "success");
-            setBookings(prev => prev.map(b => b._id === id ? { ...b, status: newStatus } : b));
-        } catch (err) {
-            showToast(err?.response?.data?.message || "Failed to update status.", "error");
-        } finally { setUpdatingId(null); }
-    };
 
     const filtered = bookings.filter(b => {
         const q = search.toLowerCase();
@@ -102,35 +52,10 @@ export default function AllBookings() {
         { label: "Completed", value: bookings.filter(b => b.status === "completed").length, icon: <FiCheckCircle size={18} />, color: "text-emerald-600", bg: "bg-emerald-50" },
         { label: "Cancelled", value: bookings.filter(b => b.status === "cancelled").length, icon: <FiXCircle size={18} />, color: "text-red-500", bg: "bg-red-50" },
         {
-            label: "Revenue", value: currency(bookings.filter(b => b.paymentStatus === "paid").reduce((s, b) => s + (b.amount || 0), 0)),
+            label: "Revenue", value: bookings.filter(b => b.paymentStatus === "paid").reduce((s, b) => s + (b.amount || 0), 0),
             icon: <FaIndianRupeeSign size={18} />, color: "text-purple-600", bg: "bg-purple-50", small: true
         },
     ];
-
-    /* ── shared loading / error / empty states ── */
-    const StateView = () => {
-        if (loading) return (
-            <div className="flex items-center justify-center py-20 gap-3 text-gray-400">
-                <div className="h-7 w-7 rounded-full border-2 border-indigo-300 border-t-indigo-600 animate-spin" />
-                <span className="text-sm font-medium">Loading bookings…</span>
-            </div>
-        );
-        if (error) return (
-            <div className="flex flex-col items-center justify-center py-16 text-red-500 gap-3">
-                <FiAlertCircle size={36} className="opacity-60" />
-                <p className="text-sm font-medium">{error}</p>
-                <button onClick={fetchBookings} className="cursor-pointer text-xs font-semibold text-indigo-500 underline">Retry</button>
-            </div>
-        );
-        if (filtered.length === 0) return (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3">
-                <FiClipboard size={40} className="opacity-30" />
-                <p className="text-sm">No bookings found{search ? ` for "${search}"` : ""}</p>
-                {search && <button onClick={() => setSearch("")} className="cursor-pointer text-xs font-semibold text-indigo-500 underline">Clear search</button>}
-            </div>
-        );
-        return null;
-    };
 
     return (
         <div className="space-y-6">
@@ -142,7 +67,14 @@ export default function AllBookings() {
                 <div className="flex items-center gap-2 flex-wrap">
                     <div className="flex items-center gap-2 text-xs text-gray-500 bg-white border border-gray-200 rounded-2xl px-3 py-2 shadow-sm">
                         <FiCalendar size={12} />
-                        <span>{new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                        <span>
+                            Last updated:{" "}
+                            {new Date().toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                            })}
+                        </span>
                     </div>
                     <button
                         onClick={fetchBookings}
@@ -201,7 +133,18 @@ export default function AllBookings() {
                 </div>
 
                 <div className="lg:hidden">
-                    {(loading || error || filtered.length === 0) ? <StateView /> : (
+                    {(loading) ? <div className="flex items-center justify-center py-20 gap-3 text-gray-400">
+                        <div className="h-7 w-7 rounded-full border-2 border-indigo-300 border-t-indigo-600 animate-spin" />
+                        <span className="text-sm font-medium">Loading bookings…</span>
+                    </div> : (error) ? <div className="flex flex-col items-center justify-center py-16 text-red-500 gap-3">
+                        <FiAlertCircle size={36} className="opacity-60" />
+                        <p className="text-sm font-medium">{error}</p>
+                        <button onClick={fetchBookings} className="cursor-pointer text-xs font-semibold text-indigo-500 underline">Retry</button>
+                    </div> : (filtered.length === 0) ? <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3">
+                        <FiClipboard size={40} className="opacity-30" />
+                        <p className="text-sm">No bookings found{search ? ` for "${search}"` : ""}</p>
+                        {search && <button onClick={() => setSearch("")} className="cursor-pointer text-xs font-semibold text-indigo-500 underline">Clear search</button>}
+                    </div> : (
                         <div className="divide-y divide-gray-100">
                             {filtered.map((booking, idx) => {
                                 const sm2 = STATUS_META[booking.status] || STATUS_META.pending;
@@ -244,7 +187,7 @@ export default function AllBookings() {
                                             </div>
                                             <div className="flex items-center gap-1.5">
                                                 <FaIndianRupeeSign size={11} className="text-gray-400 flex-shrink-0" />
-                                                <span className="font-semibold text-gray-800">{currency(booking.amount)}</span>
+                                                <span className="font-semibold text-gray-800">{booking.amount}</span>
                                             </div>
                                         </div>
 
@@ -255,7 +198,7 @@ export default function AllBookings() {
                                             </span>
                                             <select
                                                 value={booking.status}
-                                                onChange={e => handleStatusChange(booking._id, e.target.value)}
+                                                onChange={e => updateBookingStatus(booking._id, e.target.value)}
                                                 disabled={updatingId === booking._id || booking.status === "cancelled"}
                                                 className="sm:flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded-lg text-xs bg-white text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
@@ -270,7 +213,7 @@ export default function AllBookings() {
                                                 <FiChevronDown size={13} className={`transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(booking._id)}
+                                                onClick={() => deleteBooking(booking._id)}
                                                 disabled={deletingId === booking._id}
                                                 className="cursor-pointer p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition border border-red-100 disabled:opacity-50"
                                             >
@@ -301,7 +244,18 @@ export default function AllBookings() {
                 </div>
 
                 <div className="hidden lg:block">
-                    {(loading || error || filtered.length === 0) ? <StateView /> : (
+                    {(loading) ? <div className="flex items-center justify-center py-20 gap-3 text-gray-400">
+                        <div className="h-7 w-7 rounded-full border-2 border-indigo-300 border-t-indigo-600 animate-spin" />
+                        <span className="text-sm font-medium">Loading bookings…</span>
+                    </div> : (error) ? <div className="flex flex-col items-center justify-center py-16 text-red-500 gap-3">
+                        <FiAlertCircle size={36} className="opacity-60" />
+                        <p className="text-sm font-medium">{error}</p>
+                        <button onClick={fetchBookings} className="cursor-pointer text-xs font-semibold text-indigo-500 underline">Retry</button>
+                    </div> : (filtered.length === 0) ? <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3">
+                        <FiClipboard size={40} className="opacity-30" />
+                        <p className="text-sm">No bookings found{search ? ` for "${search}"` : ""}</p>
+                        {search && <button onClick={() => setSearch("")} className="cursor-pointer text-xs font-semibold text-indigo-500 underline">Clear search</button>}
+                    </div> : (
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-gray-50 border-b border-gray-100">
@@ -376,7 +330,7 @@ export default function AllBookings() {
                                                         <div className="relative">
                                                             <select
                                                                 value={booking.status}
-                                                                onChange={e => handleStatusChange(booking._id, e.target.value)}
+                                                                onChange={e => updateBookingStatus(booking._id, e.target.value)}
                                                                 disabled={updatingId === booking._id || booking.status === "cancelled"}
                                                                 className="appearance-none cursor-pointer pl-2 pr-5 py-1.5 border border-gray-200 rounded-lg text-xs bg-white text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed transition"
                                                             >
@@ -397,7 +351,7 @@ export default function AllBookings() {
                                                             <FiChevronDown size={13} className={`transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleDelete(booking._id)}
+                                                            onClick={() => deleteBooking(booking._id)}
                                                             disabled={deletingId === booking._id}
                                                             className="cursor-pointer p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition disabled:opacity-50"
                                                             title="Delete"
@@ -418,7 +372,7 @@ export default function AllBookings() {
                                                             <DetailItem label="Service" value={booking.serviceName} />
                                                             <DetailItem label="Phone" value={booking.user?.phone} />
                                                             <DetailItem label="Booking Date" value={fmt(booking.bookingDate || booking.scheduledDate || booking.createdAt)} />
-                                                            <DetailItem label="Total Amount" value={currency(booking.amount)} bold />
+                                                            <DetailItem label="Total Amount" value={`₹${booking.amount}`} bold />
                                                             {booking.timeSlot && <DetailItem label="Time Slot" value={booking.timeSlot} />}
                                                             {booking.address && <DetailItem label="Address" value={[booking.address?.street, booking.address?.city, booking.address?.state].filter(Boolean).join(", ")} full />}
                                                             {booking.notes && <DetailItem label="Notes" value={booking.notes} full />}

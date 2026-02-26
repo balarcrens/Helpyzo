@@ -6,10 +6,8 @@ import {
     FiBriefcase, FiShield, FiAward, FiRefreshCw, FiAlertCircle,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import { usePartners } from "../../../hooks/useData";
-import { partnerAPI } from "../../../services/api";
-import ToastContext from "../../../context/Toast/ToastContext";
 
 const avatarColors = [
     "from-indigo-400 to-indigo-600",
@@ -36,43 +34,36 @@ function StarRating({ rating = 0 }) {
 const FILTERS = ["all", "verified", "pending"];
 
 export default function Partners() {
-    const { showToast, showConfirm } = useContext(ToastContext)
     const navigate = useNavigate();
-    const { partners, loading } = usePartners();
-    const [partnerList, setPartnerList] = useState([]);
-    const [deletingId, setDeletingId] = useState(null);
+    const { partners, refetch, loading, deletingId, handleDelete } = usePartners();
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
-
-    useEffect(() => {
-        if (Array.isArray(partners)) setPartnerList(partners);
-    }, [partners]);
 
     const stats = [
         {
             label: "Total Partners",
-            value: partnerList.length,
+            value: partners.length,
             icon: <FaUserTie size={20} />,
             color: "text-indigo-600",
             bg: "bg-indigo-50",
         },
         {
             label: "Verified",
-            value: partnerList.filter((p) => p?.verification?.status === "approved").length,
+            value: partners.filter((p) => p?.verification?.status === "approved").length,
             icon: <FiShield size={20} />,
             color: "text-emerald-600",
             bg: "bg-emerald-50",
         },
         {
             label: "Pending",
-            value: partnerList.filter((p) => p?.verification?.status !== "approved").length,
+            value: partners.filter((p) => p?.verification?.status !== "approved").length,
             icon: <FiAward size={20} />,
             color: "text-amber-600",
             bg: "bg-amber-50",
         },
         {
             label: "Total Services",
-            value: partnerList.reduce(
+            value: partners.reduce(
                 (sum, p) => sum + (Array.isArray(p?.services) ? p.services.length : 0),
                 0
             ),
@@ -82,27 +73,7 @@ export default function Partners() {
         },
     ];
 
-    const handleDelete = async (partnerId) => {
-        const confirmed = await showConfirm({
-            message: "Are you sure you want to delete this partner?",
-            subMessage: "This action cannot be undone.",
-            type: "danger",
-            confirmLabel: "Delete",
-        });
-        if (!confirmed) return;
-        try {
-            setDeletingId(partnerId);
-            await partnerAPI.deletePartner(partnerId);
-            showToast("Partner deleted successfully", "success");
-            setPartnerList((prev) => prev.filter((p) => p._id !== partnerId));
-        } catch (err) {
-            showToast(err.response?.data?.message || "Failed to delete partner", "error");
-        } finally {
-            setDeletingId(null);
-        }
-    };
-
-    const filtered = partnerList.filter((p) => {
+    const filtered = partners.filter((p) => {
         const q = search.toLowerCase();
         const matchSearch =
             p?.name?.toLowerCase().includes(q) ||
@@ -141,7 +112,7 @@ export default function Partners() {
                         </span>
                     </div>
                     <button
-                        onClick={() => window.location.reload()}
+                        onClick={() => refetch()}
                         className="cursor-pointer flex items-center gap-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 rounded-2xl px-3 py-2 shadow-sm transition"
                     >
                         <FiRefreshCw size={12} />
@@ -199,7 +170,7 @@ export default function Partners() {
                                 : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                                 }`}
                         >
-                            {f === "all" ? `All (${partnerList.length})` : f}
+                            {f === "all" ? `All (${partners.length})` : f}
                         </button>
                     ))}
                 </div>
@@ -373,7 +344,7 @@ export default function Partners() {
                         <span>
                             Showing{" "}
                             <span className="font-semibold text-gray-600">{filtered.length}</span> of{" "}
-                            <span className="font-semibold text-gray-600">{partnerList.length}</span>{" "}
+                            <span className="font-semibold text-gray-600">{partners.length}</span>{" "}
                             partners
                         </span>
                         {(search || statusFilter !== "all") && (

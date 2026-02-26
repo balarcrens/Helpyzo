@@ -3,7 +3,6 @@
 import { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { bookingAPI } from "../../../services/api";
 import {
     FiUser,
     FiPhone,
@@ -18,6 +17,7 @@ import {
     FiDollarSign,
 } from "react-icons/fi";
 import ToastContext from "../../../context/Toast/ToastContext";
+import { useBookings } from "../../../hooks/useData";
 
 const getInitials = (name = "") =>
     name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
@@ -72,47 +72,11 @@ const SectionCard = ({ icon: Icon, iconBg, title, subtitle, children, className 
 );
 
 export default function BookingDetails() {
-    const { showToast } = useContext(ToastContext);
     const { id } = useParams();
     const navigate = useNavigate();
-    const [booking, setBooking] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { booking, fetchBookingById, loading, updateBookingStatus, updateBookingPaymentStatus } = useBookings();
 
-    useEffect(() => { fetchBooking(); }, [id]);
-
-    const fetchBooking = async () => {
-        try {
-            const res = await bookingAPI.getBookingById(id);
-            setBooking(res.data.booking);
-        } catch (err) {
-            console.error("Failed to load booking", err.message);
-            showToast("Failed to load booking", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleStatusChange = async (e) => {
-        try {
-            await bookingAPI.updateBookingStatus(id, e.target.value);
-            showToast("Status changed successfully", "success");
-            fetchBooking();
-        } catch (err) {
-            console.error("Failed to update booking status", err.message);
-            showToast("Failed to update status", "error");
-        }
-    };
-
-    const handlePaymentStatusChange = async (e) => {
-        try {
-            await bookingAPI.updateBookingPaymentStatus(id, e.target.value);
-            showToast("Payment status changed successfully", "success");
-            fetchBooking();
-        } catch (error) {
-            showToast("Failed to update payment status", "error");
-            console.error("Failed to update payment status", error.message);
-        }
-    };
+    useEffect(() => { fetchBookingById(id); }, [id]);
 
     if (loading) {
         return (
@@ -205,7 +169,7 @@ export default function BookingDetails() {
                             <span className={`h-2 w-2 rounded-full ${sc.dot} ml-2`} />
                             <select
                                 value={booking.status}
-                                onChange={handleStatusChange}
+                                onChange={(e) => updateBookingStatus(id, e.target.value)}
                                 className={`bg-transparent text-sm font-bold capitalize outline-none cursor-pointer ${sc.text}`}
                             >
                                 {BOOKING_STATUSES.map((s) => (
@@ -289,7 +253,7 @@ export default function BookingDetails() {
                             <select
                                 name="paymentStatus"
                                 value={booking.paymentStatus || "pending"}
-                                onChange={handlePaymentStatusChange}
+                                onChange={(e) => updateBookingPaymentStatus(id, e.target.value)}
                                 className={`bg-transparent text-sm font-bold capitalize outline-none cursor-pointer ${psc.text}`}
                             >
                                 {PAYMENT_STATUSES.map((s) => (

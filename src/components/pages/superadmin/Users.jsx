@@ -1,75 +1,16 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { useContext, useEffect, useState } from "react";
-import { userAPI } from "../../../services/api";
 import {
     FiUsers, FiUserCheck, FiUserX, FiSearch, FiTrash2,
-    FiMail, FiPhone, FiMapPin, FiCalendar, FiShield
+    FiMail, FiPhone, FiMapPin, FiCalendar, FiShield,
+    FiRefreshCw
 } from "react-icons/fi";
-import ToastContext from "../../../context/Toast/ToastContext";
+import { useUsers } from "../../../hooks/useData";
+import { useState } from "react";
 
 export default function Users() {
-    const { showToast, showConfirm } = useContext(ToastContext)
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { users, loading, deletingId, userDelete, userRoleChange, fetchUsers } = useUsers();
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
-    const [deletingId, setDeletingId] = useState(null);
     const currentUser = JSON.parse(localStorage.getItem("userInfo"))._id;
-
-    useEffect(() => {
-        fetchUsers();
-    }, []);
-
-    const fetchUsers = async () => {
-        try {
-            setLoading(true);
-            const res = await userAPI.getAllUsers();
-            setUsers(res.data.users);
-        } catch (err) {
-            showToast(err?.response?.data?.message || "Failed to load users", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleDelete = async (userId) => {
-        const confirmed = await showConfirm({
-            message: "Are you sure want to delete this user?",
-            subMessage: "This action cannot be undone.",
-            type: "danger",
-            confirmLabel: "Delete",
-        });
-
-        if (!confirmed) return;
-        try {
-            setDeletingId(userId);
-            await userAPI.deleteUser(userId);
-            showToast("User deleted successfully", "success");
-            setUsers(prev => prev.filter(u => u._id !== userId));
-        } catch (err) {
-            showToast(err?.response?.data?.message || "Failed to delete user", "error");
-        } finally {
-            setDeletingId(null);
-        }
-    };
-
-    const handleRoleChange = async (userId, userRole) => {
-        const confirmed = await showConfirm({
-            message: "Are you sure want to change this user's role?",
-            subMessage: "The user will have new permissions based on the selected role.",
-            type: "warning",
-            confirmLabel: "Change Role",
-        });
-
-        if (!confirmed) return;
-        try {
-            await userAPI.updateRole(userId, userRole);
-            showToast("User role changed successfully", "success");
-            setUsers(prev => prev.map(u => u._id === userId ? { ...u, role: userRole } : u));
-        } catch (error) {
-            showToast(error?.message || "Failed to update user role", "error");
-        }
-    }
 
     const filtered = users.filter(u => {
         const matchSearch =
@@ -134,9 +75,26 @@ export default function Users() {
                     <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Registered Users</h1>
                     <p className="text-sm text-gray-500 mt-1">Manage all client accounts on the platform</p>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500 bg-white border border-gray-200 rounded-2xl px-4 py-2 shadow-sm">
-                    <FiCalendar size={13} />
-                    <span>Last updated: {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 text-xs text-gray-500 bg-white border border-gray-200 rounded-2xl px-3 py-2 shadow-sm">
+                        <FiCalendar size={12} />
+                        <span>
+                            Last updated:{" "}
+                            {new Date().toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                            })}
+                        </span>
+                    </div>
+                    <button
+                        onClick={fetchUsers}
+                        disabled={loading}
+                        className="cursor-pointer flex items-center gap-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 rounded-2xl px-3 py-2 shadow-sm transition disabled:opacity-60"
+                    >
+                        <FiRefreshCw size={12} className={loading ? "animate-spin" : ""} />
+                        Refresh
+                    </button>
                 </div>
             </div>
 
@@ -270,7 +228,7 @@ export default function Users() {
                                         {/* Action */}
                                         <td className="px-1 md:px-2 xl:px-6 py-4 text-center whitespace-nowrap">
                                             <div className="inline-flex flex-wrap justify-center items-center gap-1">
-                                                <select value={user.role} onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                                                <select value={user.role} onChange={(e) => userRoleChange(user._id, e.target.value)}
                                                     className="ml-2 px-2 py-1 cursor-pointer border border-gray-300 rounded-md text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled={currentUser === user._id}
                                                 >
                                                     <option value="client">Client</option>
@@ -278,7 +236,7 @@ export default function Users() {
                                                 </select>
 
                                                 <button
-                                                    onClick={() => handleDelete(user._id)}
+                                                    onClick={() => userDelete(user._id)}
                                                     disabled={currentUser === user._id || deletingId === user._id || user.role === "superadmin"}
                                                     title="Delete user"
                                                     className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-red-600 bg-red-50 disabled:cursor-not-allowed hover:bg-red-100 disabled:opacity-50 transition-all"

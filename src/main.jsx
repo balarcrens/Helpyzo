@@ -5,13 +5,16 @@ import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
 import AuthProvider from './context/Auth/AuthProvider.jsx'
 import { ToastProvider } from './context/Toast/ToastProvider.jsx'
+// import DataProvider from './context/Data/DataProvider.jsx'
 
 createRoot(document.getElementById('root')).render(
   <ToastProvider>
     <AuthProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      {/* <DataProvider> */}
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      {/* </DataProvider> */}
     </AuthProvider >
   </ToastProvider>,
 )

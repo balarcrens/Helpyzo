@@ -5,17 +5,16 @@ import {
     FaCertificate,
 } from "react-icons/fa";
 import { useParams } from "react-router-dom";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import { partnerAPI, userAPI } from "../../../services/api";
 import { ChevronDown } from "lucide-react";
-import { useNotifications } from "../../../hooks/useData";
+import { useNotifications, usePartners } from "../../../hooks/useData";
 import ToastContext from "../../../context/Toast/ToastContext";
 
 export default function PartnerDetail() {
     const { showToast } = useContext(ToastContext);
     const { id } = useParams();
-    const [partner, setPartner] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { partner, loading, fetchPartnerDetails, setPartner } = usePartners();
     const { fetchNotifications } = useNotifications();
     const STATUS_OPTIONS = [
         { value: "pending", label: "Pending", color: "bg-yellow-100 text-yellow-700" },
@@ -23,21 +22,8 @@ export default function PartnerDetail() {
         { value: "rejected", label: "Rejected", color: "bg-red-100 text-red-700" },
     ];
 
-    const fetchPartnerDetails = async () => {
-        try {
-            setLoading(true);
-            const response = await partnerAPI.getPartnerById(id);
-            setPartner(response?.data?.partner);
-        } catch (err) {
-            showToast(err.response?.data?.message || "Failed to load partner details", "error");
-            console.error("Error fetching partner:", err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        fetchPartnerDetails();
+        fetchPartnerDetails(id);
     }, [id]);
 
     const handleDocumentStatusChange = async (docId, status) => {
@@ -58,7 +44,7 @@ export default function PartnerDetail() {
 
             showToast("Document status updated", "success");
 
-            await fetchPartnerDetails();
+            await fetchPartnerDetails(id);
 
             await fetchNotifications();
 
