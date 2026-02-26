@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import AuthContext from "./AuthContext";
+import ToastContext from "../Toast/ToastContext";
 
 const AuthProvider = ({ children }) => {
+    const { showToast } = useContext(ToastContext);
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -42,6 +44,7 @@ const AuthProvider = ({ children }) => {
         localStorage.removeItem("userInfo");
         setToken(null);
         setUser(null);
+        showToast("Logout successfully", "success")
     };
 
     const role = user?.role || null;

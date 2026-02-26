@@ -1,11 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { categoryAPI, partnerAPI, bookingAPI, notificationAPI, userAPI, contactAPI } from "../services/api";
 import ToastContext from "../context/Toast/ToastContext";
 import { usePartner } from "./useAuth";
 
 // Custom hook for categories
 export const useCategories = () => {
+    const fetched = useRef(false);
     const { showToast, showConfirm } = useContext(ToastContext);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -25,6 +26,8 @@ export const useCategories = () => {
     };
 
     useEffect(() => {
+        if (fetched.current) return;
+        fetched.current = true;
         fetchCategories();
     }, []);
 
@@ -82,7 +85,7 @@ export const useCategories = () => {
         }
     };
 
-    return { categories, loading, error, createCategory, updateCategory, deleteCategory, refetch: fetchCategories };
+    return { categories, loading, error, createCategory, updateCategory, deleteCategory, fetchCategories };
 };
 
 // Custom hook for users
@@ -91,6 +94,7 @@ export const useUsers = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [deletingId, setDeletingId] = useState(null);
+    const fetched = useRef(false);
 
     const fetchUsers = async () => {
         try {
@@ -105,6 +109,8 @@ export const useUsers = () => {
     };
 
     useEffect(() => {
+        if (fetched.current) return;
+        fetched.current = true;
         fetchUsers();
     }, []);
 
@@ -152,6 +158,7 @@ export const useUsers = () => {
 
 // Custom hook for partners
 export const usePartners = () => {
+    const fetched = useRef(false);
     const { showToast, showConfirm } = useContext(ToastContext);
     const [partners, setPartners] = useState([]);
     const [partner, setPartner] = useState([]);
@@ -173,6 +180,8 @@ export const usePartners = () => {
     };
 
     useEffect(() => {
+        if (fetched.current) return;
+        fetched.current = true;
         fetchPartners();
     }, []);
 
@@ -209,11 +218,13 @@ export const usePartners = () => {
         }
     };
 
-    return { partners, setPartners, partner, setPartner, loading, error, fetchPartnerDetails, refetch: fetchPartners, handleDelete, deletingId };
+    return { partners, setPartners, partner, setPartner, loading, error, fetchPartnerDetails, fetchPartners, handleDelete, deletingId };
 };
 
 // Custom hook for bookings
 export const useBookings = () => {
+    const fetchedAll = useRef(false);
+    const fetchedPartner = useRef(false);
     const { showToast, showConfirm } = useContext(ToastContext)
     const [bookings, setBookings] = useState([]);
     const [booking, setBooking] = useState(null);
@@ -234,6 +245,8 @@ export const useBookings = () => {
         } finally { setLoading(false); }
     };
     useEffect(() => {
+        if (fetchedAll.current) return;
+        fetchedAll.current = true;
         fetchBookings();
     }, []);
 
@@ -263,6 +276,8 @@ export const useBookings = () => {
     };
 
     useEffect(() => {
+        if (fetchedPartner.current) return;
+        fetchedPartner.current = true;
         fetchPartnerBookings();
     }, []);
 
@@ -371,6 +386,7 @@ export const useBookings = () => {
 
 // Custom hook for notifications
 export const useNotifications = () => {
+    const fetched = useRef(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -394,6 +410,8 @@ export const useNotifications = () => {
     };
 
     useEffect(() => {
+        if (fetched.current) return;
+        fetched.current = true;
         fetchNotifications();
     }, []);
 
@@ -448,6 +466,7 @@ export const useNotifications = () => {
 
 // Custom hook for contacts
 export const useContact = () => {
+    const fetched = useRef(false);
     const { showConfirm, showToast } = useContext(ToastContext);
     const [contacts, setContacts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -485,6 +504,8 @@ export const useContact = () => {
     }
 
     useEffect(() => {
+        if (fetched.current) return;
+        fetched.current = true;
         fetchContacts();
         fetchUsers();
     }, []);

@@ -11,7 +11,7 @@ const ServiceCard = ({ item, onClick }) => {
             onClick={onClick}
             whileHover={{ y: -3 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            className=" snap-start w-[300px] flex-shrink-0 rounded-3xl bg-white ring-1 ring-stone-200 shadow-sm hover:shadow-xl transition cursor-pointer">
+            className="snap-start w-[300px] min-h-full flex-shrink-0 rounded-3xl bg-white ring-1 ring-stone-200 shadow-sm hover:shadow-xl transition cursor-pointer">
             {/* IMAGE */}
             <div className="relative h-56 overflow-hidden rounded-t-3xl">
                 <img
@@ -42,7 +42,7 @@ const ServiceCard = ({ item, onClick }) => {
             {/* CONTENT */}
             <div className="p-4 space-y-3">
                 <div>
-                    <h3 className="font-semibold text-lg leading-tight">
+                    <h3 className="font-semibold text-lg leading-tight line-clamp-1">
                         {item.name || item.title}
                     </h3>
                     {item.partnerName && (

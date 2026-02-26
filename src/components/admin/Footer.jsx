@@ -8,7 +8,7 @@ export default function Footer() {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="bg-white/80 backdrop-blur-xl border-t border-gray-200 px-6 py-2"
+            className="bg-white/80 backdrop-blur-xl border-t border-gray-200 px-6 py-4 sm:py-2"
         >
             <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-evenly sm:justify-between gap-3 text-sm text-gray-500">
                 {/* Left */}

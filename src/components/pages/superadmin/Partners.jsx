@@ -35,7 +35,7 @@ const FILTERS = ["all", "verified", "pending"];
 
 export default function Partners() {
     const navigate = useNavigate();
-    const { partners, refetch, loading, deletingId, handleDelete } = usePartners();
+    const { partners, fetchPartners, loading, deletingId, handleDelete } = usePartners();
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
 
@@ -112,7 +112,7 @@ export default function Partners() {
                         </span>
                     </div>
                     <button
-                        onClick={() => refetch()}
+                        onClick={() => fetchPartners()}
                         className="cursor-pointer flex items-center gap-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 rounded-2xl px-3 py-2 shadow-sm transition"
                     >
                         <FiRefreshCw size={12} />

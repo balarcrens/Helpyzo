@@ -328,6 +328,7 @@ const Header = () => {
                                         <button onClick={() => {
                                             logout();
                                             navigate("/");
+                                            
                                             setIsMobileMenuOpen(false);
                                         }} className="bg-red-500/20 text-red-300 w-full py-3 rounded-2xl font-bold flex items-center justify-center gap-2" >
                                             <FiLogOut size={16} />

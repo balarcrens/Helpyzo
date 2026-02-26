@@ -187,7 +187,7 @@ const Profile = ({ user, setUser, updateProfile, changePassword }) => {
                     </div>
 
                     <div className="lg:col-span-2 space-y-5">
-                        {user?.role === "client" || user?.role ===  "superadmin" && (
+                        {user?.role === "client" || user?.role === "superadmin" && (
                             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                                     <div className="flex items-center gap-2.5">
@@ -456,7 +456,7 @@ const UserBookingsList = ({ bookings, onRate }) => {
                     >
                         {/* Card header */}
                         <div className="px-5 pt-5 pb-4 border-b border-slate-100">
-                            <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start justify-between gap-1.5">
                                 <div className="min-w-0">
                                     <h5 className="font-bold text-stone-900 text-sm leading-snug truncate">{booking.serviceName}</h5>
                                     <p className="text-[11px] text-stone-400 mt-0.5 font-mono">#{booking.bookingNumber}</p>

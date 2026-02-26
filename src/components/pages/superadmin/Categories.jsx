@@ -22,7 +22,7 @@ const cardPalette = [
 ];
 
 export default function Categories() {
-    const { showToast, showConfirm } = useContext(ToastContext);
+    const { showToast } = useContext(ToastContext);
     const { categories, createCategory, updateCategory, deleteCategory, loading } = useCategories();
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
