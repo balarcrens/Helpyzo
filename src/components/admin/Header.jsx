@@ -35,7 +35,6 @@ export default function Header({ onMenuClick }) {
 
     const handleLogout = () => {
         logout();
-        showToast("LogOut successfully", "success");
         navigate("/");
     };
 
