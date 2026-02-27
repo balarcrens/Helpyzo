@@ -36,8 +36,9 @@ import Header from "../Layout/Header";
 import { useNavigate, useParams } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import AuthContext from "../../context/Auth/AuthContext";
-import { partnerAPI, bookingAPI } from "../../services/api";
+import { partnerAPI, bookingAPI, paymentAPI } from "../../services/api";
 import ToastContext from "../../context/Toast/ToastContext";
+import useRazorpay from "../../hooks/useRazorpay";
 
 export default function ServiceDetail() {
     const { slug } = useParams();
@@ -187,6 +188,12 @@ export default function ServiceDetail() {
         try {
             setBookingLoading(true);
 
+            const amount = serviceType === "normal"
+                ? serviceData.finalPrice
+                : serviceType === "urgent"
+                    ? serviceData.finalPrice + 200
+                    : serviceData.finalPrice + 500;
+
             const bookingPayload = {
                 bookingNumber,
                 serviceId: serviceData._id,
@@ -197,11 +204,7 @@ export default function ServiceDetail() {
                 status: "pending",
                 notes: issue === "other" ? customIssue : `${issueLabel} (${serviceType} priority)`,
                 paymentMethod: "online",
-                amount: serviceType === "normal"
-                    ? serviceData.finalPrice
-                    : serviceType === "urgent"
-                        ? serviceData.finalPrice + 200
-                        : serviceData.finalPrice + 500,
+                amount,
                 bookedDate: new Date(selectedDate),
                 scheduledTime: selectedTime,
                 serviceName: serviceData.name,
@@ -216,15 +219,78 @@ export default function ServiceDetail() {
                 createdBy: "user",
             };
 
-            const res = await bookingAPI.createBooking(bookingPayload);
+            // 1. Create a Booking first
+            const bookingRes = await bookingAPI.createBooking(bookingPayload);
 
-            if (res.data.success) {
-                showToast("Service Book successfully!", "success");
-                navigate("/my-bookings");
+            if (bookingRes.data.success) {
+                const bookingId = bookingRes.data.booking._id;
+                
+                // 2. Create Razorpay order
+                const orderRes = await paymentAPI.createOrder({ amount, currency: 'INR', receipt: bookingNumber });
+                
+                if (orderRes.data.success) {
+                    const options = {
+                        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                        amount: orderRes.data.order.amount,
+                        currency: 'INR',
+                        name: 'Home Service',
+                        description: `Payment for ${serviceData.name}`,
+                        order_id: orderRes.data.order.id,
+                        handler: async function (response) {
+                            try {
+                                // 3. Verify payment on backend
+                                const verifyRes = await paymentAPI.verifyPayment({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    bookingId: bookingId,
+                                });
+
+                                if (verifyRes.data.success) {
+                                    // 4. Payment status is now updated securely on the backend
+                                    showToast("Service booked and payment successful!", "success");
+                                    navigate("/my-bookings");
+                                } else {
+                                    showToast("Payment verification failed", "error");
+                                    navigate("/my-bookings");
+                                }
+                            } catch (verifyErr) {
+                                console.error("Payment verification error:", verifyErr);
+                                showToast("Payment verification error", "error");
+                                navigate("/my-bookings");
+                            }
+                        },
+                        prefill: {
+                            name: user?.name || '',
+                            email: user?.email || '',
+                            contact: user?.phone || '',
+                        },
+                        theme: {
+                            color: '#9fe870'
+                        }
+                    };
+
+                    if (!isRazorpayLoaded) {
+                        showToast("Razorpay SDK not loaded. Please try again.", "error");
+                        setBookingLoading(false);
+                        return;
+                    }
+
+                    const rzp = new window.Razorpay(options);
+                    rzp.on('payment.failed', async function (response) {
+                        showToast("Payment failed", "error");
+                        // Booking remains 'pending' payment
+                        navigate("/my-bookings");
+                    });
+                    rzp.open();
+                } else {
+                    showToast("Failed to initiate payment", "error");
+                    navigate("/my-bookings");
+                }
             }
         } catch (err) {
             console.error("Booking error:", err);
-            showToast(err.response?.data?.message || "Failed to book service", "error");
+            showToast(err.response?.data?.message || err.message || "Failed to book service", "error");
         } finally {
             setBookingLoading(false);
         }

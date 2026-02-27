@@ -67,6 +67,12 @@ export const bookingAPI = {
     deleteBooking: (bookingId) => apiClient.delete(`/bookings/${bookingId}`),
 };
 
+// ========== PAYMENT APIs ==========
+export const paymentAPI = {
+    createOrder: (orderData) => apiClient.post('/payment/create-order', orderData),
+    verifyPayment: (paymentData) => apiClient.post('/payment/verify', paymentData),
+};
+
 export const contactAPI = {
     createContact: (contactData) => apiClient.post('/contact/', contactData),
     getAllContact: () => apiClient.get('/contact/all'),

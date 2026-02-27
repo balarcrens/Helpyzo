@@ -729,9 +729,9 @@ const PopularProjects = () => {
         sliderRef.current.scrollLeft = scrollLeft.current - walk;
     };
 
-    const handleClick = (category, slug) => {
+    const handleClick = (category, id) => {
         if (dragged.current) return;
-        navigate(`/category/${category}/${slug}`);
+        navigate(`/category/${category}/${id}`);
     };
 
     return (
@@ -782,11 +782,11 @@ const PopularProjects = () => {
                         onTouchMove={onDrag}
                         onTouchEnd={stopDrag}
                     >
-                        {services.slice(0, 6).map((item, i) => (
+                        {services.slice(0, 4).map((item, i) => (
                             <ServiceCard
                                 key={i}
                                 item={item}
-                                onClick={() => handleClick(item.category, item.slug)}
+                                onClick={() => handleClick(item?.category?.name.toLowerCase(), item?._id)}
                             />
                         ))}
                     </div>
