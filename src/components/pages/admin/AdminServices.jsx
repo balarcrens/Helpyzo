@@ -40,7 +40,7 @@ export default function AdminServices() {
         availableDays: [],
         availableTime: { from: "09:00", to: "18:00" },
         maxBookingsPerDay: "10",
-        serviceArea: { cities: [], radiusKm: "10" },
+        serviceArea: { cities: [user?.address?.city], radiusKm: "10" },
         cancellationAllowed: true,
         cancellationWindowHours: "2",
     });
@@ -82,7 +82,13 @@ export default function AdminServices() {
                 durationInMinutes: parseInt(formData.durationInMinutes),
                 maxBookingsPerDay: parseInt(formData.maxBookingsPerDay),
                 cancellationWindowHours: parseInt(formData.cancellationWindowHours),
-                serviceArea: { ...formData.serviceArea, radiusKm: parseInt(formData.serviceArea.radiusKm) },
+                serviceArea: {
+                    ...formData.serviceArea,
+                    cities: typeof formData.serviceArea.cities === "string"
+                        ? formData.serviceArea.cities.split(",").map(c => c.trim()).filter(Boolean)
+                        : formData.serviceArea.cities,
+                    radiusKm: parseInt(formData.serviceArea.radiusKm)
+                },
             };
             if (editingId) {
                 const updated = await updateService(editingId, submitData);
@@ -107,7 +113,7 @@ export default function AdminServices() {
             confirmLabel: "Delete",
         })
 
-        if(!confirmed) return
+        if (!confirmed) return
         try {
             const updated = await deleteService(serviceId);
             setServices(updated.services);
@@ -131,7 +137,7 @@ export default function AdminServices() {
             availableDays: service.availableDays || [],
             availableTime: service.availableTime || { from: "09:00", to: "18:00" },
             maxBookingsPerDay: service.maxBookingsPerDay || 10,
-            serviceArea: service.serviceArea || { cities: [], radiusKm: 10 },
+            serviceArea: service.serviceArea || { cities: [user?.address?.city], radiusKm: 10 },
             cancellationAllowed: service.cancellationAllowed !== false,
             cancellationWindowHours: service.cancellationWindowHours || 2,
         });
@@ -149,7 +155,7 @@ export default function AdminServices() {
             durationInMinutes: "", isActive: true, availableDays: [],
             availableTime: { from: "09:00", to: "18:00" },
             maxBookingsPerDay: "10",
-            serviceArea: { cities: [], radiusKm: "10" },
+            serviceArea: { cities: [user?.address?.city], radiusKm: "10" },
             cancellationAllowed: true, cancellationWindowHours: "2",
         });
         setImagePreview("");
@@ -452,6 +458,18 @@ export default function AdminServices() {
                                                     className={inputCls}
                                                 />
                                             </div>
+                                        </div>
+
+                                        <div>
+                                            <label className={labelCls}>Service Area (cities)</label>
+                                            <input
+                                                type="text"
+                                                value={Array.isArray(formData.serviceArea.cities) ? formData.serviceArea.cities.join(", ") : formData.serviceArea.cities}
+                                                onChange={(e) => setFormData({ ...formData, serviceArea: { ...formData.serviceArea, cities: e.target.value } })}
+                                                className={inputCls}
+                                                placeholder="e.g. Surat, Mumbai, Delhi"
+                                            />
+                                            <p className="text-[10px] text-gray-400 mt-1 font-medium">Separate multiple cities with commas</p>
                                         </div>
 
                                         <div>

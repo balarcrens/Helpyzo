@@ -57,7 +57,8 @@ const Header = () => {
                 { label: "Home & Kitchen Cleaning", path: "/category/home cleaning" },
                 { label: "Plumbing Services", path: "/category/plumbing" },
                 { label: "Appliance Repair", path: "/category/appliance repair" },
-                { label: "Electrical Services", path: "/category/electrical services" }
+                { label: "Electrical Services", path: "/category/electrical services" },
+                { label: "All Services", path: "/category/all" }
             ],
         },
         {
@@ -328,7 +329,7 @@ const Header = () => {
                                         <button onClick={() => {
                                             logout();
                                             navigate("/");
-                                            
+
                                             setIsMobileMenuOpen(false);
                                         }} className="bg-red-500/20 text-red-300 w-full py-3 rounded-2xl font-bold flex items-center justify-center gap-2" >
                                             <FiLogOut size={16} />

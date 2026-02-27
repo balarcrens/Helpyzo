@@ -41,7 +41,7 @@ const Login = ({ onClose }) => {
                 showToast("Login Successfully", "success");
             } else {
                 showToast("Login Failed", "error");
-            } 
+            }
 
             login(
                 res.data.token,
@@ -51,10 +51,8 @@ const Login = ({ onClose }) => {
             onClose();
 
         } catch (err) {
-            setError(
-                err.response?.data?.message ||
-                "Invalid email or password"
-            );
+            console.log("Login catch error:", err?.message);
+            setError(err?.message || "Invalid email or password");
         } finally {
             setLoading(false);
             navigate('/')

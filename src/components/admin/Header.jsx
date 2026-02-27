@@ -34,8 +34,8 @@ export default function Header({ onMenuClick }) {
     }, []);
 
     const handleLogout = () => {
-        logout();
         navigate("/");
+        logout();
     };
 
     const fetchNotifications = async () => {

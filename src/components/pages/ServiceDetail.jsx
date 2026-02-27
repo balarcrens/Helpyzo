@@ -19,7 +19,9 @@ import {
     FiTag,
     FiArrowLeft,
     FiZap,
-    FiTool
+    FiTool,
+    FiHome,
+    FiNavigation
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -34,7 +36,7 @@ import Header from "../Layout/Header";
 import { useNavigate, useParams } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import AuthContext from "../../context/Auth/AuthContext";
-import { partnerAPI, bookingAPI, userAPI } from "../../services/api";
+import { partnerAPI, bookingAPI } from "../../services/api";
 import ToastContext from "../../context/Toast/ToastContext";
 
 export default function ServiceDetail() {
@@ -42,6 +44,7 @@ export default function ServiceDetail() {
     const { isLoggedIn, user } = useContext(AuthContext);
     const { showToast } = useContext(ToastContext);
     const navigate = useNavigate();
+    const isRazorpayLoaded = useRazorpay();
 
     useEffect(() => {
         if (!isLoggedIn && !user) {
@@ -116,6 +119,7 @@ export default function ServiceDetail() {
 
     const userAddressData = user?.address || {
         street: "",
+        landmark: "",
         city: "",
         state: "",
         pincode: "",
@@ -147,6 +151,11 @@ export default function ServiceDetail() {
         if (!isLoggedIn) {
             showToast("Please login to book a service", "info");
             navigate("/login");
+            return;
+        }
+
+        if (user?.isActive === false) {
+            showToast("Your account is not active. Please Activate your account first.", "info");
             return;
         }
 
@@ -542,6 +551,37 @@ export default function ServiceDetail() {
                                     </div>
                                 </motion.div>
 
+                                {/* PARTNER ADDRESS */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    className="bg-stone-800 border border-stone-700 rounded-3xl p-6 sm:p-8"
+                                >
+                                    <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
+                                        <FiHome className="text-[#9fe870]" /> Partner Address
+                                    </h3>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {[
+                                            { label: "Street", value: partnerData?.address?.street || "—" },
+                                            { label: "Landmark", value: partnerData?.address?.landmark || "—" },
+                                            { label: "City", value: partnerData?.address?.city || "—" },
+                                            { label: "State", value: partnerData?.address?.state || "—" },
+                                            { label: "Pincode", value: partnerData?.address?.pincode || "—" },
+                                            { label: "Country", value: partnerData?.address?.country || "India" },
+                                        ].map((row, i) => (
+                                            <div key={i} className="flex items-start gap-3 bg-stone-700/40 border border-stone-600/40 rounded-2xl px-4 py-3">
+                                                <FiMapPin className="text-[#9fe870] mt-0.5 shrink-0 text-sm" />
+                                                <div>
+                                                    <p className="text-stone-500 text-[10px] uppercase tracking-widest">{row.label}</p>
+                                                    <p className="text-white text-sm font-medium">{row.value}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </motion.div>
+
                                 {/* CLIENT REVIEWS CAROUSEL */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
@@ -611,26 +651,65 @@ export default function ServiceDetail() {
                                     className="bg-stone-800 border border-stone-700 rounded-3xl p-6 sm:p-8"
                                 >
                                     <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
-                                        <FiMapPin className="text-[#9fe870]" /> Service Coverage
+                                        <FiNavigation className="text-[#9fe870]" /> Service Coverage Area
                                     </h3>
 
-                                    <div className="rounded-2xl overflow-hidden mb-5 border border-stone-600">
-                                        <iframe
-                                            title="map"
-                                            src="https://maps.google.com/maps?q=Surat&output=embed"
-                                            className="w-full h-52"
+                                    {/* Dynamic map centred on partner city */}
+                                    <div className="rounded-2xl overflow-hidden mb-5 border border-stone-600 relative">
+                                        <iframe title="partner-location-map"
+                                            src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                                                [
+                                                    partnerData?.address?.city,
+                                                    partnerData?.address?.state,
+                                                ].filter(Boolean).join(', ')
+                                                || 'India'
+                                            )}&output=embed`}
+                                            className="w-full h-60"
                                             loading="lazy"
+                                            allowFullScreen
                                         />
+                                        {/* City badge overlay */}
+                                        {partnerData?.address?.city && (
+                                            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-stone-900/80 backdrop-blur border border-stone-700 rounded-full px-3 py-1.5 text-xs font-semibold text-white">
+                                                <FiMapPin className="text-[#9fe870] text-xs" />
+                                                {partnerData.address.city}{partnerData?.address?.state ? `, ${partnerData.address.state}` : ""}
+                                            </div>
+                                        )}
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {["Central Zone", "South City", "West End", "North District"].map(area => (
-                                            <div key={area} className="flex items-center gap-2 bg-stone-700/50 border border-stone-600/50 rounded-xl px-3 py-2 text-sm text-stone-300">
-                                                <FiMapPin className="text-[#9fe870] text-xs shrink-0" />
-                                                {area}
-                                            </div>
-                                        ))}
-                                    </div>
+                                    {/* Coverage cities from serviceArea or fallback to partner city */}
+                                    {(() => {
+                                        const cities = (
+                                            serviceData?.serviceArea?.cities?.length
+                                                ? serviceData.serviceArea.cities
+                                                : partnerData?.address?.city
+                                                    ? [partnerData.address.city]
+                                                    : []
+                                        );
+                                        return cities.length > 0 ? (
+                                            <>
+                                                <p className="text-xs font-semibold uppercase tracking-widest text-stone-400 mb-3">
+                                                    Serviceable Cities
+                                                </p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {cities.map(city => (
+                                                        <div key={city} className="flex items-center gap-2 bg-[#9fe870]/10 border border-[#9fe870]/20 rounded-full px-3 py-1.5 text-sm text-[#9fe870] font-medium">
+                                                            <FiMapPin className="text-xs shrink-0" />
+                                                            {city}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                {serviceData?.serviceArea?.radiusKm && (
+                                                    <p className="mt-3 text-xs text-stone-500 flex items-center gap-1.5">
+                                                        <FiNavigation className="text-[#9fe870] text-xs" />
+                                                        Covers up to <span className="text-stone-300 font-semibold">{serviceData.serviceArea.radiusKm} km</span> radius
+                                                    </p>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <p className="text-sm text-stone-500">Coverage area not specified.</p>
+                                        );
+                                    })()}
                                 </motion.div>
 
                                 {/* WRITE REVIEW - DESKTOP */}
@@ -683,6 +762,7 @@ const BookingSidebar = ({
     calendarDays, selectedDate, setSelectedDate,
     selectedTime, setSelectedTime, handleBooking, bookingLoading, serviceData, partnerData
 }) => {
+    const { user } = useContext(AuthContext);
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -815,7 +895,7 @@ const BookingSidebar = ({
             {/* BOOK BUTTON */}
             <motion.button
                 onClick={handleBooking}
-                disabled={bookingLoading}
+                disabled={bookingLoading || user?.isActive === false}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
                 className="w-full bg-[#9fe870] text-stone-900 py-4 rounded-2xl font-bold tracking-wide hover:bg-[#8fd960] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[#9fe870]/20 text-sm"

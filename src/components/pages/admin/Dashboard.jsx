@@ -205,7 +205,7 @@ export default function Dashboard() {
                                 <p className="text-sm font-medium text-gray-400">No bookings yet</p>
                             </div>
                         ) : (
-                            bookings.slice(0, 5).map((booking, idx) => {
+                            bookings.slice(0, 9).map((booking, idx) => {
                                 const sc = statusCfg[booking.status] || { bg: "bg-gray-100", text: "text-gray-600", dot: "bg-gray-400" };
                                 return (
                                     <motion.div

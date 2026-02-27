@@ -33,8 +33,34 @@ const AuthProvider = ({ children }) => {
     }, []);
 
     const login = (authToken, userData) => {
+        // Prevent LocalStorage Quota Exceeded by removing huge base64 fields 
+        // from the object we save to localStorage, while keeping them in memory.
+        const storageData = { ...userData };
+
+        if (storageData.profileImage && storageData.profileImage.length > 50000) {
+            storageData.profileImage = null;
+        }
+
+        if (Array.isArray(storageData.documents)) {
+            storageData.documents = storageData.documents.map(doc => ({
+                ...doc,
+                fileUrl: doc.fileUrl && doc.fileUrl.length > 50000 ? null : doc.fileUrl
+            }));
+        }
+
+        if (Array.isArray(storageData.services)) {
+            storageData.services = storageData.services.map(srv => ({
+                ...srv,
+                image: srv.image && srv.image.length > 50000 ? null : srv.image
+            }));
+        }
+
         localStorage.setItem("auth-token", authToken);
-        localStorage.setItem("userInfo", JSON.stringify(userData));
+        try {
+            localStorage.setItem("userInfo", JSON.stringify(storageData));
+        } catch (e) {
+            console.error("Failed to save userInfo to localStorage", e);
+        }
         setToken(authToken);
         setUser(userData);
     };

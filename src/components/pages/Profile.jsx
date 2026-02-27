@@ -40,6 +40,22 @@ const Profile = ({ user, setUser, updateProfile, changePassword }) => {
 
     useEffect(() => { if (user?.role) getBookings(); }, []);
 
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                const res = await userAPI.getProfile();
+                setUser(res.data.user);
+                localStorage.setItem("user", JSON.stringify(res.data.user));
+            } catch (err) {
+                logout();
+            }
+        };
+
+        if (user) {
+            loadProfile();
+        }
+    }, []);
+
     if (!user) return (
         <div className="min-h-[60vh] flex items-center justify-center text-stone-500 text-lg">
             Loading profile...
@@ -60,16 +76,18 @@ const Profile = ({ user, setUser, updateProfile, changePassword }) => {
     const pendingCount = bookings.filter((b) => b.status === "pending" || b.status === "confirmed").length;
     const totalSpent = bookings.reduce((sum, b) => sum + (b.status === "completed" ? b.amount : 0), 0);
 
-    const handleChangeStatus = async (e) => {
-        e.preventDefault();
+    const handleChangeStatus = async () => {
         try {
-            await userAPI.changeStatus(user._id, !user.isActive);
-            const userResponse = await userAPI.getProfile();
-            setUser(userResponse.data.user);
-        } catch (error) {
-            console.log(error.message);
+            const nextStatus = !user.isActive;
+            await userAPI.changeStatus(user._id, nextStatus);
+
+            const { data } = await userAPI.getProfile();
+            setUser(data.user);
+            localStorage.setItem("user", JSON.stringify(data.user));
+        } catch (err) {
+            console.log(err);
         }
-    }
+    };
 
     return (
         <>
@@ -165,9 +183,9 @@ const Profile = ({ user, setUser, updateProfile, changePassword }) => {
                             {user.address ? (
                                 <div className="space-y-1.5">
                                     {[
-                                        user.address.street,
-                                        `${user.address.city}, ${user.address.state}`,
-                                        `${user.address.pincode}, ${user.address.country}`,
+                                        user?.address?.street,
+                                        `${user?.address?.landmark}, ${user?.address?.city}, ${user?.address?.state}`,
+                                        `${user?.address?.pincode}, ${user?.address?.country}`,
                                     ].map((line, i) => (
                                         <p key={i} className="text-sm text-stone-700 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2">
                                             {line || "—"}
@@ -180,7 +198,7 @@ const Profile = ({ user, setUser, updateProfile, changePassword }) => {
                             )}
                         </InfoCard>
 
-                        <button onClick={(e) => handleChangeStatus(e)} className={`hidden sm:flex w-full items-center justify-center gap-2 py-3 rounded-2xl ${user?.isActive ? 'bg-red-50 hover:bg-red-100 text-red-600' : 'bg-green-50 hover:bg-green-100 text-green-600'} text-xs font-bold border border-red-100 cursor-pointer transition active:scale-95`}>
+                        <button onClick={handleChangeStatus} className={`hidden sm:flex w-full items-center justify-center gap-2 py-3 rounded-2xl ${user?.isActive ? 'bg-red-50 hover:bg-red-100 text-red-600' : 'bg-green-50 hover:bg-green-100 text-green-600'} text-xs font-bold border border-red-100 cursor-pointer transition active:scale-95`}>
                             {user?.isActive ? <FiTrash2 size={14} /> : <FiActivity size={14} />}
                             {user?.isActive ? 'Deactivate Account' : 'Activate Account'}
                         </button>
@@ -266,7 +284,7 @@ const EditProfileModal = ({ open, setOpen, user, updateProfile }) => {
     const profileInputRef = useRef(null);
     const [form, setForm] = useState({
         name: user.name || "", phone: user.phone || "",
-        street: user.address?.street || "", city: user.address?.city || "",
+        street: user.address?.street || "", landmark: user.address?.landmark || "", city: user.address?.city || "",
         state: user.address?.state || "", country: user.address?.country || "India",
         pincode: user.address?.pincode || "",
     });
@@ -285,7 +303,7 @@ const EditProfileModal = ({ open, setOpen, user, updateProfile }) => {
             setLoading(true);
             const payload = {
                 name: form.name, phone: form.phone,
-                address: { street: form.street, city: form.city, state: form.state, country: form.country || "India", pincode: form.pincode },
+                address: { street: form.street, landmark: form.landmark, city: form.city, state: form.state, country: form.country || "India", pincode: form.pincode },
                 profileImage: profileImage || undefined,
             };
 
@@ -325,6 +343,7 @@ const EditProfileModal = ({ open, setOpen, user, updateProfile }) => {
                     <DarkInput label="Full Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="col-span-2" />
                     <DarkInput label="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="col-span-2" />
                     <DarkInput label="Street" value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} className="col-span-2" />
+                    <DarkInput label="Landmark" value={form.landmark} onChange={(e) => setForm({ ...form, landmark: e.target.value })} />
                     <DarkInput label="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
                     <DarkInput label="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
                     <DarkInput label="Country" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />

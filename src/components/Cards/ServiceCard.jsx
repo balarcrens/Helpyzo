@@ -11,7 +11,7 @@ const ServiceCard = ({ item, onClick }) => {
             onClick={onClick}
             whileHover={{ y: -3 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            className="snap-start w-[300px] min-h-full flex-shrink-0 rounded-3xl bg-white ring-1 ring-stone-200 shadow-sm hover:shadow-xl transition cursor-pointer">
+            className="w-full h-full flex flex-col rounded-3xl bg-white ring-1 ring-stone-200 shadow-sm hover:shadow-xl transition cursor-pointer">
             {/* IMAGE */}
             <div className="relative h-56 overflow-hidden rounded-t-3xl">
                 <img

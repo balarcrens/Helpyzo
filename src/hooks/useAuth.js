@@ -12,7 +12,6 @@ export const useUser = () => {
         try {
             setLoading(true);
             const res = await userAPI.getProfile();
-            console.log(res.data.user);
             login(localStorage.getItem("auth-token"), res.data.user);
             return res.data.user;
         } catch (err) {
@@ -27,7 +26,7 @@ export const useUser = () => {
         try {
             setLoading(true);
             const res = await userAPI.updateProfile(data);
-            login(localStorage.getItem("auth-token"), res.data.user);
+            await getProfile();
             return res.data.user;
         } catch (err) {
             setError(err.response?.data?.message || "Failed to update profile");

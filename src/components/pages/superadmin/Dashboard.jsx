@@ -65,7 +65,7 @@ export default function Dashboard() {
             sub: "Service providers",
         },
         {
-            title: "Verified Partners",
+            title: "Verified Partner",
             value: verifiedPartnersCount,
             ...getTrend(verifiedPartnersCount, prevPartners.current),
             icon: <FaTools />,

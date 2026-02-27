@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import { useMemo, useState, useEffect, useContext } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     FiChevronDown,
@@ -24,10 +24,18 @@ export default function ServicePage() {
     const { showToast } = useContext(ToastContext);
     const { category } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Parse query params for initial state
+    const queryParams = new URLSearchParams(location.search);
+    const initialSearch = queryParams.get("search") || "";
+    const initialZip = queryParams.get("zip") || "";
+
     const [partners, setPartners] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const [search, setSearch] = useState("");
+    const [search, setSearch] = useState(initialSearch);
+    const [zipCode, setZipCode] = useState(initialZip);
     const [onlyNearby, setOnlyNearby] = useState(false);
     const [availableToday, setAvailableToday] = useState(false);
     const [minRating, setMinRating] = useState(0);
@@ -58,16 +66,22 @@ export default function ServicePage() {
         return partners.flatMap(partner =>
             partner.services
                 .filter(service => {
-                    const categoryMatch =
-                        service.category?.name?.toLowerCase() === category?.toLowerCase();
+                    const categoryMatch = (!category || category.toLowerCase() === 'all')
+                        ? true
+                        : service.category?.name?.toLowerCase() === category?.toLowerCase();
 
                     const searchMatch =
-                        service.name.toLowerCase().includes(search.toLowerCase());
+                        service.name.toLowerCase().includes(search.toLowerCase()) ||
+                        service.description?.toLowerCase().includes(search.toLowerCase());
+
+                    const zipMatch = zipCode.trim() === ""
+                        ? true
+                        : partner.address?.pincode === zipCode.trim();
 
                     const ratingMatch =
                         (partner.rating || 0) >= minRating;
 
-                    return categoryMatch && searchMatch && ratingMatch;
+                    return categoryMatch && searchMatch && zipMatch && ratingMatch;
                 })
                 .map(service => ({
                     ...service,
@@ -82,7 +96,7 @@ export default function ServicePage() {
                     }
                 }))
         );
-    }, [partners, category, search, minRating]);
+    }, [partners, category, search, zipCode, minRating]);
 
     if (!category) {
         return (
@@ -96,7 +110,7 @@ export default function ServicePage() {
 
     const sections = [
         {
-            title: `${category ? category.charAt(0).toUpperCase() + category.slice(1) : 'Available'} Services`,
+            title: (!category || category.toLowerCase() === 'all') ? 'All Services' : `${category.charAt(0).toUpperCase() + category.slice(1)} Services`,
             filter: (s) => true, // Show all filtered services
         },
     ];
@@ -121,11 +135,11 @@ export default function ServicePage() {
                     </span>
 
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mt-4">
-                        {category && (category.charAt(0).toUpperCase() + category.slice(1))} Services<br />Near You
+                        {(!category || category.toLowerCase() === 'all') ? 'All' : (category.charAt(0).toUpperCase() + category.slice(1))} Services<br />Near You
                     </h1>
 
                     <p className="text-gray-300 mt-6 max-w-xl text-lg">
-                        Find verified professionals for your {category} needs.
+                        Find verified professionals for your {(!category || category.toLowerCase() === 'all') ? 'home' : category} needs.
                     </p>
                 </div>
             </section>
@@ -134,13 +148,23 @@ export default function ServicePage() {
             <section className="relative -mt-20 z-20">
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="bg-white rounded-3xl shadow-2xl p-4 space-y-3">
-                        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_auto] gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1.6fr_auto] gap-3">
                             <div className="relative">
                                 <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
                                 <input
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Search services"
+                                    className="h-12 w-full pl-12 pr-4 rounded-2xl bg-stone-50 ring-1 ring-stone-200 focus:ring-2 focus:ring-[#9fe870] outline-none"
+                                />
+                            </div>
+
+                            <div className="relative">
+                                <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
+                                <input
+                                    value={zipCode}
+                                    onChange={(e) => setZipCode(e.target.value)}
+                                    placeholder="Enter ZIP code"
                                     className="h-12 w-full pl-12 pr-4 rounded-2xl bg-stone-50 ring-1 ring-stone-200 focus:ring-2 focus:ring-[#9fe870] outline-none"
                                 />
                             </div>
@@ -244,7 +268,7 @@ export default function ServicePage() {
                             >
                                 Finding the best{" "}
                                 <span className="text-[#9fe870] font-semibold">
-                                    {category && category.charAt(0).toUpperCase() + category.slice(1)}
+                                    {(!category || category.toLowerCase() === 'all') ? 'home' : category.charAt(0).toUpperCase() + category.slice(1)}
                                 </span>{" "}
                                 services
                             </motion.p>
@@ -313,7 +337,7 @@ export default function ServicePage() {
                         <h3 className="text-3xl font-bold text-stone-800 mb-3">
                             No{" "}
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#9fe870] to-emerald-500">
-                                {category && category.charAt(0).toUpperCase() + category.slice(1)}
+                                {(!category || category.toLowerCase() === 'all') ? 'Matching' : category.charAt(0).toUpperCase() + category.slice(1)}
                             </span>{" "}
                             Services Found
                         </h3>
@@ -347,7 +371,7 @@ export default function ServicePage() {
                             <motion.button
                                 whileHover={{ scale: 1.04 }}
                                 whileTap={{ scale: 0.97 }}
-                                onClick={() => { setSearch(""); setMinRating(0); setOnlyNearby(false); setAvailableToday(false); }}
+                                onClick={() => { setSearch(""); setZipCode(""); setMinRating(0); setOnlyNearby(false); setAvailableToday(false); }}
                                 className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-stone-900 text-white font-semibold shadow-lg hover:bg-stone-800 transition-colors"
                             >
                                 <FiRefreshCw size={16} /> Reset Filters

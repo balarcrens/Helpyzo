@@ -32,6 +32,18 @@ export default HomePage
 
 
 const HeroSection = () => {
+    const navigate = useNavigate();
+    const [searchQuery, setSearchQuery] = useState("");
+    const [zipCode, setZipCode] = useState("");
+
+    const handleSearch = () => {
+        if (searchQuery.trim() || zipCode.trim()) {
+            navigate(`/category/all?search=${encodeURIComponent(searchQuery)}&zip=${encodeURIComponent(zipCode)}`);
+        } else {
+            navigate(`/category/all`);
+        }
+    };
+
     // Parallax Effect Logic
     const { scrollY } = useScroll();
     const backgroundY = useTransform(scrollY, [0, 800], [0, 120])
@@ -81,6 +93,9 @@ const HeroSection = () => {
                             <div className="flex items-center px-2 h-10 rounded-2xl md:rounded-none md:border-r border-white/10 w-full">
                                 <input
                                     type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                                     placeholder="What service do you need?"
                                     className="w-full bg-transparent text-white placeholder-gray-400 outline-none text-base"
                                 />
@@ -90,12 +105,15 @@ const HeroSection = () => {
                                 <FiMapPin className="text-gray-400 mr-3 shrink-0" size={20} />
                                 <input
                                     type="text"
+                                    value={zipCode}
+                                    onChange={(e) => setZipCode(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                                     placeholder="Enter ZIP code"
                                     className="w-full bg-transparent text-white placeholder-gray-400 outline-none text-base"
                                 />
                             </div>
 
-                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                            <motion.button onClick={handleSearch} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                                 className="bg-[#9fe870] px-2 text-stone-900 h-10 w-full md:w-14 rounded-2xl md:rounded-full flex items-center justify-center shadow-lg shadow-[#9fe870]/30"
                             >
                                 <FiSearch size={22} strokeWidth={3} />
