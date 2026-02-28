@@ -64,6 +64,7 @@ export const bookingAPI = {
     updateBookingStatus: (bookingId, status) => apiClient.put(`/bookings/${bookingId}/status`, { status }),
     updateBookingPaymentStatus: (bookingId, paymentStatus) => apiClient.put(`/bookings/payment-status/${bookingId}`, { paymentStatus }),
     rateBooking: (bookingId, rating, review) => apiClient.put(`/bookings/${bookingId}/rate`, { rating, review }),
+    getPartnerReviews: (partnerId) => apiClient.get(`/bookings/partner/${partnerId}/reviews`),
     deleteBooking: (bookingId) => apiClient.delete(`/bookings/${bookingId}`),
 };
 

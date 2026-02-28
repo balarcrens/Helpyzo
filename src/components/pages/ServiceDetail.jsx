@@ -39,6 +39,7 @@ import AuthContext from "../../context/Auth/AuthContext";
 import { partnerAPI, bookingAPI, paymentAPI } from "../../services/api";
 import ToastContext from "../../context/Toast/ToastContext";
 import useRazorpay from "../../hooks/useRazorpay";
+import { useBookings } from "../../hooks/useData";
 
 export default function ServiceDetail() {
     const { slug } = useParams();
@@ -64,10 +65,11 @@ export default function ServiceDetail() {
     const [partnerData, setPartnerData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [dataError, setDataError] = useState(null);
+    const { fetchPartnerReviews, reviews } = useBookings();
 
     const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
+    const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+    const [currentYear, setCurrentYear] = useState(today.getFullYear());
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
@@ -105,6 +107,7 @@ export default function ServiceDetail() {
 
                 setServiceData(foundService);
                 setPartnerData(foundPartner);
+                fetchPartnerReviews(foundPartner._id);
             } catch (err) {
                 console.error("Error fetching data:", err.message);
                 showToast("Failed to load service details", "error");
@@ -224,16 +227,17 @@ export default function ServiceDetail() {
 
             if (bookingRes.data.success) {
                 const bookingId = bookingRes.data.booking._id;
-                
+
                 // 2. Create Razorpay order
                 const orderRes = await paymentAPI.createOrder({ amount, currency: 'INR', receipt: bookingNumber });
-                
+
                 if (orderRes.data.success) {
                     const options = {
                         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                         amount: orderRes.data.order.amount,
                         currency: 'INR',
-                        name: 'Home Service',
+                        image: 'http://localhost:5173/helpyZo.png',
+                        name: 'Helpyzo',
                         description: `Payment for ${serviceData.name}`,
                         order_id: orderRes.data.order.id,
                         handler: async function (response) {
@@ -649,65 +653,63 @@ export default function ServiceDetail() {
                                 </motion.div>
 
                                 {/* CLIENT REVIEWS CAROUSEL */}
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    className="bg-stone-800 border border-stone-700 rounded-3xl p-6 sm:p-8 relative overflow-hidden"
-                                >
-                                    {/* Decorative blob */}
-                                    <div className="absolute top-0 right-0 w-48 h-48 bg-[#9fe870]/5 rounded-full blur-3xl pointer-events-none" />
-
-                                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                                        <AiFillStar className="text-yellow-400" /> Client Experiences
-                                    </h3>
-
-                                    <Swiper
-                                        modules={[Autoplay, Navigation]}
-                                        autoplay={{ delay: 2500 }}
-                                        navigation={{
-                                            prevEl: ".prev-review",
-                                            nextEl: ".next-review",
-                                        }}
+                                {reviews && reviews.length > 0 && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true }}
+                                        className="bg-stone-800 border border-stone-700 rounded-3xl p-6 sm:p-8 relative overflow-hidden"
                                     >
-                                        {[
-                                            { text: "Prompt service and exceptional workmanship. Highly reliable and professional.", author: "Rahul M.", role: "Homeowner" },
-                                            { text: "Explained the issue clearly and fixed it the same day. Absolutely fantastic experience!", author: "Priya K.", role: "Apartment Resident" },
-                                            { text: "Professional, respectful, and worth every penny. Will definitely book again.", author: "Amit S.", role: "Business Owner" },
-                                        ].map((review, i) => (
-                                            <SwiperSlide key={i}>
-                                                <div className="bg-stone-700/50 border border-stone-600/50 rounded-2xl p-6">
-                                                    <div className="flex gap-1 mb-4">
-                                                        {[...Array(5)].map((_, j) => (
-                                                            <AiFillStar key={j} className="text-yellow-400 text-sm" />
-                                                        ))}
-                                                    </div>
-                                                    <p className="text-stone-300 text-sm leading-relaxed mb-5 italic">
-                                                        &ldquo;{review.text}&rdquo;
-                                                    </p>
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-9 h-9 rounded-full bg-[#9fe870]/20 flex items-center justify-center text-[#9fe870] text-sm font-bold">
-                                                            {review.author[0]}
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-white text-sm font-semibold">{review.author}</p>
-                                                            <p className="text-stone-500 text-xs">{review.role}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </SwiperSlide>
-                                        ))}
-                                    </Swiper>
+                                        {/* Decorative blob */}
+                                        <div className="absolute top-0 right-0 w-48 h-48 bg-[#9fe870]/5 rounded-full blur-3xl pointer-events-none" />
 
-                                    <div className="flex gap-2 mt-4 justify-end">
-                                        <button className="prev-review w-9 h-9 rounded-full bg-stone-700 hover:bg-[#9fe870] hover:text-stone-900 text-stone-300 flex items-center justify-center transition-colors">
-                                            <FiChevronLeft />
-                                        </button>
-                                        <button className="next-review w-9 h-9 rounded-full bg-stone-700 hover:bg-[#9fe870] hover:text-stone-900 text-stone-300 flex items-center justify-center transition-colors">
-                                            <FiChevronRight />
-                                        </button>
-                                    </div>
-                                </motion.div>
+                                        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                                            <AiFillStar className="text-yellow-400" /> Client Experiences
+                                        </h3>
+
+                                        <Swiper
+                                            modules={[Autoplay, Navigation]}
+                                            autoplay={{ delay: 2500 }}
+                                            navigation={{
+                                                prevEl: ".prev-review",
+                                                nextEl: ".next-review",
+                                            }}
+                                        >
+                                            {reviews.map((review, i) => (
+                                                <SwiperSlide key={i}>
+                                                    <div className="bg-stone-700/50 border border-stone-600/50 rounded-2xl p-6">
+                                                        <div className="flex gap-1 mb-4">
+                                                            {[...Array(5)].map((_, j) => (
+                                                                <AiFillStar key={j} className={j < review.rating ? "text-yellow-400 text-sm" : "text-stone-600 text-sm"} />
+                                                            ))}
+                                                        </div>
+                                                        <p className="text-stone-300 text-sm leading-relaxed mb-5 italic">
+                                                            &ldquo;{review.review || "Excellent service provided!"}&rdquo;
+                                                        </p>
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-9 h-9 rounded-full bg-[#9fe870]/20 flex items-center justify-center text-[#9fe870] text-sm font-bold">
+                                                                {review.user?.name?.[0] || review.user?.profileImage ? <img src={review.user.profileImage} alt="User" className="w-9 h-9 rounded-full object-cover" /> : "U"}
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-white text-sm font-semibold">{review.user?.name || "Verified Client"}</p>
+                                                                <p className="text-stone-500 text-xs">{new Date(review.createdAt).toLocaleDateString()}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </SwiperSlide>
+                                            ))}
+                                        </Swiper>
+
+                                        <div className="flex gap-2 mt-4 justify-end">
+                                            <button className="prev-review w-9 h-9 rounded-full bg-stone-700 hover:bg-[#9fe870] hover:text-stone-900 text-stone-300 flex items-center justify-center transition-colors">
+                                                <FiChevronLeft />
+                                            </button>
+                                            <button className="next-review w-9 h-9 rounded-full bg-stone-700 hover:bg-[#9fe870] hover:text-stone-900 text-stone-300 flex items-center justify-center transition-colors">
+                                                <FiChevronRight />
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
 
                                 {/* SERVICE COVERAGE */}
                                 <motion.div
@@ -778,10 +780,6 @@ export default function ServiceDetail() {
                                     })()}
                                 </motion.div>
 
-                                {/* WRITE REVIEW - DESKTOP */}
-                                <div className="hidden lg:block">
-                                    <WriteReview />
-                                </div>
                             </div>
 
                             {/* BOOKING SIDEBAR */}
@@ -805,12 +803,11 @@ export default function ServiceDetail() {
                                 bookingLoading={bookingLoading}
                                 serviceData={serviceData}
                                 partnerData={partnerData}
+                                currentMonth={currentMonth}
+                                currentYear={currentYear}
+                                setCurrentMonth={setCurrentMonth}
+                                setCurrentYear={setCurrentYear}
                             />
-                        </div>
-
-                        {/* REVIEWS ON MOBILE */}
-                        <div className="lg:hidden mt-6">
-                            <WriteReview />
                         </div>
                     </div>
                 </div>
@@ -826,7 +823,8 @@ const BookingSidebar = ({
     customIssue, setCustomIssue,
     serviceType, setServiceType,
     calendarDays, selectedDate, setSelectedDate,
-    selectedTime, setSelectedTime, handleBooking, bookingLoading, serviceData, partnerData
+    selectedTime, setSelectedTime, handleBooking, bookingLoading, serviceData, partnerData,
+    currentMonth, currentYear, setCurrentMonth, setCurrentYear
 }) => {
     const { user } = useContext(AuthContext);
     return (
@@ -940,7 +938,15 @@ const BookingSidebar = ({
             </div>
 
             {/* CALENDAR */}
-            <Calendar calendarDays={calendarDays} selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
+            <Calendar
+                calendarDays={calendarDays}
+                selectedDate={selectedDate}
+                setSelectedDate={setSelectedDate}
+                currentMonth={currentMonth}
+                currentYear={currentYear}
+                setCurrentMonth={setCurrentMonth}
+                setCurrentYear={setCurrentYear}
+            />
 
             {/* TIME INPUT */}
             <div>
@@ -986,12 +992,56 @@ const BookingSidebar = ({
 };
 
 /* ─── CALENDAR ──── */
-const Calendar = ({ calendarDays, selectedDate, setSelectedDate }) => {
+const Calendar = ({ calendarDays, selectedDate, setSelectedDate, currentMonth, currentYear, setCurrentMonth, setCurrentYear }) => {
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    const todayDate = new Date();
+    const isCurrentOrPastMonth = currentYear < todayDate.getFullYear() || (currentYear === todayDate.getFullYear() && currentMonth <= todayDate.getMonth());
+
+    const handlePrevMonth = () => {
+        if (isCurrentOrPastMonth) return;
+        if (currentMonth === 0) {
+            setCurrentMonth(11);
+            setCurrentYear(currentYear - 1);
+        } else {
+            setCurrentMonth(currentMonth - 1);
+        }
+    };
+
+    const handleNextMonth = () => {
+        if (currentMonth === 11) {
+            setCurrentMonth(0);
+            setCurrentYear(currentYear + 1);
+        } else {
+            setCurrentMonth(currentMonth + 1);
+        }
+    };
+
     return (
         <div>
-            <label className="text-xs font-semibold uppercase tracking-widest text-stone-300 mb-3 flex items-center gap-1.5">
-                <FiCalendar className="text-[#9fe870]" /> Select Date
-            </label>
+            <div className="flex items-center justify-between mb-3">
+                <label className="text-xs font-semibold uppercase tracking-widest text-stone-300 flex items-center gap-1.5">
+                    <FiCalendar className="text-[#9fe870]" /> Select Date
+                </label>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={handlePrevMonth}
+                        disabled={isCurrentOrPastMonth}
+                        className={`p-1 rounded-lg transition-colors ${isCurrentOrPastMonth ? "text-stone-600 cursor-not-allowed" : "text-stone-300 hover:bg-stone-700 hover:text-white"}`}
+                    >
+                        <FiChevronLeft className="text-lg" />
+                    </button>
+                    <span className="text-sm font-semibold text-white min-w-[100px] text-center">
+                        {monthNames[currentMonth]} {currentYear}
+                    </span>
+                    <button
+                        onClick={handleNextMonth}
+                        className="p-1 rounded-lg text-stone-300 hover:bg-stone-700 hover:text-white transition-colors"
+                    >
+                        <FiChevronRight className="text-lg" />
+                    </button>
+                </div>
+            </div>
             <div className="grid grid-cols-7 gap-1 text-center">
                 {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(d => (
                     <div key={d} className="text-[10px] font-bold text-stone-500 py-1">{d}</div>
@@ -1023,107 +1073,3 @@ const Calendar = ({ calendarDays, selectedDate, setSelectedDate }) => {
     );
 };
 
-/* ─── WRITE REVIEW ──── */
-const WriteReview = () => {
-    const [rating, setRating] = useState(0);
-    const [hover, setHover] = useState(null);
-    const [beforeImage, setBeforeImage] = useState(null);
-    const [afterImage, setAfterImage] = useState(null);
-
-    const handleImageChange = (e, type) => {
-        const file = e.target.files[0];
-        if (file) {
-            const url = URL.createObjectURL(file);
-            type === "before" ? setBeforeImage(url) : setAfterImage(url);
-        }
-    };
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-stone-800 border border-stone-700 rounded-3xl p-6 sm:p-8 w-full relative overflow-hidden"
-        >
-            {/* Decorative */}
-            <div className="absolute top-0 left-0 w-64 h-64 bg-[#9fe870]/5 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="relative">
-                <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-semibold tracking-widest text-[#9fe870] uppercase">Your Feedback</span>
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-6">
-                    Share Your Experience
-                </h3>
-
-                {/* Star Rating */}
-                <div className="flex gap-2 mb-6">
-                    {[...Array(5)].map((_, i) => {
-                        const value = i + 1;
-                        return (
-                            <motion.div
-                                key={i}
-                                whileTap={{ scale: 0.85 }}
-                                whileHover={{ scale: 1.2 }}
-                                onClick={() => setRating(value)}
-                                onMouseEnter={() => setHover(value)}
-                                onMouseLeave={() => setHover(null)}
-                                className="cursor-pointer"
-                            >
-                                <AiFillStar
-                                    className={`text-3xl transition-colors ${value <= (hover || rating) ? "text-yellow-400" : "text-stone-600"}`}
-                                />
-                            </motion.div>
-                        );
-                    })}
-                    {(hover || rating) > 0 && (
-                        <span className="text-stone-300 text-sm self-center ml-1">
-                            {["", "Poor", "Fair", "Good", "Very Good", "Excellent"][hover || rating]}
-                        </span>
-                    )}
-                </div>
-
-                <textarea
-                    rows="4"
-                    placeholder="Write an honest review that helps others choose confidently..."
-                    className="w-full bg-stone-700/50 border border-stone-600 focus:border-[#9fe870]/50 rounded-2xl p-4 resize-none outline-none text-sm text-stone-300 placeholder-stone-500 transition-colors mb-5"
-                />
-
-                {/* Before / After Image Upload */}
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                    {["before", "after"].map((type) => {
-                        const img = type === "before" ? beforeImage : afterImage;
-                        return (
-                            <label
-                                key={type}
-                                className="flex-1 flex flex-col items-center justify-center p-4 border-2 border-dashed border-stone-600 hover:border-[#9fe870]/50 rounded-2xl cursor-pointer transition-colors relative overflow-hidden h-36 group"
-                            >
-                                {img ? (
-                                    <img src={img} alt={type} className="h-full w-full object-cover rounded-xl" />
-                                ) : (
-                                    <>
-                                        <div className="w-10 h-10 rounded-xl bg-stone-700 group-hover:bg-[#9fe870]/10 flex items-center justify-center mb-2 transition-colors">
-                                            <AiOutlineUpload className="text-xl text-stone-300 group-hover:text-[#9fe870] transition-colors" />
-                                        </div>
-                                        <span className="text-stone-500 text-xs text-center group-hover:text-stone-300 transition-colors">
-                                            Upload {type.charAt(0).toUpperCase() + type.slice(1)} Image
-                                        </span>
-                                    </>
-                                )}
-                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, type)} />
-                            </label>
-                        );
-                    })}
-                </div>
-
-                <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full bg-[#9fe870] text-stone-900 py-3.5 rounded-2xl font-bold shadow-lg shadow-[#9fe870]/20 hover:bg-[#8fd960] transition-colors"
-                >
-                    Submit Review
-                </motion.button>
-            </div>
-        </motion.div>
-    );
-};

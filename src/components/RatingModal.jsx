@@ -9,7 +9,7 @@ const RatingModal = ({ isOpen, bookingId, partnerName, serviceName, onClose, onS
     const [review, setReview] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const { rateBooking } = useBookings();
+    const { rateBooking, fetchUserBookings } = useBookings();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -36,6 +36,7 @@ const RatingModal = ({ isOpen, bookingId, partnerName, serviceName, onClose, onS
 
             // Close modal
             onClose();
+            await fetchUserBookings();
         } catch (err) {
             setError(err.response?.data?.message || "Failed to submit rating");
         } finally {

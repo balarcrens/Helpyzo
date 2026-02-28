@@ -227,6 +227,7 @@ export const useBookings = () => {
     const fetchedPartner = useRef(false);
     const { showToast, showConfirm } = useContext(ToastContext)
     const [bookings, setBookings] = useState([]);
+    const [reviews, setReviews] = useState([]);
     const [booking, setBooking] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -280,6 +281,20 @@ export const useBookings = () => {
         fetchedPartner.current = true;
         fetchPartnerBookings();
     }, []);
+
+    const fetchPartnerReviews = async (partnerId) => {
+        try {
+            setLoading(true);
+            const res = await bookingAPI.getPartnerReviews(partnerId);
+            setReviews(res.data.reviews || []);
+            return res.data.reviews;
+        } catch (error) {
+            console.error("Failed to load reviews", error.message);
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchBookingById = async (bookingId) => {
         try {
@@ -381,7 +396,7 @@ export const useBookings = () => {
         }
     };
 
-    return { bookings, booking, loading, error, deletingId, updatingId, fetchBookings, fetchUserBookings, fetchPartnerBookings, fetchBookingById, createBooking, updateBookingStatus, updateBookingPaymentStatus, deleteBooking, rateBooking, };
+    return { bookings, reviews, booking, loading, error, deletingId, updatingId, fetchBookings, fetchUserBookings, fetchPartnerBookings, fetchBookingById, fetchPartnerReviews, createBooking, updateBookingStatus, updateBookingPaymentStatus, deleteBooking, rateBooking, };
 };
 
 // Custom hook for notifications
