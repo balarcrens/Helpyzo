@@ -53,7 +53,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 <div className="px-6 py-5 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
                         <img
-                            src="https://helpyzo.netlify.app/helpyZo.png"
+                            src="/helpyZo.png"
                             alt="HelpyZo"
                             className="h-8 object-contain"
                         />
